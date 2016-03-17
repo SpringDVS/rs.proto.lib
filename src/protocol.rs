@@ -1,7 +1,8 @@
 use std::mem::transmute;
 use ::serialise::NetSerial;
+use ::serialise::push_bytes;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum PacketType {
 	Undefined,
 
@@ -18,9 +19,12 @@ pub struct Packet {
 	pub addr_dest: [u8;4]
 }
 
-fn push_bytes(v: &mut Vec<u8>, bytes: &[u8]) {
-	for b in bytes {
-		v.push(*b)
+fn u8_packet_type(byte: u8) -> Option<PacketType> {
+	match byte {
+		0 => Some(PacketType::Undefined),
+		1 => Some(PacketType::GsnRegisterHost),
+		2 => Some(PacketType::GsnUnregisterHost),
+		_ => None
 	}
 }
 
@@ -54,16 +58,26 @@ impl NetSerial for Packet {
 		v
 	}
 
-	//fn deserialise(bytes: [u8]) -> Packet {
-	//	let r = bytes[0]	;
-	//}
+	fn deserialise(bytes: &[u8]) -> Option<Packet> {
+		let op = u8_packet_type(bytes[0]);
+		let pt = match op {
+			None => return None,
+			_ => op.unwrap()
+		};
+		
+		let p = Packet::new(pt);
+		
+		Some(p)
+	}
 }
 
 
 
 
+// ------- Testing  -------- \\
+
 #[test]
-fn ts_protocol_packet_serialise() {
+fn ts_protocol_packet_serialise_s() {
 	let mut p = Packet::new(PacketType::GsnRegisterHost);
 	p.msg_part = 0;
 	p.msg_size = 101;
@@ -90,4 +104,26 @@ fn ts_protocol_packet_serialise() {
 	assert_eq!(1, serial[12]);
 	assert_eq!(2, serial[13]);
 	
+}
+
+#[test]
+fn ts_protocol_packet_deserialise_p() {
+	// Test good
+	let bytes : [u8;14] = [1,0, 0,0,0,33, 127,0,0,1, 192,168,0,255];
+	let op = Packet::deserialise(&bytes);
+	
+	assert!(op.is_some());
+	
+	let p = op.unwrap();
+	
+	assert_eq!(PacketType::GsnRegisterHost, p.msg_type);
+}
+
+#[test]
+fn ts_protocol_packet_deserialise_f() {
+	// Test bad
+	let bytes : [u8;14] = [128,0, 0,0,0,33, 127,0,0,1, 192,168,0,255];
+	let op = Packet::deserialise(&bytes);
+	
+	assert!(op.is_none());
 }
