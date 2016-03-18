@@ -1,4 +1,3 @@
-use std::mem::transmute;
 use ::serialise::*;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -63,7 +62,7 @@ impl NetSerial for Packet {
 		v.push( t as u8 );
 		
 		v.push( self.header.msg_part );
-		let bytes: [u8;4] = unsafe { transmute(self.header.msg_size.to_be()) };
+		let bytes = array_transmute_be_u32(self.header.msg_size);
 		
 		push_bytes(&mut v, &bytes);
 		push_bytes(&mut v, &self.header.addr_orig);  
