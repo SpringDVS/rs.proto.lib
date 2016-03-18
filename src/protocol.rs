@@ -1,6 +1,5 @@
 use std::mem::transmute;
-use ::serialise::NetSerial;
-use ::serialise::push_bytes;
+use ::serialise::*;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum PacketType {
@@ -9,14 +8,6 @@ pub enum PacketType {
 	GsnRegisterHost,
 	GsnUnregisterHost,
 
-}
-
-pub struct Packet {
-	pub msg_type: PacketType,
-	pub msg_part: u8,
-	pub msg_size: u32,
-	pub addr_orig: [u8;4],
-	pub addr_dest: [u8;4]
 }
 
 fn u8_packet_type(byte: u8) -> Option<PacketType> {
@@ -28,16 +19,39 @@ fn u8_packet_type(byte: u8) -> Option<PacketType> {
 	}
 }
 
+pub struct PacketHeader {
+	pub msg_type: PacketType,
+	pub msg_part: u8,
+	pub msg_size: u32,
+	pub addr_orig: [u8;4],
+	pub addr_dest: [u8;4]
+	
+}
+
+pub struct Packet {
+	header: PacketHeader,
+}
+
 impl Packet {
 	pub fn new(t: PacketType) -> Packet {
 		Packet {
-			msg_type: t,
-			msg_part: 0,
-			msg_size: 0,
-			addr_orig: [0,0,0,0],
-			addr_dest: [0,0,0,0]
+			header: PacketHeader {
+				msg_type: t,
+				msg_part: 0,
+				msg_size: 0,
+				addr_orig: [0,0,0,0],
+				addr_dest: [0,0,0,0],
+			}
 		}
-	} 
+	}
+	
+	pub fn header(&self) -> &PacketHeader {
+		&self.header
+	}
+	
+	pub fn mut_header(&mut self) -> &mut PacketHeader {
+		&mut self.header
+	}
 }
 
 impl NetSerial for Packet {
@@ -45,15 +59,15 @@ impl NetSerial for Packet {
 	fn serialise(&self) -> Vec<u8> {
 		
 		let mut v: Vec<u8> = Vec::new();
-		let t : u8 =  self.msg_type as u8 ;
+		let t : u8 =  self.header.msg_type as u8 ;
 		v.push( t as u8 );
 		
-		v.push( self.msg_part );
-		let bytes: [u8;4] = unsafe { transmute(self.msg_size.to_be()) };
+		v.push( self.header.msg_part );
+		let bytes: [u8;4] = unsafe { transmute(self.header.msg_size.to_be()) };
 		
 		push_bytes(&mut v, &bytes);
-		push_bytes(&mut v, &self.addr_orig);  
-		push_bytes(&mut v, &self.addr_dest);
+		push_bytes(&mut v, &self.header.addr_orig);  
+		push_bytes(&mut v, &self.header.addr_dest);
 		
 		v
 	}
@@ -65,8 +79,14 @@ impl NetSerial for Packet {
 			_ => op.unwrap()
 		};
 		
-		let p = Packet::new(pt);
-		
+		let mut p = Packet::new(pt);
+		{
+			let h = p.mut_header();
+			
+			h.msg_size = u32_transmute_be_arr(&bytes[2..6]);
+			h.addr_orig = byte_slice_4array(&bytes[6..10]);
+			h.addr_dest = byte_slice_4array(&bytes[10..14]);
+		}
 		Some(p)
 	}
 }
@@ -79,30 +99,28 @@ impl NetSerial for Packet {
 #[test]
 fn ts_protocol_packet_serialise_s() {
 	let mut p = Packet::new(PacketType::GsnRegisterHost);
-	p.msg_part = 0;
-	p.msg_size = 101;
-	p.addr_orig = [192,168,1,1];
-	p.addr_dest = [192,168,1,2];
+	
+	{
+		let mut h = p.mut_header();
+		h.msg_part = 0;
+		h.msg_size = 101;
+		h.addr_orig = [192,168,1,1];
+		h.addr_dest = [192,168,1,2];
+	}
 	
 	let serial = p.serialise();
 	
 	assert_eq!(1, serial[0]);	// type
 	assert_eq!(0, serial[1]);	// part
 	
-	assert_eq!(0, serial[2]);	// int32
+	assert_eq!(0, serial[2]);	// uint32
 	assert_eq!(0, serial[3]);
 	assert_eq!(0, serial[4]);
 	assert_eq!(101, serial[5]);
 	
-	assert_eq!(192, serial[6]); // addr_orig
-	assert_eq!(168, serial[7]);
-	assert_eq!(1, serial[8]);
-	assert_eq!(1, serial[9]);
-	
-	assert_eq!(192, serial[10]); // addr_dest
-	assert_eq!(168, serial[11]);
-	assert_eq!(1, serial[12]);
-	assert_eq!(2, serial[13]);
+	assert_eq!([192,168,1,1], byte_slice_4array(&serial[6..10]));
+
+	assert_eq!([192,168,1,2], byte_slice_4array(&serial[10..14]));
 	
 }
 
@@ -116,7 +134,9 @@ fn ts_protocol_packet_deserialise_p() {
 	
 	let p = op.unwrap();
 	
-	assert_eq!(PacketType::GsnRegisterHost, p.msg_type);
+	assert_eq!(PacketType::GsnRegisterHost, p.header().msg_type);
+	assert_eq!(33, p.header().msg_size);
+	assert_eq!([192,168,0,255], p.header().addr_dest);
 }
 
 #[test]
