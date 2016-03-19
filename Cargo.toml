@@ -2,6 +2,6 @@
 name = "spring_dvs"
 version = "0.1.0"
 authors = ["Charlie Fyvie-Gauld <cfg@zunautica.org>"]
-
+license = "GPLv3"
 [dependencies]
 
