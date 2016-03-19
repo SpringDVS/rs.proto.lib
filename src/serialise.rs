@@ -31,3 +31,10 @@ pub fn array_transmute_le_u32(d: u32) -> [u8;4] {
 pub fn byte_slice_4array(a: &[u8]) -> [u8;4] {
 	[ a[0], a[1], a[2], a[3] ]
 }
+
+pub fn deserialise_bool(byte: u8) -> bool {
+	match byte {
+		0 => false,
+		_ => true
+	}
+}
