@@ -15,3 +15,10 @@ pub enum DvspRcode {
 	MalformedContent = 104,
 	Ok = 200,
 }
+
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum DvspNodeType {
+	Undefined = 0,
+	Root = 1,
+	Org = 2,
+}
