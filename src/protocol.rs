@@ -1,3 +1,5 @@
+use std::str;
+
 use ::serialise::*;
 use ::enums::*;
 
@@ -25,6 +27,23 @@ fn u8_rcode_type(byte: u8) -> Option<DvspRcode> {
 	}
 }
 
+fn u8_service_type(byte: u8) -> Option<DvspService> {
+	match byte {
+		0 => Some(DvspService::Undefined),
+		1 => Some(DvspService::Dvsp),
+		2 => Some(DvspService::Http),
+		_ => None
+	}
+}
+
+fn u8_valid_nodetype(field: u8) -> bool {
+	if field > Bounds::MaxNodeType as u8 {
+		return false
+	}
+	
+	return true
+}
+
 // ----- Data Structures ----- \\
 
 pub struct PacketHeader {
@@ -45,7 +64,13 @@ pub struct FrameResponse {
 	pub code: DvspRcode,
 }
 
-
+pub struct FrameRegister {
+	pub register: bool,
+	pub ntype: u8,
+	pub len: u8,
+	pub service: DvspService,
+	pub nodereg: String,
+}
 
 // ----- Implementations ----- \\
 
@@ -147,6 +172,52 @@ impl NetSerial for FrameResponse {
 		};
 		
 		Some(FrameResponse::new(rc))
+	}
+}
+
+impl FrameRegister {
+	pub fn new(register: bool, ntype: u8, service: DvspService, nodereg: String) -> FrameRegister {
+		FrameRegister {
+			register: register,
+			ntype: ntype,
+			len: nodereg.len() as u8,
+			service: service,
+			nodereg: nodereg,
+		}
+	} 
+}
+
+impl NetSerial for FrameRegister {
+	fn serialise(&self) -> Vec<u8> {
+		
+		let mut v: Vec<u8> = Vec::new();
+		v.push(self.register as u8);
+		v.push(self.ntype);
+		v.push(self.len);
+		v.push(self.service as u8);
+		push_bytes(&mut v, self.nodereg.as_bytes());		
+		v
+	}
+
+	fn deserialise(bytes: &[u8]) -> Option<FrameRegister> {
+
+		let service = match u8_service_type(bytes[3]) {
+			None => return None,
+			Some(op) => op
+		};
+		
+		if u8_valid_nodetype(bytes[1]) == false 
+		|| bytes[2] > Bounds::FrameRegisterLen as u8 {
+			return None
+		}
+
+		Some(FrameRegister {
+				register: deserialise_bool(bytes[0]),
+				ntype: bytes[1],
+				len: bytes[2],
+				service: service,
+				nodereg: String::from(str::from_utf8(&bytes[4..]).unwrap()) // unwrap Dangerzone
+		})
 	}	
 }
 
@@ -218,7 +289,7 @@ fn ts_protocol_frame_response_serialise_p() {
 
 #[test]
 fn ts_protocol_frame_response_deserialis_p() {
-	// Test fail
+	// Test pass
 	let bytes = [200,0,0,0];
 	let op = FrameResponse::deserialise(&bytes);
 	
@@ -236,6 +307,69 @@ fn ts_protocol_frame_response_deserialis_f() {
 	let op = FrameResponse::deserialise(&bytes);
 	
 	assert!(op.is_none());
+}
+
+#[test]
+fn ts_protocol_frame_register_serialise_p() {
+	// Test pass
+	let fr = FrameRegister::new(
+		true,
+		DvspNodeType::Org as u8, 
+		DvspService::Http, 
+		String::from("abc")
+	);
+	
+	let bytes = fr.serialise();
+	
+	assert_eq!(1, bytes[0]); // register
+	assert_eq!(2, bytes[1]); // type
+	assert_eq!(3, bytes[2]); // len
+	assert_eq!(2, bytes[3]); // service
+	
+	assert_eq!('a' as u8, bytes[4]);
+	assert_eq!('b' as u8, bytes[5]);
+	assert_eq!('c' as u8, bytes[6]);
+}
+
+#[test]
+fn ts_protocol_frame_register_deserialise_p() {
+	// Test pass
+	let bytes : [u8;7] = [1,2,3,1, 'a' as u8,'b' as u8,'c' as u8];
+	let op = FrameRegister::deserialise(&bytes);
+	
+	assert!(op.is_some());
+	
+	let frame = op.unwrap();
+	
+	assert_eq!(true, frame.register);
+	assert_eq!(2, frame.ntype);
+	assert_eq!(3, frame.len);
+	assert_eq!(DvspService::Dvsp, frame.service);
+	assert_eq!(String::from("abc"), frame.nodereg);
+}
+
+#[test]
+fn ts_protocol_frame_register_deserialise_f() {
+	// Test fail
+	
+	// Invalid node type
+	let mut bytes : [u8;7] = [1, Bounds::MaxNodeType as u8 + 1 ,3,1, 'a' as u8,'b' as u8,'c' as u8];
+	let op1 = FrameRegister::deserialise(&bytes);
+	assert!(op1.is_none());
+	
+	// Invalid node service
+	bytes[1] = 2;
+	bytes[3] = 100;
+	let op2 = FrameRegister::deserialise(&bytes);
+	assert!(op2.is_none());
+	
+	
+	// Invalid nodereg len
+	bytes[1] = 2;
+	bytes[3] = 1;
+	bytes[2] = Bounds::FrameRegisterLen as u8 + 1;
+	let op3 = FrameRegister::deserialise(&bytes);
+	assert!(op3.is_none());
 }
 
 #[test]
