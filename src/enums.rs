@@ -35,7 +35,15 @@ pub enum DvspService {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
+pub enum DvspNodeState {
+	Disabled = 0,
+	Enabled = 1,
+	Unresponsive = 2,
+}
+
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Bounds {
 	MaxNodeType = 3,
 	FrameRegisterLen = 124,
 }
+
