@@ -22,3 +22,16 @@ pub enum DvspNodeType {
 	Root = 1,
 	Org = 2,
 }
+
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum DvspService {
+	Undefined = 0,
+	Dvsp = 1,
+	Http = 2,
+}
+
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum Bounds {
+	MaxNodeType = 3,
+	FrameRegisterLen = 124,
+}
