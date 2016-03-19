@@ -29,7 +29,7 @@ fn u8_rcode_type(byte: u8) -> Option<DvspRcode> {
 
 pub struct PacketHeader {
 	pub msg_type: DvspMsgType,
-	pub msg_part: u8,
+	pub msg_part: bool,
 	pub msg_size: u32,
 	pub addr_orig: [u8;4],
 	pub addr_dest: [u8;4]
@@ -46,6 +46,7 @@ pub struct FrameResponse {
 }
 
 
+
 // ----- Implementations ----- \\
 
 impl Packet {
@@ -53,7 +54,7 @@ impl Packet {
 		Packet {
 			header: PacketHeader {
 				msg_type: t,
-				msg_part: 0,
+				msg_part: false,
 				msg_size: 0,
 				addr_orig: [0,0,0,0],
 				addr_dest: [0,0,0,0],
@@ -91,7 +92,7 @@ impl NetSerial for Packet {
 		let t : u8 =  self.header.msg_type as u8 ;
 		v.push( t as u8 );
 		
-		v.push( self.header.msg_part );
+		v.push( self.header.msg_part as u8 );
 		let bytes = array_transmute_le_u32(self.header.msg_size);
 		
 		push_bytes(&mut v, &bytes);
@@ -111,6 +112,7 @@ impl NetSerial for Packet {
 		let mut p = Packet::new(pt);
 		{
 			let h = p.mut_header();
+			h.msg_part =  deserialise_bool(bytes[1]);
 			
 			h.msg_size = u32_transmute_le_arr(&bytes[2..6]);
 			h.addr_orig = byte_slice_4array(&bytes[6..10]);
@@ -147,6 +149,9 @@ impl NetSerial for FrameResponse {
 		Some(FrameResponse::new(rc))
 	}	
 }
+
+
+
 // ------- Testing  -------- \\
 
 #[test]
@@ -155,7 +160,7 @@ fn ts_protocol_packet_serialise_s() {
 	
 	{
 		let mut h = p.mut_header();
-		h.msg_part = 0;
+		h.msg_part = true;
 		h.msg_size = 101;
 		h.addr_orig = [192,168,1,1];
 		h.addr_dest = [192,168,1,2];
@@ -164,7 +169,7 @@ fn ts_protocol_packet_serialise_s() {
 	let serial = p.serialise();
 	
 	assert_eq!(1, serial[0]);	// type
-	assert_eq!(0, serial[1]);	// part
+	assert_eq!(1, serial[1]);	// part
 	
 	assert_eq!(101, serial[2]);	// uint32
 	assert_eq!(0, serial[3]);
@@ -188,6 +193,7 @@ fn ts_protocol_packet_deserialise_p() {
 	let p = op.unwrap();
 	
 	assert_eq!(DvspMsgType::GsnRegistration, p.header().msg_type);
+	assert_eq!(false, p.header().msg_part);
 	assert_eq!(33, p.header().msg_size);
 	assert_eq!([192,168,0,255], p.header().addr_dest);
 }
