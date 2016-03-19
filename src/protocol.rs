@@ -41,6 +41,15 @@ fn u8_service_type(byte: u8) -> Option<DvspService> {
 	}
 }
 
+fn u8_status_type(byte: u8) -> Option<DvspNodeState> {
+	match byte {
+		0 => Some(DvspNodeState::Disabled),
+		1 => Some(DvspNodeState::Enabled),
+		2 => Some(DvspNodeState::Unresponsive),
+		_ => None
+	}
+}
+
 fn u8_valid_nodetype(field: u8) -> bool {
 	if field > Bounds::MaxNodeType as u8 {
 		return false
@@ -65,11 +74,16 @@ pub struct Packet {
 	content: Vec<u8>,
 }
 
-pub struct FrameResponse {
+pub struct FrameResponse {	// Response
 	pub code: DvspRcode,
 }
 
-pub struct FrameRegister {
+pub struct FrameNodeStatus {	// Response
+	pub code: DvspRcode,
+	pub status: DvspNodeState
+}
+
+pub struct FrameRegister { 	// Request
 	pub register: bool,
 	pub ntype: u8,
 	pub len: u8,
@@ -160,6 +174,15 @@ impl FrameResponse {
 
 }
 
+impl FrameNodeStatus {
+	pub fn new(status: DvspNodeState) -> FrameNodeStatus {
+		FrameNodeStatus {
+			code: DvspRcode::Ok,
+			status: status
+		}
+	}
+}
+
 impl NetSerial for FrameResponse {
 	
 	fn serialise(&self) -> Vec<u8> {
@@ -170,13 +193,43 @@ impl NetSerial for FrameResponse {
 	}
 
 	fn deserialise(bytes: &[u8]) -> Option<FrameResponse> {
-		let op = u8_rcode_type(bytes[0]);
-		let rc = match op {
+
+		let rc = match u8_rcode_type(bytes[0]) {
 			None => return None,
-			_ => op.unwrap()
+			Some(op) => op
 		};
 		
 		Some(FrameResponse::new(rc))
+	}
+}
+
+
+impl NetSerial for FrameNodeStatus {
+	
+	fn serialise(&self) -> Vec<u8> {
+		
+		let mut v: Vec<u8> = Vec::new();
+		push_bytes(&mut v, & array_transmute_le_u32(self.code as u32));
+		v.push(self.status as u8);
+		v
+	}
+
+	fn deserialise(bytes: &[u8]) -> Option<FrameNodeStatus> {
+
+		let rc = match u8_rcode_type(bytes[0]) {
+			None => return None,
+			Some(op) => op
+		};
+
+		let status = match u8_status_type(bytes[4]) {
+			None => return None,
+			Some(op) => op			
+		};
+
+		Some(FrameNodeStatus {
+				code: rc,
+				status: status
+		})
 	}
 }
 
