@@ -2,8 +2,10 @@
  * Author: 	Charlie Fyvie-Gauld (cfg@zunautica.org)
  * License: GPLv3 (http://www.gnu.org/licenses/gpl-3.0.txt)
  */
-use ::protocol::*
-use ::serialise::*
+extern crate spring_dvs;
+use spring_dvs::protocol::*;
+use spring_dvs::serialise::*;
+use spring_dvs::enums::*;
 
 // ------- Testing  -------- \\
 
@@ -70,7 +72,7 @@ fn ts_protocol_frame_response_serialise_p() {
 }
 
 #[test]
-fn ts_protocol_frame_response_deserialis_p() {
+fn ts_protocol_frame_response_deserialise_p() {
 	// Test pass
 	let bytes = [200,0,0,0];
 	let op = FrameResponse::deserialise(&bytes);
@@ -83,12 +85,56 @@ fn ts_protocol_frame_response_deserialis_p() {
 }
 
 #[test]
-fn ts_protocol_frame_response_deserialis_f() {
+fn ts_protocol_frame_response_deserialise_f() {
 	// Test fail
 	let bytes = [0,200,0,0];
 	let op = FrameResponse::deserialise(&bytes);
 	
 	assert!(op.is_none());
+}
+
+#[test]
+fn ts_protocol_frame_node_status_serialise_p() {
+	// Test pass
+	let fr = FrameNodeStatus::new(DvspNodeState::Enabled);
+	let bytes = fr.serialise();
+	
+	assert_eq!([200,0,0,0], byte_slice_4array(&bytes[0..4]));
+	assert_eq!(1, bytes[4]);
+}
+
+#[test]
+fn ts_protocol_frame_response_deserialis_p() {
+	// Test pass
+	let bytes = [200,0,0,0, 2];
+	let op = FrameNodeStatus::deserialise(&bytes);
+	
+	assert!(op.is_some());
+	
+	let frame = op.unwrap();
+	
+	assert_eq!(DvspRcode::Ok, frame.code);
+	assert_eq!(DvspNodeState::Unresponsive, frame.status);
+}
+
+#[test]
+fn ts_protocol_frame_node_status_deserialise_f() {
+	// Test fail
+	
+	// Invalid rcode
+	let mut bytes = [0,200,0,0, 2];
+	let op1 = FrameNodeStatus::deserialise(&bytes);
+	
+	assert!(op1.is_none());
+	
+	bytes[0] = 200;
+	bytes[1] = 0;
+	bytes[4] = 5;	
+
+	let op2 = FrameNodeStatus::deserialise(&bytes);
+	
+	assert!(op2.is_none());
+	
 }
 
 #[test]
