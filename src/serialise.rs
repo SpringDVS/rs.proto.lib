@@ -3,10 +3,11 @@
  * License: GPLv3 (http://www.gnu.org/licenses/gpl-3.0.txt)
  */
 use std::mem::transmute;
+use ::enums::Failure;
 
 pub trait NetSerial : Sized {
 	fn serialise(&self) -> Vec<u8>;
-	fn deserialise(bytes: &[u8]) -> Option<Self>;
+	fn deserialise(bytes: &[u8]) -> Result<Self, Failure>;
 }
 
 pub fn push_bytes(v: &mut Vec<u8>, bytes: &[u8]) {

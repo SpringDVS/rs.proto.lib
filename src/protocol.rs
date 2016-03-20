@@ -83,6 +83,10 @@ pub struct FrameNodeStatus {	// Response
 	pub status: DvspNodeState
 }
 
+pub struct FrameNetwork { // Response
+	pub list: Vec<u8>,
+}
+
 pub struct FrameRegister { 	// Request
 	pub register: bool,
 	pub ntype: u8,
@@ -115,15 +119,22 @@ impl Packet {
 		&mut self.header
 	}
 	
-	pub fn write_content(&mut self, bytes: &[u8]) {
-		push_bytes(&mut self.content, bytes)
+	pub fn write_content(&mut self, bytes: &[u8]) -> Result<Success,Failure> {
+		
+		if bytes.len() > Bounds::PacketContentSize as usize {
+			return Err(Failure::OutOfBounds);
+		} else {
+			push_bytes(&mut self.content, bytes);	
+			Ok(Success::Ok)
+		}
+		
 	}
 	
 	pub fn content_raw(&self) -> &Vec<u8> {
 		&self.content
 	}
 	
-	pub fn content_as<T: NetSerial>(&self) -> Option<T> {
+	pub fn content_as<T: NetSerial>(&self) -> Result<T,Failure> {
 		T::deserialise(self.content.as_slice())
 	}
 }
@@ -146,11 +157,11 @@ impl NetSerial for Packet {
 		v
 	}
 
-	fn deserialise(bytes: &[u8]) -> Option<Packet> {
-		let op = u8_packet_type(bytes[0]);
-		let pt = match op {
-			None => return None,
-			_ => op.unwrap()
+	fn deserialise(bytes: &[u8]) -> Result<Packet, Failure> {
+		
+		let pt = match u8_packet_type(bytes[0]) {
+			None => return Err(Failure::InvalidBytes),
+			Some(op) => op
 		};
 		
 		let mut p = Packet::new(pt);
@@ -162,7 +173,7 @@ impl NetSerial for Packet {
 			h.addr_orig = byte_slice_4array(&bytes[6..10]);
 			h.addr_dest = byte_slice_4array(&bytes[10..14]);
 		}
-		Some(p)
+		Ok(p)
 	}
 }
 
@@ -192,14 +203,14 @@ impl NetSerial for FrameResponse {
 		v
 	}
 
-	fn deserialise(bytes: &[u8]) -> Option<FrameResponse> {
+	fn deserialise(bytes: &[u8]) -> Result<FrameResponse,Failure> {
 
 		let rc = match u8_rcode_type(bytes[0]) {
-			None => return None,
+			None => return Err(Failure::InvalidBytes),
 			Some(op) => op
 		};
 		
-		Some(FrameResponse::new(rc))
+		Ok(FrameResponse::new(rc))
 	}
 }
 
@@ -214,22 +225,34 @@ impl NetSerial for FrameNodeStatus {
 		v
 	}
 
-	fn deserialise(bytes: &[u8]) -> Option<FrameNodeStatus> {
+	fn deserialise(bytes: &[u8]) -> Result<FrameNodeStatus, Failure> {
 
 		let rc = match u8_rcode_type(bytes[0]) {
-			None => return None,
+			None => return Err(Failure::InvalidBytes),
 			Some(op) => op
 		};
 
 		let status = match u8_status_type(bytes[4]) {
-			None => return None,
+			None => return Err(Failure::InvalidBytes),
 			Some(op) => op			
 		};
 
-		Some(FrameNodeStatus {
+		Ok(FrameNodeStatus {
 				code: rc,
 				status: status
 		})
+	}
+}
+
+impl FrameNetwork {
+	pub fn new(list: &str) -> FrameNetwork {
+
+		let mut v: Vec<u8> = Vec::new();
+		v.extend_from_slice(list.as_bytes());
+
+		FrameNetwork {
+			list: v 
+		}
 	}
 }
 
@@ -257,19 +280,19 @@ impl NetSerial for FrameRegister {
 		v
 	}
 
-	fn deserialise(bytes: &[u8]) -> Option<FrameRegister> {
+	fn deserialise(bytes: &[u8]) -> Result<FrameRegister, Failure> {
 
 		let service = match u8_service_type(bytes[3]) {
-			None => return None,
+			None => return Err(Failure::InvalidBytes),
 			Some(op) => op
 		};
 		
 		if u8_valid_nodetype(bytes[1]) == false 
 		|| bytes[2] > Bounds::FrameRegisterLen as u8 {
-			return None
-		}
+			return Err(Failure::OutOfBounds)
+		};
 
-		Some(FrameRegister {
+		Ok(FrameRegister {
 				register: deserialise_bool(bytes[0]),
 				ntype: bytes[1],
 				len: bytes[2],
