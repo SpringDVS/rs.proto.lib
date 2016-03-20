@@ -259,3 +259,16 @@ fn ts_protocol_packet_content_as_p() {
 	assert_eq!(DvspRcode::Ok, frame.code);
 }
 
+#[test]
+fn ts_protocol_packet_content_as_f() {
+	let mut p = Packet::new(DvspMsgType::Undefined);
+	
+	// Out of lower bounds
+	let bytes : [u8;2] = [0;2];
+	assert!(p.write_content(&bytes).is_ok());
+	
+	let r = p.content_as::<FrameResponse>();
+	
+	assert!(r.is_err());
+	assert_eq!(Failure::OutOfBounds, r.unwrap_err())
+}
