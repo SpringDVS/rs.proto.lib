@@ -46,6 +46,7 @@ pub enum Bounds {
 	MaxNodeType = 3,
 	PacketContentSize = 512,
 	FrameRegisterLen = 124,
+	NodeRegister = 125,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
