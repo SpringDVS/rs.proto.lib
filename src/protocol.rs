@@ -171,6 +171,10 @@ impl Packet {
 	}
 	
 	pub fn content_as<T: NetSerial>(&self) -> Result<T,Failure> {
+		
+		if self.content.len() < T::lower_bound() {
+			return Err(Failure::OutOfBounds);
+		}
 		T::deserialise(self.content.as_slice())
 	}
 }
