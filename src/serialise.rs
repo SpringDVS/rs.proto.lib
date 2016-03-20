@@ -8,6 +8,7 @@ use ::enums::Failure;
 pub trait NetSerial : Sized {
 	fn serialise(&self) -> Vec<u8>;
 	fn deserialise(bytes: &[u8]) -> Result<Self, Failure>;
+	fn lower_bound() -> usize;
 }
 
 pub fn push_bytes(v: &mut Vec<u8>, bytes: &[u8]) {
