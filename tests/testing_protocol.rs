@@ -83,16 +83,6 @@ fn ts_protocol_frame_response_deserialise_p() {
 }
 
 #[test]
-fn ts_protocol_frame_response_deserialise_f() {
-	// Test fail
-	let bytes = [0,200,0,0];
-	let op = FrameResponse::deserialise(&bytes);
-	
-	assert!(op.is_err());
-	assert_eq!(Failure::InvalidBytes, op.unwrap_err());
-}
-
-#[test]
 fn ts_protocol_frame_node_status_serialise_p() {
 	// Test pass
 	let fr = FrameNodeStatus::new(DvspNodeState::Enabled);
@@ -100,20 +90,6 @@ fn ts_protocol_frame_node_status_serialise_p() {
 	
 	assert_eq!([200,0,0,0], byte_slice_4array(&bytes[0..4]));
 	assert_eq!(1, bytes[4]);
-}
-
-#[test]
-fn ts_protocol_frame_response_deserialis_p() {
-	// Test pass
-	let bytes = [200,0,0,0, 2];
-	let op = FrameNodeStatus::deserialise(&bytes);
-	
-	assert!(op.is_ok());
-	
-	let frame = op.unwrap();
-	
-	assert_eq!(DvspRcode::Ok, frame.code);
-	assert_eq!(DvspNodeState::Unresponsive, frame.status);
 }
 
 #[test]
@@ -137,6 +113,30 @@ fn ts_protocol_frame_node_status_deserialise_f() {
 	assert!(op2.is_err());
 	assert_eq!(Failure::InvalidBytes, op2.unwrap_err());
 	
+}
+
+#[test]
+fn ts_protocol_frame_network_serialise_p() {
+	// Test pass
+	let fr = FrameNetwork::new("foobar");
+	let bytes = fr.serialise();
+	
+	assert_eq!('f' as u8, bytes[0]);
+	assert_eq!('o' as u8, bytes[1]);
+	assert_eq!('o' as u8, bytes[2]);
+	assert_eq!('b' as u8, bytes[3]);
+	assert_eq!('a' as u8, bytes[4]);
+	assert_eq!('r' as u8, bytes[5]);
+}
+
+#[test]
+fn ts_protocol_frame_network_deserialise_p() {
+	// Test pass
+	let bytes = vec!['f' as u8,'o' as u8,'o' as u8,'b' as u8,'a' as u8,'r' as u8];
+	let r = FrameNetwork::deserialise(&bytes);
+	
+	assert!(r.is_ok());
+	assert_eq!("foobar", String::from_utf8(r.unwrap().list).unwrap())	
 }
 
 #[test]

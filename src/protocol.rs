@@ -251,13 +251,27 @@ impl NetSerial for FrameNodeStatus {
 
 impl FrameNetwork {
 	pub fn new(list: &str) -> FrameNetwork {
-
 		let mut v: Vec<u8> = Vec::new();
 		v.extend_from_slice(list.as_bytes());
 
 		FrameNetwork {
 			list: v 
 		}
+	}
+}
+
+impl NetSerial for FrameNetwork {
+	
+	fn serialise(&self) -> Vec<u8> {
+		self.list.clone()
+	}
+
+	fn deserialise(bytes: &[u8]) -> Result<FrameNetwork,Failure> {
+		let mut v: Vec<u8> = Vec::new();
+		v.extend_from_slice(bytes);
+		Ok(FrameNetwork {
+				list: v
+		})
 	}
 }
 
