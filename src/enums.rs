@@ -44,6 +44,16 @@ pub enum DvspNodeState {
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Bounds {
 	MaxNodeType = 3,
+	PacketContentSize = 512,
 	FrameRegisterLen = 124,
 }
 
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum Failure {
+	OutOfBounds, InvalidArgument, InvalidBytes, InvalidConversion
+}
+
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum Success {
+	Ok	
+}
