@@ -55,11 +55,12 @@ fn ts_protocol_packet_deserialise_p() {
 
 #[test]
 fn ts_protocol_packet_deserialise_f() {
-	// Test bad
+	// Test fail - Invalid type
 	let bytes : [u8;14] = [128,0, 0,0,0,33, 127,0,0,1, 192,168,0,255];
-	let op = Packet::deserialise(&bytes);
+	let r = Packet::deserialise(&bytes);
 	
-	assert!(op.is_err());
+	assert!(r.is_err());
+	assert_eq!(Failure::InvalidBytes, r.unwrap_err());
 }
 
 #[test]
@@ -78,10 +79,7 @@ fn ts_protocol_frame_response_deserialise_p() {
 	let op = FrameResponse::deserialise(&bytes);
 	
 	assert!(op.is_ok());
-	
-	let frame = op.unwrap();
-	
-	assert_eq!(DvspRcode::Ok, frame.code);
+	assert_eq!(DvspRcode::Ok, op.unwrap().code);
 }
 
 #[test]
@@ -91,6 +89,7 @@ fn ts_protocol_frame_response_deserialise_f() {
 	let op = FrameResponse::deserialise(&bytes);
 	
 	assert!(op.is_err());
+	assert_eq!(Failure::InvalidBytes, op.unwrap_err());
 }
 
 #[test]
@@ -126,7 +125,9 @@ fn ts_protocol_frame_node_status_deserialise_f() {
 	let op1 = FrameNodeStatus::deserialise(&bytes);
 	
 	assert!(op1.is_err());
+	assert_eq!(Failure::InvalidBytes, op1.unwrap_err());
 	
+	// invalid node state
 	bytes[0] = 200;
 	bytes[1] = 0;
 	bytes[4] = 5;	
@@ -134,6 +135,7 @@ fn ts_protocol_frame_node_status_deserialise_f() {
 	let op2 = FrameNodeStatus::deserialise(&bytes);
 	
 	assert!(op2.is_err());
+	assert_eq!(Failure::InvalidBytes, op2.unwrap_err());
 	
 }
 
@@ -184,20 +186,22 @@ fn ts_protocol_frame_register_deserialise_f() {
 	let mut bytes : [u8;7] = [1, Bounds::MaxNodeType as u8 + 1 ,3,1, 'a' as u8,'b' as u8,'c' as u8];
 	let op1 = FrameRegister::deserialise(&bytes);
 	assert!(op1.is_err());
+	assert_eq!(Failure::InvalidBytes, op1.unwrap_err());
 	
 	// Invalid node service
 	bytes[1] = 2;
 	bytes[3] = 100;
 	let op2 = FrameRegister::deserialise(&bytes);
 	assert!(op2.is_err());
-	
+	assert_eq!(Failure::InvalidBytes, op2.unwrap_err());
 	
 	// Invalid nodereg len
-	bytes[1] = 2;
-	bytes[3] = 1;
+	bytes[1] = 0;
+	bytes[3] = 0;
 	bytes[2] = Bounds::FrameRegisterLen as u8 + 1;
 	let op3 = FrameRegister::deserialise(&bytes);
 	assert!(op3.is_err());
+	assert_eq!(Failure::OutOfBounds, op3.unwrap_err());
 }
 
 #[test]
