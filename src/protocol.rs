@@ -211,6 +211,10 @@ impl NetSerial for Packet {
 		}
 		Ok(p)
 	}
+	
+	fn lower_bound() -> usize {
+		14
+	}
 }
 
 
@@ -242,6 +246,10 @@ impl NetSerial for FrameResponse {
 		};
 		
 		Ok(FrameResponse::new(rcode))
+	}
+	
+	fn lower_bound() -> usize {
+		4
 	}
 }
 
@@ -285,6 +293,10 @@ impl NetSerial for FrameNodeStatus {
 				status: status
 		})
 	}
+	
+	fn lower_bound() -> usize {
+		5
+	}
 }
 
 
@@ -315,6 +327,10 @@ impl NetSerial for FrameNetwork {
 		Ok(FrameNetwork {
 				list: v
 		})
+	}
+	
+	fn lower_bound() -> usize {
+		0
 	}
 }
 
@@ -370,6 +386,10 @@ impl NetSerial for FrameNodeInfo {
 			name: String::from(str::from_utf8(&bytes[9..]).unwrap())
 		})
 	}
+	
+	fn lower_bound() -> usize {
+		9
+	}
 }
 
 
@@ -423,7 +443,11 @@ impl NetSerial for FrameRegister {
 			service: service,
 			nodereg: String::from(str::from_utf8(&bytes[4..]).unwrap()) // unwrap Dangerzone
 		})
-	}	
+	}
+	
+	fn lower_bound() -> usize {
+		4
+	}
 }
 
 
@@ -456,5 +480,9 @@ impl NetSerial for FrameStateUpdate {
 		};
 		
 		Ok(FrameStateUpdate::new(status))
+	}
+	
+	fn lower_bound() -> usize {
+		0
 	}
 }
