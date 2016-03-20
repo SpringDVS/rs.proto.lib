@@ -40,7 +40,7 @@ fn ts_protocol_packet_serialise_s() {
 #[test]
 fn ts_protocol_packet_deserialise_p() {
 	// Test good
-	let bytes : [u8;14] = [1,0, 0,0,0,33, 127,0,0,1, 192,168,0,255];
+	let bytes : [u8;14] = [1,0, 33,0,0,0, 127,0,0,1, 192,168,0,255];
 	let op = Packet::deserialise(&bytes);
 	
 	assert!(op.is_ok());
@@ -56,7 +56,7 @@ fn ts_protocol_packet_deserialise_p() {
 #[test]
 fn ts_protocol_packet_deserialise_f() {
 	// Test fail - Invalid type
-	let bytes : [u8;14] = [128,0, 0,0,0,33, 127,0,0,1, 192,168,0,255];
+	let bytes : [u8;14] = [128,0, 33,0,0,0, 127,0,0,1, 192,168,0,255];
 	let r = Packet::deserialise(&bytes);
 	
 	assert!(r.is_err());
@@ -81,6 +81,26 @@ fn ts_protocol_frame_response_deserialise_p() {
 	assert!(op.is_ok());
 	assert_eq!(DvspRcode::Ok, op.unwrap().code);
 }
+
+#[test]
+fn ts_protocol_frame_state_update_serialise_p() {
+	// Test pass
+	let fr = FrameStateUpdate::new(DvspNodeState::Enabled);
+	let bytes = fr.serialise();
+	
+	assert_eq!(1, bytes[0]);
+}
+
+#[test]
+fn ts_protocol_frame_state_update_deserialise_p() {
+	// Test pass
+	let bytes = [1];
+	let op = FrameStateUpdate::deserialise(&bytes);
+	
+	assert!(op.is_ok());
+	assert_eq!(DvspNodeState::Enabled, op.unwrap().status);
+}
+
 
 #[test]
 fn ts_protocol_frame_node_status_serialise_p() {
