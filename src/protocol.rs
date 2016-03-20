@@ -8,6 +8,10 @@ use std::str;
 use ::serialise::*;
 use ::enums::*;
 
+pub type Ipv4 = [u8;4];
+pub type Ipv6 = [u8;6];
+pub type NodeTypeField = u8;
+
 // ----- Helper Functions ----- \\
 
 fn u8_packet_type(byte: u8) -> Option<DvspMsgType> {
@@ -19,8 +23,8 @@ fn u8_packet_type(byte: u8) -> Option<DvspMsgType> {
 	}
 }
 
-fn u8_rcode_type(byte: u8) -> Option<DvspRcode> {
-	match byte {
+fn u32_rcode_type(bytes: u32) -> Option<DvspRcode> {
+	match bytes {
 		101 => Some(DvspRcode::NetspaceError),
 		102 => Some(DvspRcode::NetspaceDuplication),
 		103 => Some(DvspRcode::NetworkError),
@@ -58,6 +62,20 @@ fn u8_valid_nodetype(field: u8) -> bool {
 	return true
 }
 
+fn bytes_slice_to_ipv4(bytes: &[u8]) -> Option<Ipv4> {
+	if bytes.len() < 4 {
+		return None;
+	}
+	
+	let mut addr : Ipv4 = [0;4];
+	
+	for b in 0 .. 4 {
+		addr[b] = bytes[b]
+	}
+	
+	Some(addr)
+}
+
 // ----- Data Structures ----- \\
 #[derive(Debug)]
 pub struct PacketHeader {
@@ -92,12 +110,25 @@ pub struct FrameNetwork { // Response
 }
 
 #[derive(Debug)]
+pub struct FrameNodeInfo { // Response
+	pub code: DvspRcode,
+	pub ntype: NodeTypeField,
+	pub address: Ipv4,
+	pub name: String,
+}
+
+#[derive(Debug)]
 pub struct FrameRegister { 	// Request
 	pub register: bool,
 	pub ntype: u8,
 	pub len: u8,
 	pub service: DvspService,
 	pub nodereg: String,
+}
+
+#[derive(Debug)]
+pub struct FrameStateUpdate { 	// Request
+	pub status: DvspNodeState
 }
 
 // ----- Implementations ----- \\
@@ -182,21 +213,16 @@ impl NetSerial for Packet {
 	}
 }
 
+
+
+// ----- FrameResponse ------
+
 impl FrameResponse {
 
 	pub fn new(c: DvspRcode) -> FrameResponse {
 		FrameResponse { code: c }
 	}
 
-}
-
-impl FrameNodeStatus {
-	pub fn new(status: DvspNodeState) -> FrameNodeStatus {
-		FrameNodeStatus {
-			code: DvspRcode::Ok,
-			status: status
-		}
-	}
 }
 
 impl NetSerial for FrameResponse {
@@ -210,15 +236,27 @@ impl NetSerial for FrameResponse {
 
 	fn deserialise(bytes: &[u8]) -> Result<FrameResponse,Failure> {
 
-		let rc = match u8_rcode_type(bytes[0]) {
+		let rcode = match u32_rcode_type( u32_transmute_le_arr(&bytes[0..4]) ) {
 			None => return Err(Failure::InvalidBytes),
 			Some(op) => op
 		};
 		
-		Ok(FrameResponse::new(rc))
+		Ok(FrameResponse::new(rcode))
 	}
 }
 
+
+
+// ----- FrameNodeStatus ------
+
+impl FrameNodeStatus {
+	pub fn new(status: DvspNodeState) -> FrameNodeStatus {
+		FrameNodeStatus {
+			code: DvspRcode::Ok,
+			status: status
+		}
+	}
+}
 
 impl NetSerial for FrameNodeStatus {
 	
@@ -232,7 +270,7 @@ impl NetSerial for FrameNodeStatus {
 
 	fn deserialise(bytes: &[u8]) -> Result<FrameNodeStatus, Failure> {
 
-		let rc = match u8_rcode_type(bytes[0]) {
+		let rc = match u32_rcode_type(u32_transmute_le_arr(&bytes[0..4])) {
 			None => return Err(Failure::InvalidBytes),
 			Some(op) => op
 		};
@@ -248,6 +286,11 @@ impl NetSerial for FrameNodeStatus {
 		})
 	}
 }
+
+
+
+
+// ----- FrameNetwork ------
 
 impl FrameNetwork {
 	pub fn new(list: &str) -> FrameNetwork {
@@ -274,6 +317,65 @@ impl NetSerial for FrameNetwork {
 		})
 	}
 }
+
+
+
+
+// ----- FrameNodeInfo ------
+
+impl FrameNodeInfo {
+	pub fn new(ntype: NodeTypeField, address: Ipv4, name: &str ) -> FrameNodeInfo {
+		
+		FrameNodeInfo {
+			code: DvspRcode::Ok,
+			ntype: ntype,
+			address: address,
+			name: String::from(name),
+		}
+	}
+}
+
+impl NetSerial for FrameNodeInfo {
+	
+	fn serialise(&self) -> Vec<u8> {
+		let mut v: Vec<u8> = Vec::new();
+		
+		 v.extend_from_slice( &array_transmute_le_u32(self.code as u32) );
+		 v.push(self.ntype as u8);
+		 v.extend_from_slice(&self.address);
+		 v.extend_from_slice(&self.name.as_bytes());
+		 v
+	}
+
+	fn deserialise(bytes: &[u8]) -> Result<FrameNodeInfo,Failure> {
+		
+		let code = match u32_rcode_type(u32_transmute_le_arr(&bytes[0..4])) {
+			None => return Err(Failure::InvalidBytes),
+			Some(op) => op	
+		};
+		
+		if u8_valid_nodetype(bytes[4]) == false {
+			return Err(Failure::InvalidBytes);
+		}
+
+		let addr = match bytes_slice_to_ipv4(&bytes[5..9]) {
+			None => return return Err(Failure::OutOfBounds),
+			Some(op) => op
+ 		};
+		
+		Ok(FrameNodeInfo {
+			code: code,
+			ntype: bytes[4],
+			address: addr,
+			name: String::from(str::from_utf8(&bytes[9..]).unwrap())
+		})
+	}
+}
+
+
+
+
+// ----- FrameRegister ------
 
 impl FrameRegister {
 	pub fn new(register: bool, ntype: u8, service: DvspService, nodereg: String) -> FrameRegister {
@@ -315,11 +417,44 @@ impl NetSerial for FrameRegister {
 		}
 
 		Ok(FrameRegister {
-				register: deserialise_bool(bytes[0]),
-				ntype: bytes[1],
-				len: bytes[2],
-				service: service,
-				nodereg: String::from(str::from_utf8(&bytes[4..]).unwrap()) // unwrap Dangerzone
+			register: deserialise_bool(bytes[0]),
+			ntype: bytes[1],
+			len: bytes[2],
+			service: service,
+			nodereg: String::from(str::from_utf8(&bytes[4..]).unwrap()) // unwrap Dangerzone
 		})
 	}	
+}
+
+
+
+
+// ------- FrameStateUpdate ------- \\
+
+impl FrameStateUpdate {
+
+	pub fn new(state: DvspNodeState) -> FrameStateUpdate {
+		FrameStateUpdate { status: state }
+	}
+
+}
+
+impl NetSerial for FrameStateUpdate {
+	
+	fn serialise(&self) -> Vec<u8> {
+		
+		let mut v: Vec<u8> = Vec::new();
+		v.push(self.status as u8);	
+		v
+	}
+
+	fn deserialise(bytes: &[u8]) -> Result<FrameStateUpdate,Failure> {
+
+		let status = match u8_status_type(bytes[0]) {
+			None => return Err(Failure::InvalidBytes),
+			Some(op) => op
+		};
+		
+		Ok(FrameStateUpdate::new(status))
+	}
 }
