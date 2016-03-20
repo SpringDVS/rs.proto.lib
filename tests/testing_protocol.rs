@@ -63,6 +63,11 @@ fn ts_protocol_packet_deserialise_f() {
 	assert_eq!(Failure::InvalidBytes, r.unwrap_err());
 }
 
+
+
+
+
+
 #[test]
 fn ts_protocol_frame_response_serialise_p() {
 	// Test pass
@@ -81,6 +86,11 @@ fn ts_protocol_frame_response_deserialise_p() {
 	assert!(op.is_ok());
 	assert_eq!(DvspRcode::Ok, op.unwrap().code);
 }
+
+
+
+
+
 
 #[test]
 fn ts_protocol_frame_state_update_serialise_p() {
@@ -125,6 +135,10 @@ fn ts_protocol_frame_state_update_deserialise_p() {
 }
 
 
+
+
+
+
 #[test]
 fn ts_protocol_frame_node_status_serialise_p() {
 	// Test pass
@@ -158,6 +172,10 @@ fn ts_protocol_frame_node_status_deserialise_f() {
 	
 }
 
+
+
+
+
 #[test]
 fn ts_protocol_frame_network_serialise_p() {
 	// Test pass
@@ -179,8 +197,84 @@ fn ts_protocol_frame_network_deserialise_p() {
 	let r = FrameNetwork::deserialise(&bytes);
 	
 	assert!(r.is_ok());
-	assert_eq!("foobar", String::from_utf8(r.unwrap().list).unwrap())	
+	assert_eq!("foobar", String::from_utf8(r.unwrap().list).unwrap())
 }
+
+
+
+
+
+#[test]
+fn ts_protocol_frame_node_info_serialise_p() {
+	
+	// Test pass
+	let frame = FrameNodeInfo::new(DvspNodeType::Root as u8, [127,0,0,1], "foobar");
+	let bytes = frame.serialise();
+	
+	assert_eq!([200,0,0,0], bytes[0..4]);
+	assert_eq!(DvspNodeType::Root as u8, bytes[4]);
+	assert_eq!([127,0,0,1], bytes[5..9]);
+	assert!(bytes.len() > 9);
+	assert_eq!('f' as u8, bytes[9]);
+	assert_eq!('r' as u8, bytes[14]);
+	
+	let frame2 = FrameNodeInfo::new(DvspNodeType::Root as u8, [127,0,0,1], "");
+	let bytes2 = frame2.serialise();
+	
+	assert!(bytes2.len() == 9);
+}
+
+#[test]
+fn ts_protocol_frame_node_info_deserialise_p() {
+	
+	// Test pass
+	let mut frame = FrameNodeInfo::new(DvspNodeType::Root as u8, [127,0,0,1], "foobar");
+	let bytes = frame.serialise();
+	
+	let r = FrameNodeInfo::deserialise(&bytes);
+	
+	assert!(r.is_ok());
+	
+	let checker = r.unwrap();
+	
+	assert_eq!(frame.code, checker.code);
+	assert_eq!(frame.ntype, checker.ntype);
+	assert_eq!(frame.address, checker.address);
+	assert_eq!(frame.name, checker.name);
+	
+	frame.name = String::from("");
+	let bytes2 = frame.serialise();
+	let r2 = FrameNodeInfo::deserialise(&bytes2);
+	
+	assert!(r2.is_ok());
+	
+	let checker2 = r2.unwrap();
+	assert_eq!(frame.name, checker2.name);
+}
+
+#[test]
+fn ts_protocol_frame_node_info_deserialise_f() {
+	// Test Fail
+	
+	// Invalid response code
+	let bytes = [0,200,0,0, 1,  127,0,0,1, 'f' as u8];
+	let r = FrameNodeInfo::deserialise(&bytes);
+	
+	assert!(r.is_err());
+	assert_eq!(Failure::InvalidBytes, r.unwrap_err());
+	
+	// Invalid node type
+	let bytes2 = [200,0,0,0, 125,  127,0,0,1, 'f' as u8];
+	let r2 = FrameNodeInfo::deserialise(&bytes2);
+	
+	assert!(r2.is_err());
+	assert_eq!(Failure::InvalidBytes, r2.unwrap_err());
+}
+
+
+
+
+
 
 #[test]
 fn ts_protocol_frame_register_serialise_p() {
@@ -266,6 +360,11 @@ fn ts_protocol_frame_register_deserialise_f() {
 	assert_eq!(Failure::OutOfBounds, op3.unwrap_err());
 }
 
+
+
+
+
+
 #[test]
 fn ts_protocol_packet_write_content_p() {
 	let mut p = Packet::new(DvspMsgType::Undefined);
@@ -282,6 +381,11 @@ fn ts_protocol_packet_write_content_f() {
 	assert!(r.is_err());
 	assert_eq!(Failure::OutOfBounds, r.unwrap_err());
 }
+
+
+
+
+
 
 #[test]
 fn ts_protocol_packet_content_as_p() {
