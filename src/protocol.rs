@@ -128,7 +128,8 @@ pub struct FrameRegister { 	// Request
 
 #[derive(Debug)]
 pub struct FrameStateUpdate { 	// Request
-	pub status: DvspNodeState
+	pub status: DvspNodeState,
+	pub springname: String,
 }
 
 // ----- Implementations ----- \\
@@ -382,12 +383,17 @@ impl NetSerial for FrameNodeInfo {
 			None => return return Err(Failure::OutOfBounds),
 			Some(op) => op
  		};
+	
+		let mut name = String::new();
+		if bytes.len() > 9 {
+			name = String::from( str::from_utf8(&bytes[9..]).unwrap() ) // DANGERZONE: unwrap()
+		}	
 		
 		Ok(FrameNodeInfo {
 			code: code,
 			ntype: bytes[4],
 			address: addr,
-			name: String::from(str::from_utf8(&bytes[9..]).unwrap())
+			name: name,
 		})
 	}
 	
@@ -440,12 +446,18 @@ impl NetSerial for FrameRegister {
 			return Err(Failure::OutOfBounds)
 		}
 
+		
+		let mut reg = String::new();
+		if bytes.len() > 4 {
+			reg = String::from( str::from_utf8(&bytes[4..]).unwrap() ) // DANGERZONE: unwrap()
+		}
+		
 		Ok(FrameRegister {
 			register: deserialise_bool(bytes[0]),
 			ntype: bytes[1],
 			len: bytes[2],
 			service: service,
-			nodereg: String::from(str::from_utf8(&bytes[4..]).unwrap()) // unwrap Dangerzone
+			nodereg: reg 
 		})
 	}
 	
@@ -461,8 +473,11 @@ impl NetSerial for FrameRegister {
 
 impl FrameStateUpdate {
 
-	pub fn new(state: DvspNodeState) -> FrameStateUpdate {
-		FrameStateUpdate { status: state }
+	pub fn new(state: DvspNodeState, name: &str) -> FrameStateUpdate {
+		FrameStateUpdate { 
+			status: state,
+			springname: String::from(name) 
+		}
 	}
 
 }
@@ -473,6 +488,7 @@ impl NetSerial for FrameStateUpdate {
 		
 		let mut v: Vec<u8> = Vec::new();
 		v.push(self.status as u8);	
+		v.extend_from_slice(self.springname.as_bytes());
 		v
 	}
 
@@ -483,10 +499,15 @@ impl NetSerial for FrameStateUpdate {
 			Some(op) => op
 		};
 		
-		Ok(FrameStateUpdate::new(status))
+		let mut name = String::new();
+		if bytes.len() > 1 {
+			name = String::from( str::from_utf8(&bytes[1..]).unwrap() )
+		}
+		
+		Ok(FrameStateUpdate::new(status, name.as_ref()))
 	}
 	
 	fn lower_bound() -> usize {
-		0
+		1
 	}
 }
