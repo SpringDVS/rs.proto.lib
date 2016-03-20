@@ -43,7 +43,7 @@ fn ts_protocol_packet_deserialise_p() {
 	let bytes : [u8;14] = [1,0, 0,0,0,33, 127,0,0,1, 192,168,0,255];
 	let op = Packet::deserialise(&bytes);
 	
-	assert!(op.is_some());
+	assert!(op.is_ok());
 	
 	let p = op.unwrap();
 	
@@ -59,7 +59,7 @@ fn ts_protocol_packet_deserialise_f() {
 	let bytes : [u8;14] = [128,0, 0,0,0,33, 127,0,0,1, 192,168,0,255];
 	let op = Packet::deserialise(&bytes);
 	
-	assert!(op.is_none());
+	assert!(op.is_err());
 }
 
 #[test]
@@ -77,7 +77,7 @@ fn ts_protocol_frame_response_deserialise_p() {
 	let bytes = [200,0,0,0];
 	let op = FrameResponse::deserialise(&bytes);
 	
-	assert!(op.is_some());
+	assert!(op.is_ok());
 	
 	let frame = op.unwrap();
 	
@@ -90,7 +90,7 @@ fn ts_protocol_frame_response_deserialise_f() {
 	let bytes = [0,200,0,0];
 	let op = FrameResponse::deserialise(&bytes);
 	
-	assert!(op.is_none());
+	assert!(op.is_err());
 }
 
 #[test]
@@ -109,7 +109,7 @@ fn ts_protocol_frame_response_deserialis_p() {
 	let bytes = [200,0,0,0, 2];
 	let op = FrameNodeStatus::deserialise(&bytes);
 	
-	assert!(op.is_some());
+	assert!(op.is_ok());
 	
 	let frame = op.unwrap();
 	
@@ -125,7 +125,7 @@ fn ts_protocol_frame_node_status_deserialise_f() {
 	let mut bytes = [0,200,0,0, 2];
 	let op1 = FrameNodeStatus::deserialise(&bytes);
 	
-	assert!(op1.is_none());
+	assert!(op1.is_err());
 	
 	bytes[0] = 200;
 	bytes[1] = 0;
@@ -133,7 +133,7 @@ fn ts_protocol_frame_node_status_deserialise_f() {
 
 	let op2 = FrameNodeStatus::deserialise(&bytes);
 	
-	assert!(op2.is_none());
+	assert!(op2.is_err());
 	
 }
 
@@ -165,7 +165,7 @@ fn ts_protocol_frame_register_deserialise_p() {
 	let bytes : [u8;7] = [1,2,3,1, 'a' as u8,'b' as u8,'c' as u8];
 	let op = FrameRegister::deserialise(&bytes);
 	
-	assert!(op.is_some());
+	assert!(op.is_ok());
 	
 	let frame = op.unwrap();
 	
@@ -183,13 +183,13 @@ fn ts_protocol_frame_register_deserialise_f() {
 	// Invalid node type
 	let mut bytes : [u8;7] = [1, Bounds::MaxNodeType as u8 + 1 ,3,1, 'a' as u8,'b' as u8,'c' as u8];
 	let op1 = FrameRegister::deserialise(&bytes);
-	assert!(op1.is_none());
+	assert!(op1.is_err());
 	
 	// Invalid node service
 	bytes[1] = 2;
 	bytes[3] = 100;
 	let op2 = FrameRegister::deserialise(&bytes);
-	assert!(op2.is_none());
+	assert!(op2.is_err());
 	
 	
 	// Invalid nodereg len
@@ -197,21 +197,41 @@ fn ts_protocol_frame_register_deserialise_f() {
 	bytes[3] = 1;
 	bytes[2] = Bounds::FrameRegisterLen as u8 + 1;
 	let op3 = FrameRegister::deserialise(&bytes);
-	assert!(op3.is_none());
+	assert!(op3.is_err());
 }
 
 #[test]
-fn ts_protocol_packet_content_as() {
+fn ts_protocol_packet_write_content_p() {
+	let mut p = Packet::new(DvspMsgType::Undefined);
+	let bytes : [u8;500] = [0;500];
+	let r = p.write_content(&bytes);
+	assert!(r.is_ok());
+}
+
+#[test]
+fn ts_protocol_packet_write_content_f() {
+	let mut p = Packet::new(DvspMsgType::Undefined);
+	let bytes : [u8;513] = [0;513];
+	let r = p.write_content(&bytes);
+	assert!(r.is_err());
+	assert_eq!(Failure::OutOfBounds, r.unwrap_err());
+}
+
+#[test]
+fn ts_protocol_packet_content_as_p() {
 	let mut p = Packet::new(DvspMsgType::Undefined);
 	let fr = FrameResponse::new(DvspRcode::Ok);
 	
-	p.write_content(fr.serialise().as_slice());
+	let r = p.write_content(fr.serialise().as_slice());
+	
+	assert!(r.is_ok());
 	
 	let op = p.content_as::<FrameResponse>();
 	
-	assert!(op.is_some());
+	assert!(op.is_ok());
 	
 	let frame = op.unwrap();
 	
 	assert_eq!(DvspRcode::Ok, frame.code);
 }
+
