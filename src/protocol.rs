@@ -59,7 +59,7 @@ fn u8_valid_nodetype(field: u8) -> bool {
 }
 
 // ----- Data Structures ----- \\
-
+#[derive(Debug)]
 pub struct PacketHeader {
 	pub msg_type: DvspMsgType,
 	pub msg_part: bool,
@@ -69,24 +69,29 @@ pub struct PacketHeader {
 	
 }
 
+#[derive(Debug)]
 pub struct Packet {
 	header: PacketHeader,
 	content: Vec<u8>,
 }
 
+#[derive(Debug)]
 pub struct FrameResponse {	// Response
 	pub code: DvspRcode,
 }
 
+#[derive(Debug)]
 pub struct FrameNodeStatus {	// Response
 	pub code: DvspRcode,
 	pub status: DvspNodeState
 }
 
+#[derive(Debug)]
 pub struct FrameNetwork { // Response
 	pub list: Vec<u8>,
 }
 
+#[derive(Debug)]
 pub struct FrameRegister { 	// Request
 	pub register: bool,
 	pub ntype: u8,
@@ -287,10 +292,13 @@ impl NetSerial for FrameRegister {
 			Some(op) => op
 		};
 		
-		if u8_valid_nodetype(bytes[1]) == false 
-		|| bytes[2] > Bounds::FrameRegisterLen as u8 {
+		if u8_valid_nodetype(bytes[1]) == false {
+			return Err(Failure::InvalidBytes)
+		} 
+		
+		if bytes[2] > Bounds::FrameRegisterLen as u8 {
 			return Err(Failure::OutOfBounds)
-		};
+		}
 
 		Ok(FrameRegister {
 				register: deserialise_bool(bytes[0]),
