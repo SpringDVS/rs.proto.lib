@@ -85,10 +85,20 @@ fn ts_protocol_frame_response_deserialise_p() {
 #[test]
 fn ts_protocol_frame_state_update_serialise_p() {
 	// Test pass
-	let fr = FrameStateUpdate::new(DvspNodeState::Enabled);
+	let fr = FrameStateUpdate::new(DvspNodeState::Enabled, "springtime");
 	let bytes = fr.serialise();
 	
 	assert_eq!(1, bytes[0]);
+	assert!( { bytes.len() == 11 } );
+	assert_eq!('s' as u8, bytes[1]);
+	assert_eq!('e' as u8, bytes[10]);
+	
+	// Test pass
+	let fr = FrameStateUpdate::new(DvspNodeState::Enabled, "");
+	let bytes = fr.serialise();
+	
+	assert_eq!(1, bytes[0]);
+	assert!( { bytes.len() == 1 } );
 }
 
 #[test]
@@ -98,7 +108,20 @@ fn ts_protocol_frame_state_update_deserialise_p() {
 	let op = FrameStateUpdate::deserialise(&bytes);
 	
 	assert!(op.is_ok());
-	assert_eq!(DvspNodeState::Enabled, op.unwrap().status);
+	
+	let frame = op.unwrap();
+	assert_eq!(DvspNodeState::Enabled, frame.status);
+	assert_eq!("", frame.springname);
+	
+	let bytes2 = [1,'f' as u8, 'o' as u8, 'o' as u8];
+	
+	let op = FrameStateUpdate::deserialise(&bytes2);
+	
+	assert!(op.is_ok());
+	
+	let frame2 = op.unwrap();
+	assert_eq!(DvspNodeState::Enabled, frame2.status);
+	assert_eq!("foo", frame2.springname);
 }
 
 
@@ -179,6 +202,17 @@ fn ts_protocol_frame_register_serialise_p() {
 	assert_eq!('a' as u8, bytes[4]);
 	assert_eq!('b' as u8, bytes[5]);
 	assert_eq!('c' as u8, bytes[6]);
+	
+	let fr2 = FrameRegister::new(
+		true,
+		DvspNodeType::Org as u8, 
+		DvspService::Http, 
+		String::from("")
+	);
+	
+	let bytes2 = fr2.serialise();
+	assert!(bytes2.len() == FrameRegister::lower_bound());
+	
 }
 
 #[test]
@@ -196,6 +230,14 @@ fn ts_protocol_frame_register_deserialise_p() {
 	assert_eq!(3, frame.len);
 	assert_eq!(DvspService::Dvsp, frame.service);
 	assert_eq!(String::from("abc"), frame.nodereg);
+	
+	let bytes2 : [u8;4] = [1,2,3,1];
+	let op2 = FrameRegister::deserialise(&bytes2);
+	
+	assert!(op2.is_ok());
+	
+	let frame2 = op2.unwrap();
+	assert_eq!(String::from(""), frame2.nodereg);
 }
 
 #[test]
