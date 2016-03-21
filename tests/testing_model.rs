@@ -3,7 +3,7 @@
  * License: GPLv3 (http://www.gnu.org/licenses/gpl-3.0.txt)
  */
 extern crate spring_dvs;
-use spring_dvs::model::Node;
+use spring_dvs::model::*;
 use spring_dvs::enums::Failure;
 
 #[test]
@@ -46,4 +46,98 @@ fn ts_model_node_to_node_string_f() {
 	let r = Node::from_node_string(node_string);
 	assert!(r.is_ok());
 	assert_eq!(node_string, r.unwrap().to_node_string());
+}
+
+#[test]
+fn ts_model_url_new_basic_p() {
+	
+	let r = Url::new("spring://cci.esusx.uk");
+	
+	assert!(r.is_ok());
+	
+	let url = r.unwrap();
+	let gsn = url.gsn();
+	assert_eq!(gsn.len(), 3);
+	assert_eq!(gsn[0], "cci");
+	assert_eq!(gsn[1], "esusx");
+	assert_eq!(gsn[2], "uk");
+	assert_eq!(url.gtn(), "uk");
+}
+
+#[test]
+fn ts_model_url_new_basic_no_gtn_p() {
+	
+	let r = Url::new("spring://cci.esusx");
+	
+	assert!(r.is_ok());
+	
+	let url = r.unwrap();
+	let gsn = url.gsn();
+	assert_eq!(gsn.len(), 2);
+	assert_eq!(gsn[0], "cci");
+	assert_eq!(gsn[1], "esusx");
+	assert_eq!(url.gtn(), "");
+}
+
+#[test]
+fn ts_model_url_new_basic_glq_p() {
+	
+	let r = Url::new("spring://cci.esusx.uk:foo=bar");
+	
+	assert!(r.is_ok());
+	
+	let url = r.unwrap();
+	let gsn = url.gsn();
+	assert_eq!(gsn.len(), 3);
+	assert_eq!(gsn[0], "cci");
+	assert_eq!(gsn[1], "esusx");
+	assert_eq!(gsn[2], "uk");
+	assert_eq!(url.gtn(), "uk");
+	assert_eq!(url.glq(), "foo=bar");
+}
+
+#[test]
+fn ts_model_url_new_basic_glq_res_p() {
+	
+	let r = Url::new("spring://cci.esusx.uk:foo=bar/res");
+	
+	assert!(r.is_ok());
+	
+	let url = r.unwrap();
+	let gsn = url.gsn();
+	assert_eq!(gsn.len(), 3);
+	assert_eq!(gsn[0], "cci");
+	assert_eq!(gsn[1], "esusx");
+	assert_eq!(gsn[2], "uk");
+	assert_eq!(url.gtn(), "uk");
+	assert_eq!(url.glq(), "foo=bar");
+	assert_eq!(url.res(), "res");
+}
+
+#[test]
+fn ts_model_url_new_basic_glq_res_query_p() {
+	
+	let r = Url::new("spring://cci.esusx.uk:foo=bar/res?query:test");
+	
+	assert!(r.is_ok());
+	
+	let url = r.unwrap();
+	let gsn = url.gsn();
+	assert_eq!(gsn.len(), 3);
+	assert_eq!(gsn[0], "cci");
+	assert_eq!(gsn[1], "esusx");
+	assert_eq!(gsn[2], "uk");
+	assert_eq!(url.gtn(), "uk");
+	assert_eq!(url.glq(), "foo=bar");
+	assert_eq!(url.res(), "res");
+	assert_eq!(url.query(), "query:test");
+}
+
+#[test]
+fn ts_model_url_new_f() {
+	
+	let r = Url::new("cci.esusx.uk:foo=bar/res?query:test");
+	
+	assert!(r.is_err());
+	assert_eq!(Failure::InvalidFormat, r.unwrap_err());
 }

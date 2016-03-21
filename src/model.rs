@@ -18,6 +18,16 @@ pub struct Node {
 	state: DvspNodeState,
 }
 
+#[derive(Debug)]
+pub struct Url {
+	
+	gsn: Vec<String>,
+	gtn: String,
+	glq: String,
+	res: String,
+	query: String,
+}
+
 
 // --------- Implementations ----------- \\
 impl Node {
@@ -80,5 +90,80 @@ impl Node {
 	
 	pub fn to_node_register(&self) -> String {
 		format(format_args!("{},{}", self.springname, self.hostname))
+	}
+}
+
+impl Url {
+	
+	pub fn new(url: &str) -> Result<Url, Failure> {
+		
+		let initial : Vec<&str> = url.split("://").collect();
+
+		if initial[0] != "spring" || initial.len() < 2 {
+			return Err(Failure::InvalidFormat)
+		}
+
+		let mut gsn : Vec<String> = Vec::new();
+		let mut glq: &str = "";
+		let mut res: &str = "";
+		let mut query: &str = "";
+
+
+		let mut atoms : Vec<&str> = initial[1].split('?').collect();
+		if atoms.len() > 1 {
+			query = atoms[1]
+		}
+
+		atoms = atoms[0].split('/').collect();
+
+		if atoms.len() > 1 {
+			res = atoms[1]
+		}
+		
+		atoms = atoms[0].split(':').collect();
+
+		if atoms.len() > 1 {
+			glq = atoms[1]
+		}
+		
+		let v : Vec<&str> = atoms[0].split('.').collect();
+		
+		
+		let gtn = match v[v.len()-1] {
+			"uk" => "uk",
+			_ => ""
+		};
+		
+		for s in v {
+			gsn.push(String::from(s))
+		}
+		
+		Ok(Url {
+			gsn: gsn,
+			gtn: String::from(gtn),
+			glq: String::from(glq),
+			res: String::from(res),
+			query: String::from(query),
+		})
+	}
+	
+	pub fn gsn(&self) -> &Vec<String> {
+		&self.gsn
+	}
+	
+	pub fn gtn(&self) -> &str {
+		&self.gtn
+	}
+
+	pub fn glq(&self) -> &str {
+		&self.glq
+	}
+
+	pub fn query(&self) -> &str {
+		&self.query
+	}
+	
+	pub fn res(&self) -> &str {
+		&self.res
 	}
 }
