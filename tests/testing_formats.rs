@@ -5,6 +5,8 @@
 extern crate spring_dvs;
 use spring_dvs::formats::*;
 use spring_dvs::enums::Failure;
+use spring_dvs::model::Node;
+
 #[test]
 fn ts_formats_str_address_to_ipv4_p() {
 	
@@ -41,5 +43,18 @@ fn ts_formats_ipv4_to_str_address_p() {
 	let addr = ipv4_to_str_address([192,168,1,2]);
 	
 	assert_eq!("192.168.1.2", addr);
+}
+
+#[test]
+fn ts_formats_nodes_to_node_list_p() {
+	let mut v : Vec<Node> = Vec::new();
+	
+	v.push(Node::from_node_string("spring1,host1,192.168.1.1").unwrap());
+	v.push(Node::from_node_string("spring2,host2,192.168.1.2").unwrap());
+	
+	let list = nodes_to_node_list(&v);
+	
+	assert_eq!("spring1,host1,192.168.1.1;spring2,host2,192.168.1.2;", list);
+	
 }
 

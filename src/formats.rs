@@ -8,6 +8,8 @@ use std::fmt::format;
 use ::protocol::Ipv4;
 use ::enums::Failure;
 
+use ::model::Node;
+
 pub fn str_address_to_ipv4(address: &str) -> Result<Ipv4, Failure> {
 	let atom: Vec<&str> = address.split('.').collect();
 	
@@ -30,4 +32,13 @@ pub fn str_address_to_ipv4(address: &str) -> Result<Ipv4, Failure> {
 
 pub fn ipv4_to_str_address(address: Ipv4) -> String {
 	format(format_args!("{}.{}.{}.{}", address[0],address[1],address[2],address[3]))
+}
+
+pub fn nodes_to_node_list(nodes: &Vec<Node>) -> String {
+	let mut s = String::new();
+	for n in nodes {
+		s.push_str(&format(format_args!("{};", &n.to_node_string())));
+	}
+	
+	s
 }
