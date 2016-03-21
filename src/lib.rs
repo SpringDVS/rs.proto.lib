@@ -1,12 +1,9 @@
-/* Notice:	Copyright 2016, The Care Connections Initiative c.i.c.
- * Author: 	Charlie Fyvie-Gauld (cfg@zunautica.org)
+/* Notice:  Copyright 2016, The Care Connections Initiative c.i.c.
+ * Author:  Charlie Fyvie-Gauld (cfg@zunautica.org)
  * License: GPLv3 (http://www.gnu.org/licenses/gpl-3.0.txt)
  */
 pub mod protocol;
 pub mod serialise;
 pub mod enums;
-
-pub fn node_init() {
-	println!("SpringDVS Root GSN");
-   	
-}
+pub mod model;
+pub mod formats;
