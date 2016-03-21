@@ -49,7 +49,7 @@ impl Node {
 				address: addr,
 				
 				service: DvspService::Undefined,
-				state: DvspNodeState::Unresponsive,
+				state: DvspNodeState::Unspecified,
 			}
 		)
 	}
@@ -76,5 +76,9 @@ impl Node {
 	
 	pub fn to_node_string(&self) -> String {
 		format(format_args!("{},{},{}", self.springname, self.hostname, ipv4_to_str_address(self.address) ))
+	}
+	
+	pub fn to_node_register(&self) -> String {
+		format(format_args!("{},{}", self.springname, self.hostname))
 	}
 }
