@@ -3,6 +3,8 @@
  * License: GPLv3 (http://www.gnu.org/licenses/gpl-3.0.txt)
  */
 
+use std::fmt::format;
+
 use ::protocol::Ipv4;
 use ::enums::Failure;
 
@@ -24,4 +26,8 @@ pub fn str_address_to_ipv4(address: &str) -> Result<Ipv4, Failure> {
 	}
 
 	Ok(addr)
+}
+
+pub fn ipv4_to_str_address(address: Ipv4) -> String {
+	format(format_args!("{}.{}.{}.{}", address[0],address[1],address[2],address[3]))
 }
