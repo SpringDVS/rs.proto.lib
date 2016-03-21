@@ -208,27 +208,28 @@ fn ts_protocol_frame_network_deserialise_p() {
 fn ts_protocol_frame_node_info_serialise_p() {
 	
 	// Test pass
-	let frame = FrameNodeInfo::new(DvspNodeType::Root as u8, [127,0,0,1], "foobar");
+	let frame = FrameNodeInfo::new(DvspNodeType::Root as u8, DvspService::Http, [127,0,0,1], "foobar");
 	let bytes = frame.serialise();
 	
 	assert_eq!([200,0,0,0], bytes[0..4]);
 	assert_eq!(DvspNodeType::Root as u8, bytes[4]);
-	assert_eq!([127,0,0,1], bytes[5..9]);
-	assert!(bytes.len() > 9);
-	assert_eq!('f' as u8, bytes[9]);
-	assert_eq!('r' as u8, bytes[14]);
+	assert_eq!(DvspService::Http as u8, bytes[5]);
+	assert_eq!([127,0,0,1], bytes[6..10]);
+	assert!(bytes.len() > 10);
+	assert_eq!('f' as u8, bytes[10]);
+	assert_eq!('r' as u8, bytes[15]);
 	
-	let frame2 = FrameNodeInfo::new(DvspNodeType::Root as u8, [127,0,0,1], "");
+	let frame2 = FrameNodeInfo::new(DvspNodeType::Root as u8, DvspService::Http, [127,0,0,1], "");
 	let bytes2 = frame2.serialise();
 	
-	assert!(bytes2.len() == 9);
+	assert!(bytes2.len() == 10);
 }
 
 #[test]
 fn ts_protocol_frame_node_info_deserialise_p() {
 	
 	// Test pass
-	let mut frame = FrameNodeInfo::new(DvspNodeType::Root as u8, [127,0,0,1], "foobar");
+	let mut frame = FrameNodeInfo::new(DvspNodeType::Root as u8, DvspService::Http, [127,0,0,1], "foobar");
 	let bytes = frame.serialise();
 	
 	let r = FrameNodeInfo::deserialise(&bytes);
@@ -239,6 +240,7 @@ fn ts_protocol_frame_node_info_deserialise_p() {
 	
 	assert_eq!(frame.code, checker.code);
 	assert_eq!(frame.ntype, checker.ntype);
+	assert_eq!(frame.service, checker.service);
 	assert_eq!(frame.address, checker.address);
 	assert_eq!(frame.name, checker.name);
 	
@@ -257,18 +259,25 @@ fn ts_protocol_frame_node_info_deserialise_f() {
 	// Test Fail
 	
 	// Invalid response code
-	let bytes = [0,200,0,0, 1,  127,0,0,1, 'f' as u8];
+	let bytes = [0,200,0,0, 1, 1, 127,0,0,1, 'f' as u8];
 	let r = FrameNodeInfo::deserialise(&bytes);
 	
 	assert!(r.is_err());
 	assert_eq!(Failure::InvalidBytes, r.unwrap_err());
 	
 	// Invalid node type
-	let bytes2 = [200,0,0,0, 125,  127,0,0,1, 'f' as u8];
+	let bytes2 = [200,0,0,0, 125, 1,  127,0,0,1, 'f' as u8];
 	let r2 = FrameNodeInfo::deserialise(&bytes2);
 	
 	assert!(r2.is_err());
 	assert_eq!(Failure::InvalidBytes, r2.unwrap_err());
+	
+	// Invalid service type
+	let bytes = [200,0,0,0, 1, 125, 127,0,0,1, 'f' as u8];
+	let r = FrameNodeInfo::deserialise(&bytes);
+	
+	assert!(r.is_err());
+	assert_eq!(Failure::InvalidBytes, r.unwrap_err());
 }
 
 

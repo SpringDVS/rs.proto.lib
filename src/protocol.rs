@@ -113,6 +113,7 @@ pub struct FrameNetwork { // Response
 pub struct FrameNodeInfo { // Response
 	pub code: DvspRcode,
 	pub ntype: NodeTypeField,
+	pub service: DvspService,
 	pub address: Ipv4,
 	pub name: String,
 }
@@ -345,11 +346,12 @@ impl NetSerial for FrameNetwork {
 // ----- FrameNodeInfo ------
 
 impl FrameNodeInfo {
-	pub fn new(ntype: NodeTypeField, address: Ipv4, name: &str ) -> FrameNodeInfo {
+	pub fn new(ntype: NodeTypeField, service: DvspService, address: Ipv4, name: &str ) -> FrameNodeInfo {
 		
 		FrameNodeInfo {
 			code: DvspRcode::Ok,
 			ntype: ntype,
+			service: service,
 			address: address,
 			name: String::from(name),
 		}
@@ -363,6 +365,7 @@ impl NetSerial for FrameNodeInfo {
 		
 		 v.extend_from_slice( &array_transmute_le_u32(self.code as u32) );
 		 v.push(self.ntype as u8);
+		 v.push(self.service as u8);
 		 v.extend_from_slice(&self.address);
 		 v.extend_from_slice(&self.name.as_bytes());
 		 v
@@ -378,27 +381,33 @@ impl NetSerial for FrameNodeInfo {
 		if u8_valid_nodetype(bytes[4]) == false {
 			return Err(Failure::InvalidBytes);
 		}
+		
+		let service = match u8_service_type(bytes[5]) {
+			None => return Err(Failure::InvalidBytes),
+			Some(op) => op 
+		};
 
-		let addr = match bytes_slice_to_ipv4(&bytes[5..9]) {
+		let addr = match bytes_slice_to_ipv4(&bytes[6..10]) {
 			None => return return Err(Failure::OutOfBounds),
 			Some(op) => op
  		};
 	
 		let mut name = String::new();
 		if bytes.len() > 9 {
-			name = String::from( str::from_utf8(&bytes[9..]).unwrap() ) // DANGERZONE: unwrap()
+			name = String::from( str::from_utf8(&bytes[10..]).unwrap() ) // DANGERZONE: unwrap()
 		}	
 		
 		Ok(FrameNodeInfo {
 			code: code,
 			ntype: bytes[4],
+			service: service,
 			address: addr,
 			name: name,
 		})
 	}
 	
 	fn lower_bound() -> usize {
-		9
+		10
 	}
 }
 
