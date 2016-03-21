@@ -513,7 +513,7 @@ impl NetSerial for FrameStateUpdate {
 			name = String::from( str::from_utf8(&bytes[1..]).unwrap() )
 		}
 		
-		Ok(FrameStateUpdate::new(status, name.as_ref()))
+		Ok(FrameStateUpdate::new(status, &name))
 	}
 	
 	fn lower_bound() -> usize {
