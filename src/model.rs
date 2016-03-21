@@ -166,4 +166,33 @@ impl Url {
 	pub fn res(&self) -> &str {
 		&self.res
 	}
+	
+	pub fn to_string(&self) -> String {
+		
+		let mut s = "spring://".to_string();
+		let last = self.gsn.len()-1;
+		
+		for i in 0 .. last {
+			s.push_str(&self.gsn[i]);
+			s.push('.');
+		}
+		
+		s.push_str(&self.gsn[last]);
+		
+		if self.glq.len() > 0 {
+			s.push(':');
+			s.push_str(&self.glq);
+		}
+
+		if self.res.len() > 0 {
+			s.push('/');
+			s.push_str(&self.res);
+		}
+
+		if self.query.len() > 0 {
+			s.push('?');
+			s.push_str(&self.query);
+		}
+		s
+	}
 }

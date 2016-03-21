@@ -141,3 +141,47 @@ fn ts_model_url_new_f() {
 	assert!(r.is_err());
 	assert_eq!(Failure::InvalidFormat, r.unwrap_err());
 }
+
+#[test]
+fn ts_model_url_to_string_basic_p() {
+	let s = "spring://cci.esusx.uk";
+	let r = Url::new(s);
+	
+	assert!(r.is_ok());
+	let url = r.unwrap();
+	
+	assert_eq!(s, url.to_string());
+}
+
+#[test]
+fn ts_model_url_to_string_basic_glq_p() {
+	let s = "spring://cci.esusx.uk:foo=bar";
+	let r = Url::new(s);
+	
+	assert!(r.is_ok());
+	let url = r.unwrap();
+	
+	assert_eq!(s, url.to_string());
+}
+
+#[test]
+fn ts_model_url_to_string_basic_glq_res_p() {
+	let s = "spring://cci.esusx.uk:foo=bar/res";
+	let r = Url::new(s);
+	
+	assert!(r.is_ok());
+	let url = r.unwrap();
+	
+	assert_eq!(s, url.to_string());
+}
+
+#[test]
+fn ts_model_url_to_string_basic_glq_res_query_p() {
+	let s = "spring://cci.esusx.uk:foo=bar/res?query:test";
+	let r = Url::new(s);
+	
+	assert!(r.is_ok());
+	let url = r.unwrap();
+	
+	assert_eq!(s, url.to_string());
+}
