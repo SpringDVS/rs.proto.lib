@@ -146,10 +146,11 @@ impl Url {
 			query: String::from(query),
 		})
 	}
-	
+		
 	pub fn gsn(&self) -> &Vec<String> {
 		&self.gsn
 	}
+	
 	
 	pub fn gtn(&self) -> &str {
 		&self.gtn
@@ -194,5 +195,26 @@ impl Url {
 			s.push_str(&self.query);
 		}
 		s
+	}
+	
+}
+
+impl Clone for Url {
+	fn clone(&self) -> Url {
+		Url {
+			gsn: (&self).gsn.clone(),
+			gtn: (&self).gtn.to_string(),
+			glq: (&self).glq.to_string(),
+			res: (&self).res.to_string(),
+			query: (&self).query.to_string()
+		}
+	}
+	
+	fn clone_from(&mut self, source: &Url)  {
+			self.gsn = source.gsn().clone();
+			self.gtn = source.gtn().to_string();
+			self.glq = source.glq().to_string();
+			self.res = source.res().to_string();
+			self.query = source.query().to_string();
 	}
 }

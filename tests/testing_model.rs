@@ -185,3 +185,30 @@ fn ts_model_url_to_string_basic_glq_res_query_p() {
 	
 	assert_eq!(s, url.to_string());
 }
+
+#[test]
+fn ts_model_url_clone_p() {
+	let s = "spring://cci.esusx.uk:foo=bar/res?query:test";
+	let r = Url::new(s);
+	
+	assert!(r.is_ok());
+	let url = r.unwrap();
+	
+	let cpy = url.clone();
+	
+	assert_eq!(s, cpy.to_string());
+}
+
+#[test]
+fn ts_model_url_clone_from_p() {
+	let s = "spring://cci.esusx.uk:foo=bar/res?query:test";
+	let r = Url::new(s);
+	
+	assert!(r.is_ok());
+	let url = r.unwrap();
+	
+	let mut cpy: Url = Url::new("spring://").unwrap();
+	cpy.clone_from(&url);
+	
+	assert_eq!(s, cpy.to_string());
+}
