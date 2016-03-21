@@ -39,6 +39,7 @@ pub enum DvspNodeState {
 	Disabled = 0,
 	Enabled = 1,
 	Unresponsive = 2,
+	Unspecified = 3,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
