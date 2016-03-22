@@ -29,21 +29,21 @@ pub struct Url {
 }
 
 pub trait Netspace {
-	pub fn gsn_nodes() -> Vec<Node>;
-	pub fn gsn_nodes_by_address(address: Ipv4) -> Vec<Node>;
-	pub fn gsn_nodes_by_type(types: NodeTypeField) -> Vec<Node>;
-	pub fn gsn_nodes_by_state(state: DvspNodeState) -> Vec<Node>;
+	fn gsn_nodes() -> Vec<Node>;
+	fn gsn_nodes_by_address(address: Ipv4) -> Vec<Node>;
+	fn gsn_nodes_by_type(types: NodeTypeField) -> Vec<Node>;
+	fn gsn_nodes_by_state(state: DvspNodeState) -> Vec<Node>;
 	
-	pub fn gsn_node_by_springname(name: String) -> Result<Node,Failure>;
-	pub fn gsn_node_by_hostname(name: String) -> Result<Node,Failure>;
+	fn gsn_node_by_springname(name: String) -> Result<Node,Failure>;
+	fn gsn_node_by_hostname(name: String) -> Result<Node,Failure>;
 	
-	pub fn gtn_root_nodes() -> Vec<Node>;
-	pub fn gtn_geosubs() -> Vec<String>;
+	fn gtn_root_nodes() -> Vec<Node>;
+	fn gtn_geosubs() -> Vec<String>;
 	
 }
 
 pub trait Metaspace {
-	pub fn gsn_resolve(metadata: String) -> Vec<String>;
+	fn gsn_resolve(metadata: String) -> Vec<String>;
 }
 
 // --------- Implementations ----------- \\
