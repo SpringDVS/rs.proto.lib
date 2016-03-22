@@ -4,7 +4,7 @@
  */
 use std::fmt::format;
 
-use ::protocol::{Ipv4};
+use ::protocol::{Ipv4, NodeTypeField};
 use ::enums::{DvspNodeState,DvspService,Failure};
 use ::formats::{str_address_to_ipv4, ipv4_to_str_address};
 
@@ -28,6 +28,23 @@ pub struct Url {
 	query: String,
 }
 
+pub trait Netspace {
+	pub fn gsn_nodes() -> Vec<Node>;
+	pub fn gsn_nodes_by_address(address: Ipv4) -> Vec<Node>;
+	pub fn gsn_nodes_by_type(types: NodeTypeField) -> Vec<Node>;
+	pub fn gsn_nodes_by_state(state: DvspNodeState) -> Vec<Node>;
+	
+	pub fn gsn_node_by_springname(name: String) -> Result<Node,Failure>;
+	pub fn gsn_node_by_hostname(name: String) -> Result<Node,Failure>;
+	
+	pub fn gtn_root_nodes() -> Vec<Node>;
+	pub fn gtn_geosubs() -> Vec<String>;
+	
+}
+
+pub trait Metaspace {
+	pub fn gsn_resolve(metadata: String) -> Vec<String>;
+}
 
 // --------- Implementations ----------- \\
 impl Node {
