@@ -14,7 +14,7 @@ pub type NodeTypeField = u8;
 
 // ----- Helper Functions ----- \\
 
-fn u8_packet_type(byte: u8) -> Option<DvspMsgType> {
+pub fn u8_packet_type(byte: u8) -> Option<DvspMsgType> {
 	match byte {
 		0 => Some(DvspMsgType::Undefined),
 		1 => Some(DvspMsgType::GsnRegistration),
@@ -23,7 +23,7 @@ fn u8_packet_type(byte: u8) -> Option<DvspMsgType> {
 	}
 }
 
-fn u32_rcode_type(bytes: u32) -> Option<DvspRcode> {
+pub fn u32_rcode_type(bytes: u32) -> Option<DvspRcode> {
 	match bytes {
 		101 => Some(DvspRcode::NetspaceError),
 		102 => Some(DvspRcode::NetspaceDuplication),
@@ -36,7 +36,7 @@ fn u32_rcode_type(bytes: u32) -> Option<DvspRcode> {
 	}
 }
 
-fn u8_service_type(byte: u8) -> Option<DvspService> {
+pub fn u8_service_type(byte: u8) -> Option<DvspService> {
 	match byte {
 		0 => Some(DvspService::Undefined),
 		1 => Some(DvspService::Dvsp),
@@ -45,7 +45,7 @@ fn u8_service_type(byte: u8) -> Option<DvspService> {
 	}
 }
 
-fn u8_status_type(byte: u8) -> Option<DvspNodeState> {
+pub fn u8_status_type(byte: u8) -> Option<DvspNodeState> {
 	match byte {
 		0 => Some(DvspNodeState::Disabled),
 		1 => Some(DvspNodeState::Enabled),
@@ -54,7 +54,7 @@ fn u8_status_type(byte: u8) -> Option<DvspNodeState> {
 	}
 }
 
-fn u8_valid_nodetype(field: u8) -> bool {
+pub fn u8_valid_nodetype(field: u8) -> bool {
 	if field > Bounds::MaxNodeType as u8 {
 		return false
 	}
@@ -157,7 +157,7 @@ impl Packet {
 		&mut self.header
 	}
 	
-	pub fn write_content(&mut self, bytes: &[u8]) -> Result<Success,Failure> {
+	pub fn write_content(&mut self, bytes: &[u8]) -> Result<Success, Failure> {
 		
 		if bytes.len() > Bounds::PacketContentSize as usize {
 			return Err(Failure::OutOfBounds);
