@@ -5,7 +5,7 @@
 use std::fmt::format;
 
 use ::protocol::{Ipv4, NodeTypeField};
-use ::enums::{DvspNodeState,DvspService,Failure};
+use ::enums::{DvspNodeState,DvspService,DvspNodeType,Failure};
 use ::formats::{str_address_to_ipv4, ipv4_to_str_address};
 
 #[derive(Debug)]
@@ -16,6 +16,7 @@ pub struct Node {
 	
 	service: DvspService,
 	state: DvspNodeState,
+	types: NodeTypeField,
 }
 
 #[derive(Debug)]
@@ -29,16 +30,16 @@ pub struct Url {
 }
 
 pub trait Netspace {
-	fn gsn_nodes() -> Vec<Node>;
-	fn gsn_nodes_by_address(address: Ipv4) -> Vec<Node>;
-	fn gsn_nodes_by_type(types: NodeTypeField) -> Vec<Node>;
-	fn gsn_nodes_by_state(state: DvspNodeState) -> Vec<Node>;
+	fn gsn_nodes(&self) -> Vec<Node>;
+	fn gsn_nodes_by_address(&self, address: Ipv4) -> Vec<Node>;
+	fn gsn_nodes_by_type(&self, types: NodeTypeField) -> Vec<Node>;
+	fn gsn_nodes_by_state(&self, state: DvspNodeState) -> Vec<Node>;
 	
-	fn gsn_node_by_springname(name: String) -> Result<Node,Failure>;
-	fn gsn_node_by_hostname(name: String) -> Result<Node,Failure>;
+	fn gsn_node_by_springname(&self, name: &str) -> Result<Node,Failure>;
+	fn gsn_node_by_hostname(&self, name: &str) -> Result<Node,Failure>;
 	
-	fn gtn_root_nodes() -> Vec<Node>;
-	fn gtn_geosubs() -> Vec<String>;
+	fn gtn_root_nodes(&self) -> Vec<Node>;
+	fn gtn_geosubs(&self) -> Vec<String>;
 	
 }
 
@@ -48,7 +49,7 @@ pub trait Metaspace {
 
 // --------- Implementations ----------- \\
 impl Node {
-	pub fn new( spring: String, host: String, address: Ipv4, service: DvspService, state: DvspNodeState ) -> Node {
+	pub fn new( spring: String, host: String, address: Ipv4, service: DvspService, state: DvspNodeState, types: NodeTypeField  ) -> Node {
 			
 		Node {
 			springname: spring,
@@ -57,6 +58,7 @@ impl Node {
 			
 			service: service,
 			state: state,
+			types: types,
 		}
 			
 	}
@@ -77,6 +79,7 @@ impl Node {
 				
 				service: DvspService::Undefined,
 				state: DvspNodeState::Unspecified,
+				types: DvspNodeType::Undefined as u8,
 			}
 		)
 	}
@@ -99,6 +102,10 @@ impl Node {
 	
 	pub fn state(&self) -> DvspNodeState {
 		self.state
+	}
+	
+	pub fn types(&self) -> NodeTypeField {
+		self.types
 	}
 	
 	pub fn to_node_string(&self) -> String {
