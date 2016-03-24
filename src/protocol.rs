@@ -50,6 +50,7 @@ pub fn u8_status_type(byte: u8) -> Option<DvspNodeState> {
 		0 => Some(DvspNodeState::Disabled),
 		1 => Some(DvspNodeState::Enabled),
 		2 => Some(DvspNodeState::Unresponsive),
+		3 => Some(DvspNodeState::Unspecified),
 		_ => None
 	}
 }
