@@ -53,6 +53,7 @@ pub enum Bounds {
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Failure {
 	OutOfBounds, InvalidArgument, InvalidBytes, InvalidConversion, InvalidFormat,
+	Duplicate,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
