@@ -5,7 +5,7 @@
 use std::fmt::format;
 
 use ::protocol::{Ipv4, NodeTypeField};
-use ::enums::{DvspNodeState,DvspService,DvspNodeType,Failure};
+use ::enums::{DvspNodeState,DvspService,DvspNodeType,Success,Failure};
 use ::formats::{str_address_to_ipv4, ipv4_to_str_address};
 
 #[derive(Debug)]
@@ -38,8 +38,13 @@ pub trait Netspace {
 	fn gsn_node_by_springname(&self, name: &str) -> Result<Node,Failure>;
 	fn gsn_node_by_hostname(&self, name: &str) -> Result<Node,Failure>;
 	
+	
 	fn gtn_root_nodes(&self) -> Vec<Node>;
 	fn gtn_geosubs(&self) -> Vec<String>;
+	
+	fn gsn_node_register(&self, node: &Node) -> Result<Success,Failure>;
+	fn gsn_node_unregister(&self, node: &Node) -> Result<Success,Failure>;
+	fn gsn_node_update(&self, node: &Node) -> Result<Success,Failure>;
 	
 }
 
