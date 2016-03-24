@@ -44,7 +44,10 @@ pub trait Netspace {
 	
 	fn gsn_node_register(&self, node: &Node) -> Result<Success,Failure>;
 	fn gsn_node_unregister(&self, node: &Node) -> Result<Success,Failure>;
-	fn gsn_node_update(&self, node: &Node) -> Result<Success,Failure>;
+
+	fn gsn_node_update_state(&self, node: &Node) -> Result<Success,Failure>;
+	fn gsn_node_update_service(&self, node: &Node) -> Result<Success,Failure>;
+	fn gsn_node_update_types(&self, node: &Node) -> Result<Success,Failure>;
 	
 }
 
@@ -89,6 +92,20 @@ impl Node {
 		)
 	}
 	
+	pub fn from_springname(springname: &str) -> Result<Node,Failure> {
+		Ok(
+			Node {
+				springname: String::from(springname),
+				hostname: String::from("unknown"),
+				address: [0,0,0,0],
+				
+				service: DvspService::Undefined,
+				state: DvspNodeState::Unspecified,
+				types: DvspNodeType::Undefined as u8,
+			}
+		)
+	}
+	
 	pub fn springname(&self) -> &str {
 		self.springname.as_ref()
 	}
@@ -105,13 +122,27 @@ impl Node {
 		self.service
 	}
 	
+	pub fn update_service(&mut self, service: DvspService) {
+		self.service = service;
+	}
+
+	
 	pub fn state(&self) -> DvspNodeState {
 		self.state
+	}
+
+	pub fn update_state(&mut self, state: DvspNodeState) {
+		self.state = state;
 	}
 	
 	pub fn types(&self) -> NodeTypeField {
 		self.types
 	}
+	
+	pub fn update_types(&mut self, types: NodeTypeField) {
+		self.types = types;
+	}
+
 	
 	pub fn to_node_string(&self) -> String {
 		format(format_args!("{},{},{}", self.springname, self.hostname, ipv4_to_str_address(self.address) ))
