@@ -136,6 +136,7 @@ pub struct FrameStateUpdate { 	// Request
 
 // ----- Implementations ----- \\
 
+
 impl Packet {
 	pub fn new(t: DvspMsgType) -> Packet {
 		Packet {
@@ -163,10 +164,10 @@ impl Packet {
 		if bytes.len() > Bounds::PacketContentSize as usize {
 			return Err(Failure::OutOfBounds);
 		} else {
-			push_bytes(&mut self.content, bytes);	
+			push_bytes(&mut self.content, bytes);
+			self.header.msg_size = bytes.len() as u32;	
 			Ok(Success::Ok)
 		}
-		
 	}
 	
 	pub fn content_raw(&self) -> &Vec<u8> {
@@ -196,7 +197,8 @@ impl NetSerial for Packet {
 		push_bytes(&mut v, &bytes);
 		push_bytes(&mut v, &self.header.addr_orig);  
 		push_bytes(&mut v, &self.header.addr_dest);
-		
+		let bytes : &[u8] = self.content.as_ref();
+		v.extend(bytes);
 		v
 	}
 
@@ -216,6 +218,8 @@ impl NetSerial for Packet {
 			h.addr_orig = byte_slice_4array(&bytes[6..10]);
 			h.addr_dest = byte_slice_4array(&bytes[10..14]);
 		}
+		
+		p.content = Vec::from(&bytes[Packet::lower_bound()..]);
 		Ok(p)
 	}
 	
