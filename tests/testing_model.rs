@@ -212,3 +212,15 @@ fn ts_model_url_clone_from_p() {
 	
 	assert_eq!(s, cpy.to_string());
 }
+
+#[test]
+fn ts_nodes_from_node_string_p() {
+	let nodelist = "s1,h1,192.168.0.1;s2,h2,192.168.0.2;s3,h3,192.168.0.3;";
+	let v = nodes_from_nodelist(nodelist);
+	
+	assert_eq!(3, v.len());
+	
+	assert_eq!("s1", v[0].springname());
+	assert_eq!("h2", v[1].hostname());
+	assert_eq!([192,168,0,3], v[2].address());
+}

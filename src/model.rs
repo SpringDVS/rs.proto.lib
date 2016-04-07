@@ -278,3 +278,19 @@ impl Clone for Url {
 			self.query = source.query().to_string();
 	}
 }
+
+pub fn nodes_from_nodelist(nodelist: &str) -> Vec<Node> {
+	let mut v : Vec<Node> = Vec::new();
+	let nstr : Vec<&str> = nodelist.split(";").collect();
+	
+	for n in nstr {
+		
+		let node = match Node::from_node_string(n) {
+			Err(_) => continue,
+			Ok(n) => n,
+		};
+		
+		v.push(node);
+	}
+	v
+}
