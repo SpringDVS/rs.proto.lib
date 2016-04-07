@@ -7,13 +7,16 @@
 pub enum DvspMsgType {
 	Undefined = 0,
 	GsnRegistration = 1,
+	GsnArea = 3,
 	GsnState = 4,
 	GsnNodeInfo = 5,
+	GsnNodeStatus = 6,
 	
 	GsnResponse = 30,
 	GsnResponseNodeInfo = 31,
 	GsnResponseNetwork = 32,
 	GsnResponseHigh = 33,
+	GsnResponseStatus = 34,
 
 }
 

@@ -18,13 +18,16 @@ pub fn u8_packet_type(byte: u8) -> Option<DvspMsgType> {
 	match byte {
 		0 => Some(DvspMsgType::Undefined),
 		1 => Some(DvspMsgType::GsnRegistration),
+		3 => Some(DvspMsgType::GsnArea),
 		4 => Some(DvspMsgType::GsnState),
 		5 => Some(DvspMsgType::GsnNodeInfo),
+		6 => Some(DvspMsgType::GsnNodeStatus),
 		
 		30 => Some(DvspMsgType::GsnResponse),
 		31 => Some(DvspMsgType::GsnResponseNodeInfo),
 		32 => Some(DvspMsgType::GsnResponseNetwork),
 		33 => Some(DvspMsgType::GsnResponseHigh),
+		34 => Some(DvspMsgType::GsnResponseStatus),
 		_ => None
 	}
 }
@@ -124,6 +127,7 @@ pub struct FrameNodeInfo { // Response
 	pub address: Ipv4,
 	pub name: String,
 }
+
 
 #[derive(Debug)]
 pub struct FrameRegister { 	// Request
