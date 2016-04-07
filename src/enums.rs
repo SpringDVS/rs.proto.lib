@@ -12,6 +12,8 @@ pub enum DvspMsgType {
 	GsnNodeInfo = 5,
 	GsnNodeStatus = 6,
 	
+	GsnTypeRequest = 8,
+	
 	GsnResponse = 30,
 	GsnResponseNodeInfo = 31,
 	GsnResponseNetwork = 32,

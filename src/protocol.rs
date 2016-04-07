@@ -23,6 +23,8 @@ pub fn u8_packet_type(byte: u8) -> Option<DvspMsgType> {
 		5 => Some(DvspMsgType::GsnNodeInfo),
 		6 => Some(DvspMsgType::GsnNodeStatus),
 		
+		8 => Some(DvspMsgType::GsnTypeRequest),
+		
 		30 => Some(DvspMsgType::GsnResponse),
 		31 => Some(DvspMsgType::GsnResponseNodeInfo),
 		32 => Some(DvspMsgType::GsnResponseNetwork),
