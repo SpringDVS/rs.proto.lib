@@ -8,7 +8,12 @@ pub enum DvspMsgType {
 	Undefined = 0,
 	GsnRegistration = 1,
 	GsnState = 4,
-	GsnResponse = 8,
+	GsnNodeInfo = 5,
+	
+	GsnResponse = 30,
+	GsnResponseNodeInfo = 31,
+	GsnResponseNetwork = 32,
+	GsnResponseHigh = 33,
 
 }
 
