@@ -40,7 +40,7 @@ fn ts_formats_str_address_to_ipv4_f() {
 #[test]
 fn ts_formats_ipv4_to_str_address_p() {
 	
-	let addr = ipv4_to_str_address([192,168,1,2]);
+	let addr = ipv4_to_str_address(&[192,168,1,2]);
 	
 	assert_eq!("192.168.1.2", addr);
 }
@@ -58,3 +58,12 @@ fn ts_formats_nodes_to_node_list_p() {
 	
 }
 
+#[test]
+fn ts_nodestring_from_node_register_p() {
+	let reg = "spring,host";
+	let addr = [192,168,1,2];
+	
+	let ns = nodestring_from_node_register(&reg, &addr);
+	assert_eq!("spring,host,192.168.1.2", ns);
+}
+	

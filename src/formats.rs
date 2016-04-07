@@ -30,7 +30,7 @@ pub fn str_address_to_ipv4(address: &str) -> Result<Ipv4, Failure> {
 	Ok(addr)
 }
 
-pub fn ipv4_to_str_address(address: Ipv4) -> String {
+pub fn ipv4_to_str_address(address: &Ipv4) -> String {
 	format(format_args!("{}.{}.{}.{}", address[0],address[1],address[2],address[3]))
 }
 
@@ -41,4 +41,10 @@ pub fn nodes_to_node_list(nodes: &Vec<Node>) -> String {
 	}
 	
 	s
+}
+
+pub fn nodestring_from_node_register(nodereg: &str, address: &Ipv4) -> String {
+	//let mut ns : String = nodereg.to_string();
+	format(format_args!("{},{}", nodereg, ipv4_to_str_address(address)))
+	//ns
 }

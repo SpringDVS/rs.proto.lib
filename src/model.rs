@@ -145,7 +145,7 @@ impl Node {
 
 	
 	pub fn to_node_string(&self) -> String {
-		format(format_args!("{},{},{}", self.springname, self.hostname, ipv4_to_str_address(self.address) ))
+		format(format_args!("{},{},{}", self.springname, self.hostname, ipv4_to_str_address(&self.address) ))
 	}
 	
 	pub fn to_node_register(&self) -> String {
@@ -269,7 +269,7 @@ impl Clone for Url {
 			query: (&self).query.to_string()
 		}
 	}
-	
+
 	fn clone_from(&mut self, source: &Url)  {
 			self.gsn = source.gsn().clone();
 			self.gtn = source.gtn().to_string();
