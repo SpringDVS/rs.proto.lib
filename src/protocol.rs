@@ -18,6 +18,7 @@ pub fn u8_packet_type(byte: u8) -> Option<DvspMsgType> {
 	match byte {
 		0 => Some(DvspMsgType::Undefined),
 		1 => Some(DvspMsgType::GsnRegistration),
+		4 => Some(DvspMsgType::GsnState),
 		8 => Some(DvspMsgType::GsnResponse),
 		_ => None
 	}
