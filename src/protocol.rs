@@ -19,7 +19,12 @@ pub fn u8_packet_type(byte: u8) -> Option<DvspMsgType> {
 		0 => Some(DvspMsgType::Undefined),
 		1 => Some(DvspMsgType::GsnRegistration),
 		4 => Some(DvspMsgType::GsnState),
-		8 => Some(DvspMsgType::GsnResponse),
+		5 => Some(DvspMsgType::GsnNodeInfo),
+		
+		30 => Some(DvspMsgType::GsnResponse),
+		31 => Some(DvspMsgType::GsnResponseNodeInfo),
+		32 => Some(DvspMsgType::GsnResponseNetwork),
+		33 => Some(DvspMsgType::GsnResponseHigh),
 		_ => None
 	}
 }
@@ -133,6 +138,11 @@ pub struct FrameRegister { 	// Request
 pub struct FrameStateUpdate { 	// Request
 	pub status: DvspNodeState,
 	pub springname: String,
+}
+
+#[derive(Debug)]
+pub struct FrameNodeRequest { 	// Request
+	pub shi: Vec<u8>
 }
 
 // ----- Implementations ----- \\
@@ -524,5 +534,37 @@ impl NetSerial for FrameStateUpdate {
 	
 	fn lower_bound() -> usize {
 		1
+	}
+}
+
+// ----- FrameNodeRequest ------
+
+impl FrameNodeRequest {
+	pub fn new(shi: &str) -> FrameNodeRequest {
+		let mut v: Vec<u8> = Vec::new();
+		v.extend_from_slice(shi.as_bytes());
+
+		FrameNodeRequest {
+			shi: v 
+		}
+	}
+}
+
+impl NetSerial for FrameNodeRequest {
+	
+	fn serialise(&self) -> Vec<u8> {
+		self.shi.clone()
+	}
+
+	fn deserialise(bytes: &[u8]) -> Result<FrameNodeRequest,Failure> {
+		let mut v: Vec<u8> = Vec::new();
+		v.extend_from_slice(bytes);
+		Ok(FrameNodeRequest {
+				shi: v
+		})
+	}
+	
+	fn lower_bound() -> usize {
+		0
 	}
 }

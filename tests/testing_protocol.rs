@@ -197,10 +197,33 @@ fn ts_protocol_frame_network_deserialise_p() {
 	let r = FrameNetwork::deserialise(&bytes);
 	
 	assert!(r.is_ok());
-	assert_eq!("foobar", String::from_utf8(r.unwrap().list).unwrap())
+	assert_eq!("foobar", String::from_utf8(r.unwrap().list).unwrap());
 }
 
 
+#[test]
+fn ts_protocol_frame_node_request_serialise_p() {
+	// Test pass
+	let fr = FrameNodeRequest::new("foobar");
+	let bytes = fr.serialise();
+	
+	assert_eq!('f' as u8, bytes[0]);
+	assert_eq!('o' as u8, bytes[1]);
+	assert_eq!('o' as u8, bytes[2]);
+	assert_eq!('b' as u8, bytes[3]);
+	assert_eq!('a' as u8, bytes[4]);
+	assert_eq!('r' as u8, bytes[5]);
+}
+
+#[test]
+fn ts_protocol_frame_node_request_deserialise_p() {
+	// Test pass
+	let bytes = vec!['f' as u8,'o' as u8,'o' as u8,'b' as u8,'a' as u8,'r' as u8];
+	let r = FrameNodeRequest::deserialise(&bytes);
+	
+	assert!(r.is_ok());
+	assert_eq!("foobar", String::from_utf8(r.unwrap().shi).unwrap());
+}
 
 
 
