@@ -149,6 +149,11 @@ pub struct FrameNodeRequest { 	// Request
 	pub shi: Vec<u8>
 }
 
+#[derive(Debug)]
+pub struct FrameTypeRequest { 	// Request
+	pub ntype: NodeTypeField
+}
+
 // ----- Implementations ----- \\
 
 
@@ -541,6 +546,10 @@ impl NetSerial for FrameStateUpdate {
 	}
 }
 
+
+
+
+
 // ----- FrameNodeRequest ------
 
 impl FrameNodeRequest {
@@ -570,5 +579,43 @@ impl NetSerial for FrameNodeRequest {
 	
 	fn lower_bound() -> usize {
 		0
+	}
+}
+
+
+
+
+
+// ----- FrameNodeRequest ------
+
+impl FrameTypeRequest {
+	pub fn new(ntype: NodeTypeField) -> FrameTypeRequest {
+		FrameTypeRequest {
+			ntype: ntype
+		}
+	}
+}
+
+impl NetSerial for FrameTypeRequest {
+	
+	fn serialise(&self) -> Vec<u8> {
+		let mut v: Vec<u8> = Vec::new();
+		v.push(self.ntype as u8);
+		v	
+	}
+
+	fn deserialise(bytes: &[u8]) -> Result<FrameTypeRequest,Failure> {
+
+		if u8_valid_nodetype(bytes[0]) == false {
+			return Err(Failure::InvalidBytes)
+		} 
+
+		Ok(FrameTypeRequest {
+				ntype: bytes[0]
+		})
+	}
+	
+	fn lower_bound() -> usize {
+		1
 	}
 }

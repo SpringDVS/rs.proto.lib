@@ -394,8 +394,33 @@ fn ts_protocol_frame_register_deserialise_f() {
 
 
 
+#[test]
+fn ts_protocol_frame_type_request_serialise_p() {
+	let frame = FrameTypeRequest::new(DvspNodeType::Org as u8);
+	let bytes = frame.serialise();
+	
+	assert_eq!(DvspNodeType::Org as u8, bytes[0]);
+}
 
+#[test]
+fn ts_protocol_frame_type_request_deserialise_p() {
+	let f = FrameTypeRequest::new(DvspNodeType::Org as u8);
+	let serial = f.serialise();
+	
+	let op = FrameTypeRequest::deserialise(&serial);
+	assert!(op.is_ok());
+	
+	assert_eq!(DvspNodeType::Org as u8, op.unwrap().ntype);
+}
 
+#[test]
+fn ts_protocol_frame_type_request_deserialise_f() {
+
+	let serial: [u8;1] = [101];
+	
+	let op = FrameTypeRequest::deserialise(&serial);
+	assert!(op.is_err());
+}
 
 #[test]
 fn ts_protocol_packet_write_content_p() {
@@ -450,3 +475,4 @@ fn ts_protocol_packet_content_as_f() {
 	assert!(r.is_err());
 	assert_eq!(Failure::OutOfBounds, r.unwrap_err())
 }
+
