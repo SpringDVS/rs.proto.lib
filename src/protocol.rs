@@ -30,6 +30,8 @@ pub fn u8_packet_type(byte: u8) -> Option<DvspMsgType> {
 		32 => Some(DvspMsgType::GsnResponseNetwork),
 		33 => Some(DvspMsgType::GsnResponseHigh),
 		34 => Some(DvspMsgType::GsnResponseStatus),
+		
+		101 => Some(DvspMsgType::UnitTest),
 		_ => None
 	}
 }
@@ -65,6 +67,15 @@ pub fn u8_status_type(byte: u8) -> Option<DvspNodeState> {
 		_ => None
 	}
 }
+
+pub fn u8_unit_test_action(byte: u8) -> Option<UnitTestAction> {
+	match byte {
+		0 => Some(UnitTestAction::Undefined),
+		1 => Some(UnitTestAction::Reset),
+		_ => None
+	}
+}
+
 
 pub fn u8_valid_nodetype(field: u8) -> bool {
 	if field > Bounds::MaxNodeType as u8 {
@@ -154,6 +165,11 @@ pub struct FrameNodeRequest { 	// Request
 #[derive(Debug)]
 pub struct FrameTypeRequest { 	// Request
 	pub ntype: NodeTypeField
+}
+
+#[derive(Debug)]
+pub struct FrameUnitTest {
+	pub action: UnitTestAction
 }
 
 // ----- Implementations ----- \\
@@ -621,3 +637,44 @@ impl NetSerial for FrameTypeRequest {
 		1
 	}
 }
+
+
+
+
+
+// ----- FrameUnitTest ------
+
+impl FrameUnitTest {
+	pub fn new(action: UnitTestAction) -> FrameUnitTest {
+		FrameUnitTest {
+			action: action
+		}
+	}
+}
+
+impl NetSerial for FrameUnitTest {
+	
+	fn serialise(&self) -> Vec<u8> {
+		let mut v: Vec<u8> = Vec::new();
+		v.push(self.action as u8);
+		v	
+	}
+
+	fn deserialise(bytes: &[u8]) -> Result<FrameUnitTest,Failure> {
+
+		
+		let action = match u8_unit_test_action(bytes[0]) {
+			None => return Err(Failure::InvalidBytes),
+			Some(op) => op
+		};
+
+		Ok(FrameUnitTest {
+				action: action
+		})
+	}
+	
+	fn lower_bound() -> usize {
+		1
+	}
+}
+
