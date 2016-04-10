@@ -422,6 +422,35 @@ fn ts_protocol_frame_type_request_deserialise_f() {
 	assert!(op.is_err());
 }
 
+
+#[test]
+fn ts_protocol_frame_unit_test_serialise_p() {
+	let frame = FrameUnitTest::new(UnitTestAction::Reset);
+	let bytes = frame.serialise();
+	
+	assert_eq!(UnitTestAction::Reset as u8, bytes[0]);
+}
+
+#[test]
+fn ts_protocol_frame_unit_test_deserialise_p() {
+	let f = FrameUnitTest::new(UnitTestAction::Reset);
+	let serial = f.serialise();
+	
+	let op = FrameUnitTest::deserialise(&serial);
+	assert!(op.is_ok());
+	
+	assert_eq!(UnitTestAction::Reset, op.unwrap().action);
+}
+
+#[test]
+fn ts_protocol_frame_unit_test_deserialise_f() {
+
+	let serial: [u8;1] = [101];
+	
+	let op = FrameUnitTest::deserialise(&serial);
+	assert!(op.is_err());
+}
+
 #[test]
 fn ts_protocol_packet_write_content_p() {
 	let mut p = Packet::new(DvspMsgType::Undefined);
