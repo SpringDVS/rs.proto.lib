@@ -19,6 +19,8 @@ pub enum DvspMsgType {
 	GsnResponseNetwork = 32,
 	GsnResponseHigh = 33,
 	GsnResponseStatus = 34,
+	
+	UnitTest = 101,
 
 }
 
@@ -70,4 +72,10 @@ pub enum Failure {
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Success {
 	Ok	
+}
+
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum UnitTestAction {
+	Undefine = 0,
+	Reset = 1,
 }
