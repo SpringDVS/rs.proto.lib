@@ -76,6 +76,6 @@ pub enum Success {
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum UnitTestAction {
-	Undefine = 0,
+	Undefined = 0,
 	Reset = 1,
 }
