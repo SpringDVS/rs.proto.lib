@@ -673,7 +673,11 @@ impl NetSerial for FrameUnitTest {
 		};
 		let mut extra = String::new();
 		if bytes.len() > 1 {
-			extra = String::from( str::from_utf8(&bytes[1..]).unwrap() )
+			
+			extra = match str::from_utf8(&bytes[1..]) {
+				Ok(s) => String::from(s),
+				_ => return Err(Failure::InvalidBytes)
+			};
 		}
 		Ok(FrameUnitTest {
 				action: action,
