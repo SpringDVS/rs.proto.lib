@@ -243,7 +243,7 @@ impl NetSerial for Packet {
 	}
 
 	fn deserialise(bytes: &[u8]) -> Result<Packet, Failure> {
-		
+		if bytes.len() < Packet::lower_bound() { return Err(Failure::InvalidArgument) }
 		let pt = match u8_packet_type(bytes[0]) {
 			None => return Err(Failure::InvalidBytes),
 			Some(op) => op
