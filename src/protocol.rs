@@ -72,6 +72,7 @@ pub fn u8_unit_test_action(byte: u8) -> Option<UnitTestAction> {
 	match byte {
 		0 => Some(UnitTestAction::Undefined),
 		1 => Some(UnitTestAction::Reset),
+		2 => Some(UnitTestAction::UpdateAddress),
 		_ => None
 	}
 }
@@ -169,7 +170,8 @@ pub struct FrameTypeRequest { 	// Request
 
 #[derive(Debug)]
 pub struct FrameUnitTest {
-	pub action: UnitTestAction
+	pub action: UnitTestAction,
+	pub extra: String,
 }
 
 // ----- Implementations ----- \\
@@ -645,9 +647,10 @@ impl NetSerial for FrameTypeRequest {
 // ----- FrameUnitTest ------
 
 impl FrameUnitTest {
-	pub fn new(action: UnitTestAction) -> FrameUnitTest {
+	pub fn new(action: UnitTestAction, extra: &str) -> FrameUnitTest {
 		FrameUnitTest {
-			action: action
+			action: action,
+			extra: String::from(extra),
 		}
 	}
 }
@@ -657,6 +660,7 @@ impl NetSerial for FrameUnitTest {
 	fn serialise(&self) -> Vec<u8> {
 		let mut v: Vec<u8> = Vec::new();
 		v.push(self.action as u8);
+		v.extend_from_slice(self.extra.as_bytes());
 		v	
 	}
 
@@ -667,9 +671,13 @@ impl NetSerial for FrameUnitTest {
 			None => return Err(Failure::InvalidBytes),
 			Some(op) => op
 		};
-
+		let mut extra = String::new();
+		if bytes.len() > 1 {
+			extra = String::from( str::from_utf8(&bytes[1..]).unwrap() )
+		}
 		Ok(FrameUnitTest {
-				action: action
+				action: action,
+				extra: extra, 
 		})
 	}
 	

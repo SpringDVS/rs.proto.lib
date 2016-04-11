@@ -425,21 +425,34 @@ fn ts_protocol_frame_type_request_deserialise_f() {
 
 #[test]
 fn ts_protocol_frame_unit_test_serialise_p() {
-	let frame = FrameUnitTest::new(UnitTestAction::Reset);
+	let frame = FrameUnitTest::new(UnitTestAction::Reset,"foobar");
 	let bytes = frame.serialise();
 	
 	assert_eq!(UnitTestAction::Reset as u8, bytes[0]);
+	assert_eq!('f' as u8, bytes[1]);
+	assert_eq!('r' as u8, bytes[6]);
 }
 
 #[test]
+fn ts_protocol_frame_unit_test_serialise_zero_extra_p() {
+	let frame = FrameUnitTest::new(UnitTestAction::Reset,"");
+	let bytes = frame.serialise();
+	
+	assert_eq!(UnitTestAction::Reset as u8, bytes[0]);
+	assert_eq!(FrameUnitTest::lower_bound(), bytes.len()) 
+}
+
+
+#[test]
 fn ts_protocol_frame_unit_test_deserialise_p() {
-	let f = FrameUnitTest::new(UnitTestAction::Reset);
+	let f = FrameUnitTest::new(UnitTestAction::Reset,"foo");
 	let serial = f.serialise();
 	
 	let op = FrameUnitTest::deserialise(&serial);
 	assert!(op.is_ok());
-	
-	assert_eq!(UnitTestAction::Reset, op.unwrap().action);
+	let frame = op.unwrap();
+	assert_eq!(UnitTestAction::Reset, frame.action);
+	assert_eq!("foo", frame.extra);
 }
 
 #[test]

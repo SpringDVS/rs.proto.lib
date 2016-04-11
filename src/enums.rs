@@ -78,4 +78,5 @@ pub enum Success {
 pub enum UnitTestAction {
 	Undefined = 0,
 	Reset = 1,
+	UpdateAddress = 2,
 }
