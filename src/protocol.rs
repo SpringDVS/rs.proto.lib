@@ -555,7 +555,11 @@ impl NetSerial for FrameStateUpdate {
 		
 		let mut name = String::new();
 		if bytes.len() > 1 {
-			name = String::from( str::from_utf8(&bytes[1..]).unwrap() )
+			
+			name = match str::from_utf8(&bytes[1..]) {
+				Ok(s) => String::from(s),
+				_ => return Err(Failure::InvalidBytes)
+			};
 		}
 		
 		Ok(FrameStateUpdate::new(status, &name))
