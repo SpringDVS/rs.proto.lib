@@ -503,7 +503,10 @@ impl NetSerial for FrameRegister {
 		
 		let mut reg = String::new();
 		if bytes.len() > 4 {
-			reg = String::from( str::from_utf8(&bytes[4..]).unwrap() ) // DANGERZONE: unwrap()
+			reg =  match  str::from_utf8(&bytes[4..]) {
+				Ok(s) => String::from(s),
+				_ => return Err(Failure::InvalidBytes),
+			}
 		}
 		
 		Ok(FrameRegister {
