@@ -464,6 +464,52 @@ fn ts_protocol_frame_unit_test_deserialise_f() {
 	assert!(op.is_err());
 }
 
+
+
+
+#[test]
+fn ts_protocol_frame_resolution_serialise_p() {
+	let frame = FrameResolution::new("spring://cci.esusx.uk");
+	let bytes = frame.serialise();
+
+	assert_eq!('s' as u8, bytes[0]);
+	assert_eq!('k' as u8, bytes[20]);
+}
+
+#[test]
+fn ts_protocol_frame_resolution_serialise_zero_length_p() {
+	let frame = FrameResolution::new("");
+	let bytes = frame.serialise();
+
+	assert_eq!(0, bytes.len());
+}
+
+#[test]
+fn ts_protocol_frame_resolution_deserialise_p() {
+	let f = FrameResolution::new("spring://cci.esusx.uk");
+	let serial = f.serialise();
+	
+	let op = FrameResolution::deserialise(&serial);
+	assert!(op.is_ok());
+	let frame = op.unwrap();
+	assert_eq!("spring://cci.esusx.uk", frame.url);
+}
+
+#[test]
+fn ts_protocol_frame_resolution_deserialise_zero_length_p() {
+	let f = FrameResolution::new("");
+	let serial = f.serialise();
+	
+	let op = FrameResolution::deserialise(&serial);
+	assert!(op.is_ok());
+	let frame = op.unwrap();
+	assert_eq!("", frame.url);
+}
+
+
+
+
+
 #[test]
 fn ts_protocol_packet_write_content_p() {
 	let mut p = Packet::new(DvspMsgType::Undefined);
