@@ -7,6 +7,7 @@
 pub enum DvspMsgType {
 	Undefined = 0,
 	GsnRegistration = 1,
+	GsnResolution = 2,
 	GsnArea = 3,
 	GsnState = 4,
 	GsnNodeInfo = 5,

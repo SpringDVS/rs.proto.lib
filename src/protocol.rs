@@ -18,6 +18,7 @@ pub fn u8_packet_type(byte: u8) -> Option<DvspMsgType> {
 	match byte {
 		0 => Some(DvspMsgType::Undefined),
 		1 => Some(DvspMsgType::GsnRegistration),
+		2 => Some(DvspMsgType::GsnResolution),
 		3 => Some(DvspMsgType::GsnArea),
 		4 => Some(DvspMsgType::GsnState),
 		5 => Some(DvspMsgType::GsnNodeInfo),
@@ -166,6 +167,11 @@ pub struct FrameNodeRequest { 	// Request
 #[derive(Debug)]
 pub struct FrameTypeRequest { 	// Request
 	pub ntype: NodeTypeField
+}
+
+#[derive(Debug)]
+pub struct FrameResolution { 	// Request
+	pub url: String
 }
 
 #[derive(Debug)]
@@ -648,6 +654,42 @@ impl NetSerial for FrameTypeRequest {
 }
 
 
+
+// ----- FrameResolution ------
+
+impl FrameResolution {
+	pub fn new(url: &str) -> FrameResolution {
+		FrameResolution {
+			url: String::from(url) 
+		}
+	}
+}
+
+impl NetSerial for FrameResolution {
+	
+	fn serialise(&self) -> Vec<u8> {
+		let mut v : Vec<u8> = Vec::new();
+		
+		v.extend_from_slice(self.url.as_bytes());
+		v
+	}
+
+	fn deserialise(bytes: &[u8]) -> Result<FrameResolution,Failure> {
+
+		let url = match str::from_utf8(bytes) {
+			Ok(s) => String::from(s),
+			_ => return Err(Failure::InvalidBytes)
+		};
+		
+		Ok(FrameResolution {
+				url: url
+		})
+	}
+	
+	fn lower_bound() -> usize {
+		0
+	}
+}
 
 
 
