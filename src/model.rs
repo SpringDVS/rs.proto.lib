@@ -207,9 +207,13 @@ impl Url {
 		})
 	}
 		
-	pub fn gsn(&self) -> &Vec<String> {
+	pub fn route(&self) -> &Vec<String> {
 		&self.gsn
 	}
+	
+	pub fn route_mut(&mut self) -> &mut Vec<String> {
+		&mut self.gsn
+	} 
 	
 	
 	pub fn gtn(&self) -> &str {
@@ -271,7 +275,7 @@ impl Clone for Url {
 	}
 
 	fn clone_from(&mut self, source: &Url)  {
-			self.gsn = source.gsn().clone();
+			self.gsn = source.route().clone();
 			self.gtn = source.gtn().to_string();
 			self.glq = source.glq().to_string();
 			self.res = source.res().to_string();

@@ -56,7 +56,7 @@ fn ts_model_url_new_basic_p() {
 	assert!(r.is_ok());
 	
 	let url = r.unwrap();
-	let gsn = url.gsn();
+	let gsn = url.route();
 	assert_eq!(gsn.len(), 3);
 	assert_eq!(gsn[0], "cci");
 	assert_eq!(gsn[1], "esusx");
@@ -72,7 +72,7 @@ fn ts_model_url_new_basic_no_gtn_p() {
 	assert!(r.is_ok());
 	
 	let url = r.unwrap();
-	let gsn = url.gsn();
+	let gsn = url.route();
 	assert_eq!(gsn.len(), 2);
 	assert_eq!(gsn[0], "cci");
 	assert_eq!(gsn[1], "esusx");
@@ -87,7 +87,7 @@ fn ts_model_url_new_basic_glq_p() {
 	assert!(r.is_ok());
 	
 	let url = r.unwrap();
-	let gsn = url.gsn();
+	let gsn = url.route();
 	assert_eq!(gsn.len(), 3);
 	assert_eq!(gsn[0], "cci");
 	assert_eq!(gsn[1], "esusx");
@@ -104,7 +104,7 @@ fn ts_model_url_new_basic_glq_res_p() {
 	assert!(r.is_ok());
 	
 	let url = r.unwrap();
-	let gsn = url.gsn();
+	let gsn = url.route();
 	assert_eq!(gsn.len(), 3);
 	assert_eq!(gsn[0], "cci");
 	assert_eq!(gsn[1], "esusx");
@@ -122,7 +122,7 @@ fn ts_model_url_new_basic_glq_res_query_p() {
 	assert!(r.is_ok());
 	
 	let url = r.unwrap();
-	let gsn = url.gsn();
+	let gsn = url.route();
 	assert_eq!(gsn.len(), 3);
 	assert_eq!(gsn[0], "cci");
 	assert_eq!(gsn[1], "esusx");
@@ -211,6 +211,23 @@ fn ts_model_url_clone_from_p() {
 	cpy.clone_from(&url);
 	
 	assert_eq!(s, cpy.to_string());
+}
+
+#[test]
+fn ts_model_url_mut_route_p() {
+	let s = "spring://cci.esusx.uk:foo=bar/res?query:test";
+	let r = Url::new(s);
+	
+	assert!(r.is_ok());
+	let mut url = r.unwrap();
+	
+	
+	url.route_mut().pop();
+	assert_eq!("spring://cci.esusx:foo=bar/res?query:test", url.to_string());
+	
+	url.route_mut().pop();
+	assert_eq!("spring://cci:foo=bar/res?query:test", url.to_string());
+	
 }
 
 #[test]
