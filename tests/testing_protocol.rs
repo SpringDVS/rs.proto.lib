@@ -507,6 +507,26 @@ fn ts_protocol_frame_resolution_deserialise_zero_length_p() {
 }
 
 
+#[test]
+fn ts_protocol_frame_gsn_nodes_serialise_p() {
+	let frame = FrameGsnNodes::new("esusx");
+	let bytes = frame.serialise();
+
+	assert_eq!(5, bytes.len());
+	assert_eq!('e' as u8, bytes[0]);
+	assert_eq!('x' as u8, bytes[4]);
+}
+
+#[test]
+fn ts_protocol_frame_gsn_nodes_deserialise_p() {
+	let f = FrameGsnNodes::new("esusx");
+	let serial = f.serialise();
+	
+	let op = FrameGsnNodes::deserialise(&serial);
+	assert!(op.is_ok());
+	let frame = op.unwrap();
+	assert_eq!("esusx", frame.gsn);
+}
 
 
 

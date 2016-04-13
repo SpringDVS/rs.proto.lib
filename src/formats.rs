@@ -48,3 +48,12 @@ pub fn nodestring_from_node_register(nodereg: &str, address: &Ipv4) -> String {
 	format(format_args!("{},{}", nodereg, ipv4_to_str_address(address)))
 	//ns
 }
+
+pub fn geosub_from_node_register_gtn(nodereg: &str) -> Result<String,Failure> {
+	let atom : Vec<&str> = nodereg.split(',').collect();
+	match atom.len() { 
+		4 => Ok(String::from(atom[3])),
+		_ => Err(Failure::InvalidFormat), 
+	}
+	
+}

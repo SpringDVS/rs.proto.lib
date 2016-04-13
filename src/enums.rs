@@ -16,6 +16,7 @@ pub enum DvspMsgType {
 	GsnTypeRequest = 8,
 	
 	GtnRegistration = 22,
+	GtnGeosubNodes = 23,
 
 	GsnResponse = 30,
 	GsnResponseNodeInfo = 31,
@@ -82,4 +83,5 @@ pub enum UnitTestAction {
 	Undefined = 0,
 	Reset = 1,
 	UpdateAddress = 2,
+	AddGeosubRoot = 3,
 }

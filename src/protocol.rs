@@ -76,6 +76,7 @@ pub fn u8_unit_test_action(byte: u8) -> Option<UnitTestAction> {
 		0 => Some(UnitTestAction::Undefined),
 		1 => Some(UnitTestAction::Reset),
 		2 => Some(UnitTestAction::UpdateAddress),
+		3 => Some(UnitTestAction::AddGeosubRoot),
 		_ => None
 	}
 }
@@ -183,6 +184,11 @@ pub struct FrameTypeRequest { 	// Request
 #[derive(Debug)]
 pub struct FrameResolution { 	// Request
 	pub url: String
+}
+
+#[derive(Debug)]
+pub struct FrameGsnNodes { 	// Request
+	pub gsn: String
 }
 
 #[derive(Debug)]
@@ -694,6 +700,44 @@ impl NetSerial for FrameResolution {
 		
 		Ok(FrameResolution {
 				url: url
+		})
+	}
+	
+	fn lower_bound() -> usize {
+		0
+	}
+}
+
+
+
+// ----- FrameResolution ------
+
+impl FrameGsnNodes {
+	pub fn new(gsn: &str) -> FrameGsnNodes {
+		FrameGsnNodes {
+			gsn: String::from(gsn) 
+		}
+	}
+}
+
+impl NetSerial for FrameGsnNodes {
+	
+	fn serialise(&self) -> Vec<u8> {
+		let mut v : Vec<u8> = Vec::new();
+		
+		v.extend_from_slice(self.gsn.as_bytes());
+		v
+	}
+
+	fn deserialise(bytes: &[u8]) -> Result<FrameGsnNodes,Failure> {
+
+		let gsn = match str::from_utf8(bytes) {
+			Ok(s) => String::from(s),
+			_ => return Err(Failure::InvalidBytes)
+		};
+		
+		Ok(FrameGsnNodes {
+				gsn: gsn
 		})
 	}
 	

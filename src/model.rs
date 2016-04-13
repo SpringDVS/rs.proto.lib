@@ -79,7 +79,7 @@ impl Node {
 	
 	pub fn from_node_string(nodestr: &str) -> Result<Node,Failure> {
 		let atom : Vec<&str> = nodestr.split(',').collect();
-		if atom.len() != 3 {
+		if atom.len() != 3 && atom.len() != 4 {
 			return Err(Failure::InvalidArgument);
 		}
 		
