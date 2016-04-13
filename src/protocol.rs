@@ -187,7 +187,7 @@ pub struct FrameResolution { 	// Request
 }
 
 #[derive(Debug)]
-pub struct FrameGsnNodes { 	// Request
+pub struct FrameGeosub { 	// Request
 	pub gsn: String
 }
 
@@ -712,15 +712,15 @@ impl NetSerial for FrameResolution {
 
 // ----- FrameResolution ------
 
-impl FrameGsnNodes {
-	pub fn new(gsn: &str) -> FrameGsnNodes {
-		FrameGsnNodes {
+impl FrameGeosub {
+	pub fn new(gsn: &str) -> FrameGeosub {
+		FrameGeosub {
 			gsn: String::from(gsn) 
 		}
 	}
 }
 
-impl NetSerial for FrameGsnNodes {
+impl NetSerial for FrameGeosub {
 	
 	fn serialise(&self) -> Vec<u8> {
 		let mut v : Vec<u8> = Vec::new();
@@ -729,14 +729,14 @@ impl NetSerial for FrameGsnNodes {
 		v
 	}
 
-	fn deserialise(bytes: &[u8]) -> Result<FrameGsnNodes,Failure> {
+	fn deserialise(bytes: &[u8]) -> Result<FrameGeosub,Failure> {
 
 		let gsn = match str::from_utf8(bytes) {
 			Ok(s) => String::from(s),
 			_ => return Err(Failure::InvalidBytes)
 		};
 		
-		Ok(FrameGsnNodes {
+		Ok(FrameGeosub {
 				gsn: gsn
 		})
 	}

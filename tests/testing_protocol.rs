@@ -508,8 +508,8 @@ fn ts_protocol_frame_resolution_deserialise_zero_length_p() {
 
 
 #[test]
-fn ts_protocol_frame_gsn_nodes_serialise_p() {
-	let frame = FrameGsnNodes::new("esusx");
+fn ts_protocol_frame_geosub_serialise_p() {
+	let frame = FrameGeosub::new("esusx");
 	let bytes = frame.serialise();
 
 	assert_eq!(5, bytes.len());
@@ -518,11 +518,11 @@ fn ts_protocol_frame_gsn_nodes_serialise_p() {
 }
 
 #[test]
-fn ts_protocol_frame_gsn_nodes_deserialise_p() {
-	let f = FrameGsnNodes::new("esusx");
+fn ts_protocol_frame_geosub_deserialise_p() {
+	let f = FrameGeosub::new("esusx");
 	let serial = f.serialise();
 	
-	let op = FrameGsnNodes::deserialise(&serial);
+	let op = FrameGeosub::deserialise(&serial);
 	assert!(op.is_ok());
 	let frame = op.unwrap();
 	assert_eq!("esusx", frame.gsn);
