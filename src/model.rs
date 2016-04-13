@@ -49,6 +49,12 @@ pub trait Netspace {
 	fn gsn_node_update_service(&self, node: &Node) -> Result<Success,Failure>;
 	fn gsn_node_update_types(&self, node: &Node) -> Result<Success,Failure>;
 	
+	fn gtn_geosub_root_nodes(&self, gsn: &str) -> Vec<Node>;
+	fn gtn_geosub_node_by_springname(&self, name: &str, gsn: &str) -> Result<Node,Failure>;
+	 
+	fn gtn_geosub_register_node(&self, node: &Node, gsn: &str) -> Result<Success,Failure>;
+	fn gtn_geosub_unregister_node(&self, node: &Node, gsn: &str) -> Result<Success,Failure>;
+	
 }
 
 pub trait Metaspace {
