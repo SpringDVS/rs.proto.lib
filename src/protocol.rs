@@ -26,6 +26,8 @@ pub fn u8_packet_type(byte: u8) -> Option<DvspMsgType> {
 		
 		8 => Some(DvspMsgType::GsnTypeRequest),
 		
+		22 => Some(DvspMsgType::GtnRegistration),
+		
 		30 => Some(DvspMsgType::GsnResponse),
 		31 => Some(DvspMsgType::GsnResponseNodeInfo),
 		32 => Some(DvspMsgType::GsnResponseNetwork),
@@ -152,6 +154,15 @@ pub struct FrameRegister { 	// Request
 	pub service: DvspService,
 	pub nodereg: String,
 }
+
+#[derive(Debug)]
+pub struct FrameRegisterGtn { 	// Request
+	pub register: bool,
+	pub service: DvspService,
+	pub len: u8,
+	pub nodereg: String,
+}
+
 
 #[derive(Debug)]
 pub struct FrameStateUpdate { 	// Request
@@ -738,4 +749,64 @@ impl NetSerial for FrameUnitTest {
 		1
 	}
 }
+
+
+// ----- FrameRegisterGtn ------
+
+impl FrameRegisterGtn {
+	pub fn new(register: bool, service: DvspService, nodereg: String) -> FrameRegisterGtn {
+		FrameRegisterGtn {
+			register: register,
+			service: service,
+			len: nodereg.len() as u8,
+			nodereg: nodereg,
+		}
+	} 
+}
+
+impl NetSerial for FrameRegisterGtn {
+	fn serialise(&self) -> Vec<u8> {
+		
+		let mut v: Vec<u8> = Vec::new();
+		v.push(self.register as u8);
+		v.push(self.service as u8);
+		v.push(self.len);
+		push_bytes(&mut v, self.nodereg.as_bytes());		
+		v
+	}
+
+	fn deserialise(bytes: &[u8]) -> Result<FrameRegisterGtn, Failure> {
+
+		let service = match u8_service_type(bytes[1]) {
+			None => return Err(Failure::InvalidBytes),
+			Some(op) => op
+		};
+		
+		if bytes[2] > Bounds::FrameRegisterLen as u8 {
+			return Err(Failure::OutOfBounds)
+		}
+
+		
+		let mut reg = String::new();
+		if bytes.len() > 3 {
+			reg =  match  str::from_utf8(&bytes[3..]) {
+				Ok(s) => String::from(s),
+				_ => return Err(Failure::InvalidBytes),
+			}
+		}
+		
+		Ok(FrameRegisterGtn {
+			register: deserialise_bool(bytes[0]),
+			service: service,
+			len: bytes[2],
+			nodereg: reg 
+		})
+	}
+	
+	fn lower_bound() -> usize {
+		3
+	}
+}
+
+
 

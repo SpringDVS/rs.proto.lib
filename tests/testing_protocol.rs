@@ -529,6 +529,96 @@ fn ts_protocol_packet_write_content_f() {
 
 
 
+#[test]
+fn ts_protocol_frame_register_gtn_serialise_p() {
+	// Test pass
+	let fr = FrameRegisterGtn::new(
+		true,
+		DvspService::Http, 
+		String::from("abc")
+	);
+	
+	let bytes = fr.serialise();
+	
+	assert_eq!(1, bytes[0]); // register
+	assert_eq!(2, bytes[1]); // service
+	assert_eq!(3, bytes[2]); // len
+	
+	
+	assert_eq!('a' as u8, bytes[3]);
+	assert_eq!('b' as u8, bytes[4]);
+	assert_eq!('c' as u8, bytes[5]);
+	
+	let fr2 = FrameRegister::new(
+		true,
+		DvspNodeType::Org as u8, 
+		DvspService::Http, 
+		String::from("")
+	);
+	
+	let bytes2 = fr2.serialise();
+	assert!(bytes2.len() == FrameRegister::lower_bound());
+	
+}
+
+#[test]
+fn ts_protocol_frame_register_gtn_deserialise_p() {
+	// Test pass
+	let fr = FrameRegisterGtn::new(
+		true,
+		DvspService::Dvsp, 
+		String::from("abc")
+	);
+	
+	let bytes = fr.serialise();
+	let op = FrameRegisterGtn::deserialise(&bytes);
+	
+	assert!(op.is_ok());
+	
+	let frame = op.unwrap();
+	
+	assert_eq!(true, frame.register);
+	assert_eq!(DvspService::Dvsp, frame.service);
+	assert_eq!(3, frame.len);
+	assert_eq!(String::from("abc"), frame.nodereg);
+
+}
+
+#[test]
+fn ts_protocol_frame_register_gtn_deserialise_f() {
+	// Test fail
+	
+	// Invalid node type
+	// Test pass
+	let fr = FrameRegisterGtn::new(
+		true,
+		DvspService::Http, 
+		String::from("abc")
+	);
+	
+	let mut bytes = fr.serialise();
+	
+	// Invalid node service
+	bytes[1] = 101;
+	let op1 = FrameRegisterGtn::deserialise(&bytes);
+	assert!(op1.is_err());
+	assert_eq!(Failure::InvalidBytes, op1.unwrap_err());
+	
+	
+	// Invalid nodereg len
+	bytes[1] = 1;
+	bytes[3] = 0;
+	bytes[2] = Bounds::FrameRegisterLen as u8 + 1;
+	let op3 = FrameRegister::deserialise(&bytes);
+	assert!(op3.is_err());
+	assert_eq!(Failure::OutOfBounds, op3.unwrap_err());
+}
+
+
+
+
+
+
 
 
 
@@ -563,4 +653,3 @@ fn ts_protocol_packet_content_as_f() {
 	assert!(r.is_err());
 	assert_eq!(Failure::OutOfBounds, r.unwrap_err())
 }
-
