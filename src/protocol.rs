@@ -27,6 +27,7 @@ pub fn u8_packet_type(byte: u8) -> Option<DvspMsgType> {
 		8 => Some(DvspMsgType::GsnTypeRequest),
 		
 		22 => Some(DvspMsgType::GtnRegistration),
+		23 => Some(DvspMsgType::GtnGeosubNodes),
 		
 		30 => Some(DvspMsgType::GsnResponse),
 		31 => Some(DvspMsgType::GsnResponseNodeInfo),
