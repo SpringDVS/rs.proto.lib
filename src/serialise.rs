@@ -44,3 +44,22 @@ pub fn deserialise_bool(byte: u8) -> bool {
 		_ => true
 	}
 }
+
+pub fn hex_str_to_byte(src: &[u8]) -> Option<u8> {
+	if src.len() != 2 { return None }
+	
+	let mut val = 0;
+	let mut factor = 16;
+	for i in 0 .. 2 {
+		val +=  match src[i] {
+			v @	48 ... 57 => (v - 48) * factor,
+			v @ 65 ... 70 => (v - 55) * factor,
+			v @ 97 ... 102 => (v - 87) * factor,
+			_ => return None,   
+		};
+		 factor >>= 4;
+	}
+
+	Some(val)
+	
+}

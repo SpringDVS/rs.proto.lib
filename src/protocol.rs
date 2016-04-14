@@ -105,6 +105,28 @@ fn bytes_slice_to_ipv4(bytes: &[u8]) -> Option<Ipv4> {
 	Some(addr)
 }
 
+
+pub fn http_to_bin(src: &str) -> Result<Vec<u8>,Failure> {
+	
+	let mut v = Vec::new();
+	let l = src.len();
+	
+	if l % 2 > 0 { return Err(Failure::InvalidFormat) }
+
+	
+	let mut i : usize = 0;
+	while i < l {
+		
+		match hex_str_to_byte(src[i..i+2].as_bytes()) {
+			Some(b) => v.push(b),
+			None => return Err(Failure::InvalidBytes),
+		};
+		
+		i += 2;
+	}
+	Ok(v)
+}
+
 // ----- Data Structures ----- \\
 #[derive(Debug)]
 pub struct PacketHeader {

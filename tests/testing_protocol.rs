@@ -673,3 +673,39 @@ fn ts_protocol_packet_content_as_f() {
 	assert!(r.is_err());
 	assert_eq!(Failure::OutOfBounds, r.unwrap_err())
 }
+
+#[test]
+fn ts_http_to_bin_upper_p() {
+	let r = http_to_bin("466F6F626172");
+	assert!(r.is_ok());
+	let s = String::from_utf8(r.unwrap()).unwrap();
+	assert_eq!(String::from("Foobar"), s);
+}
+
+#[test]
+fn ts_http_to_bin_lower_p() {
+	let r = http_to_bin("466f6f626172");
+	assert!(r.is_ok());
+	let s = String::from_utf8(r.unwrap()).unwrap();
+	assert_eq!(String::from("Foobar"), s);
+}
+
+#[test]
+fn ts_http_to_bin_upperlower_p() {
+	let r = http_to_bin("466f6F626172");
+	assert!(r.is_ok());
+	let s = String::from_utf8(r.unwrap()).unwrap();
+	assert_eq!(String::from("Foobar"), s);
+}
+
+#[test]
+fn ts_http_to_bin_out_of_bounds_f() {
+	let r = http_to_bin("466f6g626172");
+	assert!(r.is_err());
+}
+
+#[test]
+fn ts_http_to_bin_invalid_len_f() {
+	let r = http_to_bin("466f6f62617");
+	assert!(r.is_err());
+}
