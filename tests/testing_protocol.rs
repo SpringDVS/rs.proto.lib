@@ -709,3 +709,32 @@ fn ts_http_to_bin_invalid_len_f() {
 	let r = http_to_bin("466f6f62617");
 	assert!(r.is_err());
 }
+
+#[test]
+fn ts_http_wrapper_serialise_p() {
+	let mut p = Packet::new(DvspMsgType::GsnResponse);
+	let fr = FrameResponse::new(DvspRcode::Ok);
+	
+	p.write_content(fr.serialise().as_slice()).unwrap();
+	
+	let v = HttpWrapper::serialise(&p, "foohost", "");
+	
+	let slice = v.as_slice();
+	
+	assert_eq!(String::from("POST / HTTP/1.1\r\nHost: foohost\r\n"), String::from_utf8_lossy(&slice[0..32]));
+}
+
+#[test]
+fn ts_http_wrapper_deserialise_p() {
+	let mut p = Packet::new(DvspMsgType::GsnResponse);
+	let fr = FrameResponse::new(DvspRcode::NetworkError);
+	
+	p.write_content(fr.serialise().as_slice()).unwrap();
+	
+	let bytes = HttpWrapper::serialise(&p, "foohost", "");
+	
+	let packet = HttpWrapper::deserailise(bytes);
+	
+	
+	
+}

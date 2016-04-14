@@ -144,6 +144,9 @@ pub struct Packet {
 	content: Vec<u8>,
 }
 
+pub struct HttpWrapper;
+
+
 #[derive(Debug)]
 pub struct FrameResponse {	// Response
 	pub code: DvspRcode,
@@ -314,6 +317,48 @@ impl NetSerial for Packet {
 	}
 }
 
+
+impl HttpWrapper {
+	pub fn serialise(packet: &Packet, host: &str, resource: &str) -> Vec<u8> {
+		let serial = packet.serialise();
+		let header : String = format!(
+"POST /{} HTTP/1.1\r
+Host: {}\r
+User-Agent: SpringDVS\r
+Content-Type: application/octet-stream\r
+Content-Length: {}\r\n\r\n", resource, host, serial.len()
+		);
+		
+		let mut v = Vec::new();
+		v.extend_from_slice(header.as_ref());
+		v.extend_from_slice(serial.as_ref());
+		v
+	}
+	
+	pub fn deserailise(bytes: Vec<u8>) -> Result<Packet,Failure> {
+		
+		let s = match String::from_utf8(bytes) {
+			Ok(s) => s,
+			Err(_) => return Err(Failure::InvalidBytes)
+		};
+		
+		let atoms : Vec<&str> = s.split("\r\n\r\n").collect();
+		
+		if atoms.len() != 2 { return Err(Failure::InvalidFormat) }
+		
+		match http_to_bin(atoms[1]) {
+			Ok(bytes) =>  {
+				match Packet::deserialise(&bytes) {
+					Ok(p) => Ok(p),
+					Err(e) => Err(e)	
+				}
+			},
+			Err(e) => return Err(e),
+		}
+		
+		
+	}
+}
 
 
 // ----- FrameResponse ------

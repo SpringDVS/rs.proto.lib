@@ -46,7 +46,6 @@ pub fn deserialise_bool(byte: u8) -> bool {
 }
 
 pub fn hex_str_to_byte(src: &[u8]) -> Option<u8> {
-	if src.len() != 2 { return None }
 	
 	let mut val = 0;
 	let mut factor = 16;
