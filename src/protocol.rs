@@ -240,6 +240,14 @@ impl Packet {
 		}
 	}
 	
+	pub fn from_serialisable<T: NetSerial>(msgtype: DvspMsgType, content: &T) -> Result<Packet, Failure> {
+		let mut p = Packet::new(msgtype);
+		match p.write_content(content.serialise().as_slice()) {
+			Ok(_) => Ok(p),
+			Err(f) => Err(f)
+		}
+	} 
+	
 	pub fn header(&self) -> &PacketHeader {
 		&self.header
 	}

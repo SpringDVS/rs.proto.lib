@@ -10,6 +10,23 @@ use spring_dvs::enums::*;
 // ------- Testing  -------- \\
 
 #[test]
+fn ts_protocol_packet_from_serialisable_p() {
+	let r = Packet::from_serialisable(
+				DvspMsgType::GsnResponse,
+				&FrameResponse::new(DvspRcode::Ok)
+			);
+	
+	assert!(r.is_ok());
+	
+	let r2 = r.unwrap().content_as::<FrameResponse>();
+	
+	assert!(r2.is_ok());
+	
+	assert_eq!(DvspRcode::Ok, r2.unwrap().code);
+	
+}
+
+#[test]
 fn ts_protocol_packet_serialise_s() {
 	let mut p: Packet = Packet::new(DvspMsgType::GsnRegistration);
 	
