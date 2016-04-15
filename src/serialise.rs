@@ -62,3 +62,11 @@ pub fn hex_str_to_byte(src: &[u8]) -> Option<u8> {
 	Some(val)
 	
 }
+
+pub fn bin_to_hex(src: &Vec<u8>) -> String {
+	let mut s = String::new();
+	for byte in src {
+		s.push_str( format!("{:0>2x}", byte).as_ref() )
+	}
+	s
+}
