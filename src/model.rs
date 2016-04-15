@@ -175,6 +175,14 @@ impl Node {
 			format(format_args!("{},{}/{}", self.springname, self.hostname, self.resource))
 		}
 	}
+	
+	pub fn to_host_resource(&self) -> String {
+		if self.resource.is_empty() {
+			format(format_args!("{}", self.hostname))
+		} else {
+			format(format_args!("{}/{}", self.hostname, self.resource))
+		}
+	}
 }
 
 impl Url {
