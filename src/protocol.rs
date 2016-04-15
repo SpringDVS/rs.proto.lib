@@ -106,7 +106,7 @@ fn bytes_slice_to_ipv4(bytes: &[u8]) -> Option<Ipv4> {
 }
 
 
-pub fn http_to_bin(src: &str) -> Result<Vec<u8>,Failure> {
+pub fn http_to_bin(src: &[u8]) -> Result<Vec<u8>,Failure> {
 	
 	let mut v = Vec::new();
 	let l = src.len();
@@ -117,7 +117,7 @@ pub fn http_to_bin(src: &str) -> Result<Vec<u8>,Failure> {
 	let mut i : usize = 0;
 	while i < l {
 		
-		match hex_str_to_byte(src[i..i+2].as_bytes()) {
+		match hex_str_to_byte(&src[i..i+2]) {
 			Some(b) => v.push(b),
 			None => return Err(Failure::InvalidBytes),
 		};
@@ -125,6 +125,10 @@ pub fn http_to_bin(src: &str) -> Result<Vec<u8>,Failure> {
 		i += 2;
 	}
 	Ok(v)
+}
+
+pub fn http_from_bin(src: &Vec<u8>) -> String {
+	bin_to_hex(src)
 }
 
 // ----- Data Structures ----- \\
@@ -327,8 +331,27 @@ impl NetSerial for Packet {
 
 
 impl HttpWrapper {
-	pub fn serialise(packet: &Packet, host: &str, resource: &str) -> Vec<u8> {
-		let serial = packet.serialise();
+
+	/// Takes a Packet, encodes it in an hexadecimal string, wraps it
+	/// in an HTTP request and serialises it all into a vector of bytes
+	///
+	/// # Arguments
+	///
+	/// * `packet` - The Packet to serialise for HTTP service layer
+	/// * `host` - The host of the target node
+	/// * `resource` - The resource to push to on the target node
+	///
+	/// # Example
+	///
+	/// 
+	/// // Send the request to `spring.example.tld/node/`
+	/// let bytes = HttpWrapper::serialise(&Packet::from_serialisable(
+	///											DvspMsgType::Response,
+	///											&FrameResponse::new(DvspRcode::Ok)
+	///										), "spring.example.tld", "/node/");
+	///
+	pub fn serialise_request(packet: &Packet, host: &str, resource: &str) -> Vec<u8> {
+		let serial = http_from_bin(&packet.serialise()).into_bytes();
 		let header : String = format!(
 "POST /{} HTTP/1.1\r
 Host: {}\r
@@ -342,8 +365,24 @@ Content-Length: {}\r\n\r\n", resource, host, serial.len()
 		v.extend_from_slice(serial.as_ref());
 		v
 	}
+
+	/// Takes a Packet, encodes it in an hexadecimal string and returns
+	/// a vector for bytes
+	///
+	/// # Arguments
+	///
+	/// * `packet` - The Packet to serialise for HTTP service layer	
+	pub fn serialise_response(packet: &Packet) -> Vec<u8> {
+		http_from_bin(&packet.serialise()).into_bytes()
+	}
 	
-	pub fn deserailise(bytes: Vec<u8>) -> Result<Packet,Failure> {
+	/// Takes an HTTP service layer request, including HTTP Headers,
+	/// and returns the packet that is encoded within
+	///
+	/// # Arguments
+	///
+	/// * `bytes` - A Vector of u8 bytes consisting of the entire request	
+	pub fn deserialise_request(bytes: Vec<u8>) -> Result<Packet,Failure> {
 		
 		let s = match String::from_utf8(bytes) {
 			Ok(s) => s,
@@ -354,7 +393,7 @@ Content-Length: {}\r\n\r\n", resource, host, serial.len()
 		
 		if atoms.len() != 2 { return Err(Failure::InvalidFormat) }
 		
-		match http_to_bin(atoms[1]) {
+		match http_to_bin(atoms[1].as_bytes()) {
 			Ok(bytes) =>  {
 				match Packet::deserialise(&bytes) {
 					Ok(p) => Ok(p),
@@ -365,6 +404,16 @@ Content-Length: {}\r\n\r\n", resource, host, serial.len()
 		}
 		
 		
+	}
+	
+	pub fn deserialise_response(bytes: Vec<u8>) -> Result<Packet,Failure> {
+		match http_to_bin( bytes.as_slice() ) {
+			Ok(b) => match Packet::deserialise(b.as_ref()) {
+				Ok(p) => Ok(p),
+				Err(e) => Err(e)
+			},
+			Err(e) => Err(e)
+		}
 	}
 }
 

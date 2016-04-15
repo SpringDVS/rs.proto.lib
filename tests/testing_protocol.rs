@@ -693,7 +693,7 @@ fn ts_protocol_packet_content_as_f() {
 
 #[test]
 fn ts_http_to_bin_upper_p() {
-	let r = http_to_bin("466F6F626172");
+	let r = http_to_bin("466F6F626172".as_ref());
 	assert!(r.is_ok());
 	let s = String::from_utf8(r.unwrap()).unwrap();
 	assert_eq!(String::from("Foobar"), s);
@@ -701,7 +701,7 @@ fn ts_http_to_bin_upper_p() {
 
 #[test]
 fn ts_http_to_bin_lower_p() {
-	let r = http_to_bin("466f6f626172");
+	let r = http_to_bin("466f6f626172".as_ref());
 	assert!(r.is_ok());
 	let s = String::from_utf8(r.unwrap()).unwrap();
 	assert_eq!(String::from("Foobar"), s);
@@ -709,7 +709,7 @@ fn ts_http_to_bin_lower_p() {
 
 #[test]
 fn ts_http_to_bin_upperlower_p() {
-	let r = http_to_bin("466f6F626172");
+	let r = http_to_bin("466f6F626172".as_ref());
 	assert!(r.is_ok());
 	let s = String::from_utf8(r.unwrap()).unwrap();
 	assert_eq!(String::from("Foobar"), s);
@@ -717,24 +717,33 @@ fn ts_http_to_bin_upperlower_p() {
 
 #[test]
 fn ts_http_to_bin_out_of_bounds_f() {
-	let r = http_to_bin("466f6g626172");
+	let r = http_to_bin("466f6g626172".as_ref());
 	assert!(r.is_err());
 }
 
 #[test]
 fn ts_http_to_bin_invalid_len_f() {
-	let r = http_to_bin("466f6f62617");
+	let r = http_to_bin("466f6f62617".as_ref());
 	assert!(r.is_err());
 }
 
 #[test]
-fn ts_http_wrapper_serialise_p() {
+fn ts_http_from_bin_p() {
+	let v : Vec<u8> = vec!['F' as u8, 'o' as u8, 'o' as u8, 'b' as u8, 'a' as u8, 'r' as u8, 0x3];
+	
+	let val = http_from_bin(&v);
+	
+	assert_eq!(String::from("466f6f62617203"), val);
+}
+
+#[test]
+fn ts_http_wrapper_serialise_request_p() {
 	let mut p = Packet::new(DvspMsgType::GsnResponse);
 	let fr = FrameResponse::new(DvspRcode::Ok);
 	
 	p.write_content(fr.serialise().as_slice()).unwrap();
 	
-	let v = HttpWrapper::serialise(&p, "foohost", "");
+	let v = HttpWrapper::serialise_request(&p, "foohost", "");
 	
 	let slice = v.as_slice();
 	
@@ -742,16 +751,52 @@ fn ts_http_wrapper_serialise_p() {
 }
 
 #[test]
-fn ts_http_wrapper_deserialise_p() {
+fn ts_http_wrapper_deserialise_request_p() {
 	let mut p = Packet::new(DvspMsgType::GsnResponse);
 	let fr = FrameResponse::new(DvspRcode::NetworkError);
 	
 	p.write_content(fr.serialise().as_slice()).unwrap();
 	
-	let bytes = HttpWrapper::serialise(&p, "foohost", "");
+	let bytes = HttpWrapper::serialise_request(&p, "foohost", "");
 	
-	let packet = HttpWrapper::deserailise(bytes);
+	let r = HttpWrapper::deserialise_request(bytes);
+	assert!(r.is_ok());
+	
+	let r2 = r.unwrap().content_as::<FrameResponse>();
+	assert!(r2.is_ok());
+	
+	assert_eq!(DvspRcode::NetworkError, r2.unwrap().code);
+}
+
+#[test]
+fn ts_http_wrapper_deserialise_request_f() {
+	let mut p = Packet::new(DvspMsgType::GsnResponse);
+	let fr = FrameResponse::new(DvspRcode::NetworkError);
+	
+	p.write_content(fr.serialise().as_slice()).unwrap();
+	
+	let bytes = http_from_bin(p.serialise().as_ref());
+	
+	let r = HttpWrapper::deserialise_request(bytes.into_bytes());
+	assert!(r.is_err());
+}
+
+#[test]
+fn ts_http_wrapper_de_serialise_response_p() {
+	let p = Packet::from_serialisable(
+						DvspMsgType::GsnResponse,
+						&FrameResponse::new(DvspRcode::Ok)
+					).unwrap();
 	
 	
+	let v = HttpWrapper::serialise_response(&p);
 	
+	let r = HttpWrapper::deserialise_response(v);
+	
+	assert!(r.is_ok());
+	
+	let packet = r.unwrap();
+	
+	assert_eq!(p.header().msg_type, packet.header().msg_type);
+	assert_eq!(p.content_raw()[0], packet.content_raw()[0]);
 }
