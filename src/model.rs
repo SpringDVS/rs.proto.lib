@@ -17,6 +17,8 @@ pub struct Node {
 	service: DvspService,
 	state: DvspNodeState,
 	types: NodeTypeField,
+	
+	resource: String,
 }
 
 #[derive(Debug)]
@@ -64,15 +66,21 @@ pub trait Metaspace {
 // --------- Implementations ----------- \\
 impl Node {
 	pub fn new( spring: String, host: String, address: Ipv4, service: DvspService, state: DvspNodeState, types: NodeTypeField  ) -> Node {
-			
+		
+		let (hostname,res) = match host.find('/') {
+			None => (host.as_str(), "/"),
+			Some(p) => host.split_at(p)
+		};
+		
 		Node {
 			springname: spring,
-			hostname: host,
+			hostname: String::from(hostname),
 			address: address,
 			
 			service: service,
 			state: state,
 			types: types,
+			resource: String::from(&res[1..]),
 		}
 			
 	}
@@ -94,6 +102,7 @@ impl Node {
 				service: DvspService::Undefined,
 				state: DvspNodeState::Unspecified,
 				types: DvspNodeType::Undefined as u8,
+				resource: String::new(),
 			}
 		)
 	}
@@ -108,6 +117,7 @@ impl Node {
 				service: DvspService::Undefined,
 				state: DvspNodeState::Unspecified,
 				types: DvspNodeType::Undefined as u8,
+				resource: String::new(),
 			}
 		)
 	}
@@ -136,6 +146,10 @@ impl Node {
 	pub fn state(&self) -> DvspNodeState {
 		self.state
 	}
+	
+	pub fn resource(&self) -> &str {
+		&self.resource
+	}
 
 	pub fn update_state(&mut self, state: DvspNodeState) {
 		self.state = state;
@@ -155,7 +169,11 @@ impl Node {
 	}
 	
 	pub fn to_node_register(&self) -> String {
-		format(format_args!("{},{}", self.springname, self.hostname))
+		if self.resource.is_empty() {
+			format(format_args!("{},{}", self.springname, self.hostname))
+		} else {
+			format(format_args!("{},{}/{}", self.springname, self.hostname, self.resource))
+		}
 	}
 }
 

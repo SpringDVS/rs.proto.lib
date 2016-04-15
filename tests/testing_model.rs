@@ -4,7 +4,27 @@
  */
 extern crate spring_dvs;
 use spring_dvs::model::*;
-use spring_dvs::enums::Failure;
+use spring_dvs::enums::{Failure, DvspService, DvspNodeState, DvspNodeType};
+
+#[test]
+fn ts_model_node_new_dvsp_p() {
+	let node = Node::new("spring".to_string(), "host".to_string(), [192,168,1,2], DvspService::Dvsp, DvspNodeState::Enabled, DvspNodeType::Org as u8);
+	
+	assert_eq!("host", node.hostname());
+	assert_eq!("", node.resource());
+	
+	assert_eq!(String::from("spring,host"), node.to_node_register());
+}
+
+#[test]
+fn ts_model_node_new_http_p() {
+	let node = Node::new("spring".to_string(), "host/php/node".to_string(), [192,168,1,2], DvspService::Http, DvspNodeState::Enabled, DvspNodeType::Org as u8);
+	
+	assert_eq!("host", node.hostname());
+	assert_eq!("php/node", node.resource());
+	assert_eq!(String::from("spring,host/php/node"), node.to_node_register());
+}
+
 
 #[test]
 fn ts_model_node_from_node_string_p() {
