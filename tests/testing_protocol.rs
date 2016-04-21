@@ -762,7 +762,12 @@ fn ts_http_wrapper_deserialise_request_p() {
 	let r = HttpWrapper::deserialise_request(bytes);
 	assert!(r.is_ok());
 	
-	let r2 = r.unwrap().content_as::<FrameResponse>();
+	let rp = Packet::deserialise(&r.unwrap());
+	assert!(rp.is_ok());
+	
+	
+	
+	let r2 = rp.unwrap().content_as::<FrameResponse>();
 	assert!(r2.is_ok());
 	
 	assert_eq!(DvspRcode::NetworkError, r2.unwrap().code);
@@ -795,7 +800,11 @@ fn ts_http_wrapper_de_serialise_response_p() {
 	
 	assert!(r.is_ok());
 	
-	let packet = r.unwrap();
+	let r2 = Packet::deserialise(r.unwrap().as_slice());
+	assert!(r2.is_ok());
+	
+	let packet = r2.unwrap();
+	
 	
 	assert_eq!(p.header().msg_type, packet.header().msg_type);
 	assert_eq!(p.content_raw()[0], packet.content_raw()[0]);

@@ -366,6 +366,39 @@ Content-Length: {}\r\n\r\n", resource, host, serial.len()
 		v
 	}
 
+	/// Takes bytes of a serialised packet and encodes it in an HTTP Reqest
+	///
+	/// # Arguments
+	///
+	/// * `vytes` - Thebytes of an already serialised Packet
+	/// * `host` - The host of the target node
+	/// * `resource` - The resource to push to on the target node
+	///
+	/// # Example
+	///
+	/// 
+	/// // Send the request to `spring.example.tld/node/`
+	/// let bytes = HttpWrapper::serialise(&Packet::from_serialisable(
+	///											DvspMsgType::Response,
+	///											&FrameResponse::new(DvspRcode::Ok)
+	///										).serialise(), "spring.example.tld", "/node/");
+	///
+	pub fn serialise_bytes_request(bytes: &Vec<u8>, host: &str, resource: &str) -> Vec<u8> {
+		let serial = http_from_bin(&bytes).into_bytes();
+		let header : String = format!(
+"POST /{} HTTP/1.1\r
+Host: {}\r
+User-Agent: SpringDVS\r
+Content-Type: application/octet-stream\r
+Content-Length: {}\r\n\r\n", resource, host, serial.len()
+		);
+		
+		let mut v = Vec::new();
+		v.extend_from_slice(header.as_ref());
+		v.extend_from_slice(serial.as_ref());
+		v
+	}
+
 	/// Takes a Packet, encodes it in an hexadecimal string and returns
 	/// a vector for bytes
 	///
@@ -376,13 +409,23 @@ Content-Length: {}\r\n\r\n", resource, host, serial.len()
 		http_from_bin(&packet.serialise()).into_bytes()
 	}
 	
+	/// Takes the bytes of a packet, encodes it in an hexadecimal string and returns
+	/// a vector for bytes
+	///
+	/// # Arguments
+	///
+	/// * `packet` - The Packet to serialise for HTTP service layer	
+	pub fn serialise_response_bytes(bytes: &Vec<u8>) -> Vec<u8> {
+		http_from_bin(&bytes).into_bytes()
+	}
+	
 	/// Takes an HTTP service layer request, including HTTP Headers,
-	/// and returns the packet that is encoded within
+	/// and returns the bytes of a packet that is encoded within
 	///
 	/// # Arguments
 	///
 	/// * `bytes` - A Vector of u8 bytes consisting of the entire request	
-	pub fn deserialise_request(bytes: Vec<u8>) -> Result<Packet,Failure> {
+	pub fn deserialise_request(bytes: Vec<u8>) -> Result<Vec<u8>,Failure> {
 		
 		let s = match String::from_utf8(bytes) {
 			Ok(s) => s,
@@ -393,27 +436,12 @@ Content-Length: {}\r\n\r\n", resource, host, serial.len()
 		
 		if atoms.len() != 2 { return Err(Failure::InvalidFormat) }
 		
-		match http_to_bin(atoms[1].as_bytes()) {
-			Ok(bytes) =>  {
-				match Packet::deserialise(&bytes) {
-					Ok(p) => Ok(p),
-					Err(e) => Err(e)	
-				}
-			},
-			Err(e) => return Err(e),
-		}
-		
+		http_to_bin(atoms[1].as_bytes())
 		
 	}
 	
-	pub fn deserialise_response(bytes: Vec<u8>) -> Result<Packet,Failure> {
-		match http_to_bin( bytes.as_slice() ) {
-			Ok(b) => match Packet::deserialise(b.as_ref()) {
-				Ok(p) => Ok(p),
-				Err(e) => Err(e)
-			},
-			Err(e) => Err(e)
-		}
+	pub fn deserialise_response(bytes: Vec<u8>) -> Result<Vec<u8>,Failure> {
+		http_to_bin( bytes.as_slice() )
 	}
 }
 
