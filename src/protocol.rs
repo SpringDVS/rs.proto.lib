@@ -441,7 +441,21 @@ Content-Length: {}\r\n\r\n", resource, host, serial.len()
 	}
 	
 	pub fn deserialise_response(bytes: Vec<u8>) -> Result<Vec<u8>,Failure> {
-		http_to_bin( bytes.as_slice() )
+		let s : String = match String::from_utf8(bytes) {
+			Ok(s) => s,
+			Err(_) => return Err(Failure::InvalidBytes)
+		};
+		//let mut content = String::new();
+		let content = match s.find("\r\n\r\n") {
+			Some(_) => {
+				let atoms : Vec<&str> = s.split("\r\n\r\n").collect();
+				if atoms.len() != 2 { return Err(Failure::InvalidFormat) }
+				String::from(atoms[1])
+			} 
+			None => s
+		};
+
+		http_to_bin( content.as_bytes() )
 	}
 }
 
