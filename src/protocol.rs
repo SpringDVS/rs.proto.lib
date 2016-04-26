@@ -399,24 +399,48 @@ Content-Length: {}\r\n\r\n", resource, host, serial.len()
 		v
 	}
 
-	/// Takes a Packet, encodes it in an hexadecimal string and returns
-	/// a vector for bytes
+	/// Takes a Packet, encodes it in an hexadecimal string wraps it in
+	/// an HTTP response and returns a vector of bytes
 	///
 	/// # Arguments
 	///
 	/// * `packet` - The Packet to serialise for HTTP service layer	
 	pub fn serialise_response(packet: &Packet) -> Vec<u8> {
-		http_from_bin(&packet.serialise()).into_bytes()
+		let serial = http_from_bin(&packet.serialise()).into_bytes();
+		let header : String = format!(
+"HTTP/1.1 200 OK\r
+Server: SpringDVS/0.1\r
+Content-Type: application/octet-stream\r
+Connection: Closed\r
+Content-Length: {}\r\n\r\n", serial.len()
+		);
+		
+		let mut v = Vec::new();
+		v.extend_from_slice(header.as_ref());
+		v.extend_from_slice(serial.as_ref());
+		v
 	}
 	
-	/// Takes the bytes of a packet, encodes it in an hexadecimal string and returns
-	/// a vector for bytes
+	/// Takes the bytes of a packet, encodes it in an hexadecimal string
+	/// wrapped in an HTTP response and returns a vector for bytes
 	///
 	/// # Arguments
 	///
 	/// * `packet` - The Packet to serialise for HTTP service layer	
 	pub fn serialise_response_bytes(bytes: &Vec<u8>) -> Vec<u8> {
-		http_from_bin(&bytes).into_bytes()
+		let serial = http_from_bin(&bytes).into_bytes();
+		let header : String = format!(
+"HTTP/1.1 200 OK\r
+Server: SpringDVS/0.1\r
+Content-Type: application/octet-stream\r
+Connection: Closed\r
+Content-Length: {}\r\n\r\n", serial.len()
+		);
+		
+		let mut v = Vec::new();
+		v.extend_from_slice(header.as_ref());
+		v.extend_from_slice(serial.as_ref());
+		v
 	}
 	
 	/// Takes an HTTP service layer request, including HTTP Headers,
