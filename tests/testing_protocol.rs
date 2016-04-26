@@ -6,6 +6,8 @@ extern crate spring_dvs;
 use spring_dvs::protocol::*;
 use spring_dvs::serialise::*;
 use spring_dvs::enums::*;
+use std::str::FromStr;
+use std::net::SocketAddr;
 
 // ------- Testing  -------- \\
 
@@ -759,7 +761,7 @@ fn ts_http_wrapper_deserialise_request_p() {
 	
 	let bytes = HttpWrapper::serialise_request(&p, "foohost", "");
 	
-	let r = HttpWrapper::deserialise_request(bytes);
+	let r = HttpWrapper::deserialise_request(bytes, &mut SocketAddr::from_str("127.0.0.1:80").unwrap());
 	assert!(r.is_ok());
 	
 	let rp = Packet::deserialise(&r.unwrap());
@@ -782,7 +784,7 @@ fn ts_http_wrapper_deserialise_request_f() {
 	
 	let bytes = http_from_bin(p.serialise().as_ref());
 	
-	let r = HttpWrapper::deserialise_request(bytes.into_bytes());
+	let r = HttpWrapper::deserialise_request(bytes.into_bytes(), &mut SocketAddr::from_str("127.0.0.1:80").unwrap());
 	assert!(r.is_err());
 }
 

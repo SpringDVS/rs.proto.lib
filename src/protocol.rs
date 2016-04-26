@@ -7,6 +7,8 @@ use std::str;
 
 use ::serialise::*;
 use ::enums::*;
+use std::net::SocketAddr;
+use std::str::FromStr;
 
 pub type Ipv4 = [u8;4];
 pub type Ipv6 = [u8;6];
@@ -449,7 +451,7 @@ Content-Length: {}\r\n\r\n", serial.len()
 	/// # Arguments
 	///
 	/// * `bytes` - A Vector of u8 bytes consisting of the entire request	
-	pub fn deserialise_request(bytes: Vec<u8>) -> Result<Vec<u8>,Failure> {
+	pub fn deserialise_request(bytes: Vec<u8>, address: &mut SocketAddr) -> Result<Vec<u8>,Failure> {
 		
 		let s = match String::from_utf8(bytes) {
 			Ok(s) => s,
@@ -459,6 +461,12 @@ Content-Length: {}\r\n\r\n", serial.len()
 		let atoms : Vec<&str> = s.split("\r\n\r\n").collect();
 		
 		if atoms.len() != 2 { return Err(Failure::InvalidFormat) }
+		// rewrite address incase of proxy forwarding
+		
+		match HttpWrapper::extract_forwarded(atoms[0]) {
+			Some(addr) => *address = SocketAddr::from_str(&format!("{}:80", addr)).unwrap(),
+			_ => { }
+		}
 		
 		http_to_bin(atoms[1].as_bytes())
 		
@@ -480,6 +488,23 @@ Content-Length: {}\r\n\r\n", serial.len()
 		};
 
 		http_to_bin( content.as_bytes() )
+	}
+	
+	fn extract_forwarded(block: &str) -> Option<String> {
+		let headers : Vec<&str> = block.split("\n").collect();
+		for header in headers {
+			let atoms : Vec<&str> = header.split(":").collect();
+			
+			// Todo:
+			// Handle all the standard and de-facto headers here
+			// - Forwarded:
+			// - X-Real-IP:
+			if atoms[0] == "X-Forwarded-For" && atoms.len() > 1 {
+				return Some(String::from(atoms[1].trim()));
+			}
+		} 
+		
+		None
 	}
 }
 
