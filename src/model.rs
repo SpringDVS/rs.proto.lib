@@ -8,7 +8,7 @@ use ::protocol::{Ipv4, NodeTypeField};
 use ::enums::{DvspNodeState,DvspService,DvspNodeType,Success,Failure};
 use ::formats::{str_address_to_ipv4, ipv4_to_str_address};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Node {
 	springname: String,
 	hostname: String,

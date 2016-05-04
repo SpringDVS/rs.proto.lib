@@ -25,7 +25,7 @@ pub fn u8_packet_type(byte: u8) -> Option<DvspMsgType> {
 		4 => Some(DvspMsgType::GsnState),
 		5 => Some(DvspMsgType::GsnNodeInfo),
 		6 => Some(DvspMsgType::GsnNodeStatus),
-		
+		7 => Some(DvspMsgType::GsnRequest),
 		8 => Some(DvspMsgType::GsnTypeRequest),
 		
 		22 => Some(DvspMsgType::GtnRegistration),
@@ -126,6 +126,7 @@ pub fn http_to_bin(src: &[u8]) -> Result<Vec<u8>,Failure> {
 		
 		i += 2;
 	}
+	
 	Ok(v)
 }
 
@@ -134,7 +135,7 @@ pub fn http_from_bin(src: &Vec<u8>) -> String {
 }
 
 // ----- Data Structures ----- \\
-#[derive(Debug)]
+#[derive(Debug, Copy,Clone)]
 pub struct PacketHeader {
 	pub msg_type: DvspMsgType,
 	pub msg_part: bool,
@@ -144,10 +145,11 @@ pub struct PacketHeader {
 	
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Packet {
 	header: PacketHeader,
 	content: Vec<u8>,
+	tcp: bool,
 }
 
 pub struct HttpWrapper;
@@ -243,6 +245,7 @@ impl Packet {
 				addr_dest: [0,0,0,0],
 			},
 			content: Vec::new(),
+			tcp: false,
 		}
 	}
 	
@@ -252,7 +255,11 @@ impl Packet {
 			Ok(_) => Ok(p),
 			Err(f) => Err(f)
 		}
-	} 
+	}
+	
+	pub fn tcp_flag(&mut self, flag: bool) {
+		self.tcp = flag;
+	}
 	
 	pub fn header(&self) -> &PacketHeader {
 		&self.header
@@ -264,7 +271,7 @@ impl Packet {
 	
 	pub fn write_content(&mut self, bytes: &[u8]) -> Result<Success, Failure> {
 		
-		if bytes.len() > Bounds::PacketContentSize as usize {
+		if self.tcp == false && bytes.len() > Bounds::PacketContentSize as usize {
 			return Err(Failure::OutOfBounds);
 		} else {
 			push_bytes(&mut self.content, bytes);
@@ -478,6 +485,7 @@ Content-Length: {}\r\n\r\n", serial.len()
 			Err(_) => return Err(Failure::InvalidBytes)
 		};
 		//let mut content = String::new();
+
 		let content = match s.find("\r\n\r\n") {
 			Some(_) => {
 				let atoms : Vec<&str> = s.split("\r\n\r\n").collect();

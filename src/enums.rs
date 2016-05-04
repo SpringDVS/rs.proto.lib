@@ -12,7 +12,7 @@ pub enum DvspMsgType {
 	GsnState = 4,
 	GsnNodeInfo = 5,
 	GsnNodeStatus = 6,
-	
+	GsnRequest = 7,
 	GsnTypeRequest = 8,
 	
 	GtnRegistration = 22,
