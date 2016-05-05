@@ -334,7 +334,8 @@ fn ts_protocol_frame_register_serialise_p() {
 		true,
 		DvspNodeType::Org as u8, 
 		DvspService::Http, 
-		String::from("abc")
+		String::from("abc"),
+		[5;32]
 	);
 	
 	let bytes = fr.serialise();
@@ -344,15 +345,19 @@ fn ts_protocol_frame_register_serialise_p() {
 	assert_eq!(3, bytes[2]); // len
 	assert_eq!(2, bytes[3]); // service
 	
-	assert_eq!('a' as u8, bytes[4]);
-	assert_eq!('b' as u8, bytes[5]);
-	assert_eq!('c' as u8, bytes[6]);
+	assert_eq!(5, bytes[4]);
+	assert_eq!(5, bytes[33]);
+
+	assert_eq!('a' as u8, bytes[36]);
+	assert_eq!('b' as u8, bytes[37]);
+	assert_eq!('c' as u8, bytes[38]);
 	
 	let fr2 = FrameRegister::new(
 		true,
 		DvspNodeType::Org as u8, 
 		DvspService::Http, 
-		String::from("")
+		String::from(""),
+		[5;32]
 	);
 	
 	let bytes2 = fr2.serialise();
@@ -363,7 +368,15 @@ fn ts_protocol_frame_register_serialise_p() {
 #[test]
 fn ts_protocol_frame_register_deserialise_p() {
 	// Test pass
-	let bytes : [u8;7] = [1,2,3,1, 'a' as u8,'b' as u8,'c' as u8];
+	let fr = FrameRegister::new(
+		true,
+		DvspNodeType::Org as u8, 
+		DvspService::Dvsp, 
+		String::from("abc"),
+		[5;32]
+	);
+	
+	let bytes = fr.serialise();
 	let op = FrameRegister::deserialise(&bytes);
 	
 	assert!(op.is_ok());
@@ -374,41 +387,9 @@ fn ts_protocol_frame_register_deserialise_p() {
 	assert_eq!(2, frame.ntype);
 	assert_eq!(3, frame.len);
 	assert_eq!(DvspService::Dvsp, frame.service);
+	assert_eq!([5;32], frame.token);
 	assert_eq!(String::from("abc"), frame.nodereg);
-	
-	let bytes2 : [u8;4] = [1,2,3,1];
-	let op2 = FrameRegister::deserialise(&bytes2);
-	
-	assert!(op2.is_ok());
-	
-	let frame2 = op2.unwrap();
-	assert_eq!(String::from(""), frame2.nodereg);
-}
 
-#[test]
-fn ts_protocol_frame_register_deserialise_f() {
-	// Test fail
-	
-	// Invalid node type
-	let mut bytes : [u8;7] = [1, Bounds::MaxNodeType as u8 + 1 ,3,1, 'a' as u8,'b' as u8,'c' as u8];
-	let op1 = FrameRegister::deserialise(&bytes);
-	assert!(op1.is_err());
-	assert_eq!(Failure::InvalidBytes, op1.unwrap_err());
-	
-	// Invalid node service
-	bytes[1] = 2;
-	bytes[3] = 100;
-	let op2 = FrameRegister::deserialise(&bytes);
-	assert!(op2.is_err());
-	assert_eq!(Failure::InvalidBytes, op2.unwrap_err());
-	
-	// Invalid nodereg len
-	bytes[1] = 0;
-	bytes[3] = 0;
-	bytes[2] = Bounds::FrameRegisterLen as u8 + 1;
-	let op3 = FrameRegister::deserialise(&bytes);
-	assert!(op3.is_err());
-	assert_eq!(Failure::OutOfBounds, op3.unwrap_err());
 }
 
 
@@ -592,7 +573,8 @@ fn ts_protocol_frame_register_gtn_serialise_p() {
 		true,
 		DvspNodeType::Org as u8, 
 		DvspService::Http, 
-		String::from("")
+		String::from(""),
+		[5;32]
 	);
 	
 	let bytes2 = fr2.serialise();

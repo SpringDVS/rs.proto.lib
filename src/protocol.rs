@@ -187,6 +187,7 @@ pub struct FrameRegister { 	// Request
 	pub ntype: u8,
 	pub len: u8,
 	pub service: DvspService,
+	pub token: [u8;32],
 	pub nodereg: String,
 }
 
@@ -256,7 +257,7 @@ impl Packet {
 			Err(f) => Err(f)
 		}
 	}
-	
+
 	pub fn tcp_flag(&mut self, flag: bool) {
 		self.tcp = flag;
 	}
@@ -709,12 +710,13 @@ impl NetSerial for FrameNodeInfo {
 // ----- FrameRegister ------
 
 impl FrameRegister {
-	pub fn new(register: bool, ntype: u8, service: DvspService, nodereg: String) -> FrameRegister {
+	pub fn new(register: bool, ntype: u8, service: DvspService, nodereg: String, token: [u8;32]) -> FrameRegister {
 		FrameRegister {
 			register: register,
 			ntype: ntype,
 			len: nodereg.len() as u8,
 			service: service,
+			token: token,
 			nodereg: nodereg,
 		}
 	} 
@@ -728,6 +730,7 @@ impl NetSerial for FrameRegister {
 		v.push(self.ntype);
 		v.push(self.len);
 		v.push(self.service as u8);
+		push_bytes(&mut v, &self.token);
 		push_bytes(&mut v, self.nodereg.as_bytes());		
 		v
 	}
@@ -748,25 +751,30 @@ impl NetSerial for FrameRegister {
 		}
 
 		
+		
+		
 		let mut reg = String::new();
-		if bytes.len() > 4 {
-			reg =  match  str::from_utf8(&bytes[4..]) {
+		if bytes.len() > 36 {
+			reg =  match  str::from_utf8(&bytes[36..]) {
 				Ok(s) => String::from(s),
 				_ => return Err(Failure::InvalidBytes),
 			}
 		}
+		let mut tokens : [u8;32] = [0;32];
+		tokens.clone_from_slice(&bytes[4..36]);
 		
 		Ok(FrameRegister {
 			register: deserialise_bool(bytes[0]),
 			ntype: bytes[1],
 			len: bytes[2],
 			service: service,
+			token: tokens,
 			nodereg: reg 
 		})
 	}
 	
 	fn lower_bound() -> usize {
-		4
+		36
 	}
 }
 
