@@ -491,7 +491,7 @@ Content-Length: {}\r\n\r\n", serial.len()
 			Some(_) => {
 				let atoms : Vec<&str> = s.split("\r\n\r\n").collect();
 				if atoms.len() != 2 { return Err(Failure::InvalidFormat) }
-				String::from(atoms[1])
+				String::from(atoms[1].trim())
 			} 
 			None => s
 		};
