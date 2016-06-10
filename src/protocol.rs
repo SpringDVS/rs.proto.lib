@@ -86,8 +86,59 @@ impl ProtocolObject for Message {
 	
 }
 
+
+pub struct ContentRegStr {
+	pub regstr: String, 
+}
+
+impl ContentRegStr {
+	
+}
+
+impl ProtocolObject for ContentRegStr {
+	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
+		
+		if bytes.len() == 0 { return Err(ParseFailure::InvalidContentFormat) }
+		
+		let s = match str::from_utf8(bytes) {
+			Ok(s) => s,
+			Err(_) => return Err(ParseFailure::ConversionError)
+		};
+		
+		Ok( ContentRegStr{ 
+				regstr: String::from(s) 
+			} )
+	}
+
+	fn to_bytes(&self) -> Vec<u8> {
+		Vec::new()
+	}	
+}
+
+
 #[test]
-fn ts_from_bytes_reg() {
+fn ts_from_bytes_fail_invalid_command() {
+	let o = Message::from_bytes(b"void foobar");
+	assert!(o.is_err());
+	assert!( match o {
+			Err(ParseFailure::InvalidCommand) => true,
+			_ => false,
+		});
+}
+#[test]
+fn ts_from_bytes_fail_invalid_conversion() {
+	let o = Message::from_bytes(&[0xc3,0x28]);
+	assert!(o.is_err());
+	assert!( match o {
+			Err(ParseFailure::ConversionError) => true,
+			_ => false,
+		});
+}
+
+
+
+#[test]
+fn ts_from_bytes_reg_pass() {
 	let o = Message::from_bytes(b"reg foobar");
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
@@ -106,8 +157,19 @@ fn ts_from_bytes_reg() {
 	assert_eq!(c.regstr, "foobar");
 	
 }
+
 #[test]
-fn ts_from_bytes_ureg() {
+fn ts_from_bytes_reg_fail() {
+	let o = Message::from_bytes(b"reg");
+	assert!(o.is_err());
+	assert!( match o {
+			Err(ParseFailure::InvalidContentFormat) => true,
+			_ => false,
+	});	
+}
+
+#[test]
+fn ts_from_bytes_ureg_pass() {
 	let o = Message::from_bytes(b"ureg foobar");
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
@@ -125,30 +187,12 @@ fn ts_from_bytes_ureg() {
 	assert_eq!(c.regstr, "foobar");
 }
 
-pub struct ContentRegStr {
-	pub regstr: String, 
+#[test]
+fn ts_from_bytes_ureg_fail() {
+	let o = Message::from_bytes(b"ureg");
+	assert!(o.is_err());
+	assert!( match o {
+			Err(ParseFailure::InvalidContentFormat) => true,
+			_ => false,
+	});	
 }
-
-impl ContentRegStr {
-	
-}
-
-impl ProtocolObject for ContentRegStr {
-	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
-		let s = match str::from_utf8(bytes) {
-			Ok(s) => s,
-			Err(_) => return Err(ParseFailure::ConversionError)
-		};
-		
-		Ok( ContentRegStr{ 
-				regstr: String::from(s) 
-			} )
-	}
-
-	fn to_bytes(&self) -> Vec<u8> {
-		Vec::new()
-	}	
-}
-
-
-

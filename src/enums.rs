@@ -77,6 +77,7 @@ pub enum Failure {
 pub enum ParseFailure {
 	ConversionError,
 	InvalidCommand,
+	InvalidContentFormat,
 	InvalidInternalState
 }
 
