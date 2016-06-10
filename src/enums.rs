@@ -4,7 +4,7 @@
  */
 // ----- Enumeration Lists ----- \\
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub enum DvspMsgType {
+pub enum DvspCmdType {
 	Undefined = 0,
 	GsnRegistration = 1,
 	GsnResolution = 2,
@@ -71,6 +71,19 @@ pub enum Bounds {
 pub enum Failure {
 	OutOfBounds, InvalidArgument, InvalidBytes, InvalidConversion, InvalidFormat,
 	Duplicate,
+}
+
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum ParseFailure {
+	ConversionError,
+	InvalidCommand,
+	InvalidInternalState
+}
+
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum CmdType {
+	Register, Unregister,
+	State,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
