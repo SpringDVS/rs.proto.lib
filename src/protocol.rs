@@ -5,13 +5,21 @@
 
 use std::str;
 
-pub use ::enums::{CmdType, ParseFailure};
+pub use ::enums::ParseFailure;
+
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum CmdType {
+	Register, Unregister,
+	State,
+	Info,
+	Resolve,
+}
 
 struct Empty;
 
 pub enum MessageContent {
 	Empty,
-	RegStr(ContentRegStr),
+	RegStr(ContentNodeDouble),
 	
 }
 
@@ -29,7 +37,6 @@ pub struct Message {
 
 
 impl Message {
-	
 	
 	fn next(bytes: &[u8]) -> Result<(usize, &str), ParseFailure> {
 		
@@ -53,6 +60,7 @@ impl Message {
 		match cmd {
 			"reg" => Ok(CmdType::Register),
 			"ureg" => Ok(CmdType::Unregister),
+			"state" => Ok(CmdType::State),
 			_  => Err(ParseFailure::InvalidCommand)
 		}
 	}
@@ -60,8 +68,8 @@ impl Message {
 	fn parse_content(bytes: &[u8], mtype: CmdType) -> Result<MessageContent, ParseFailure> {
 		
 		match mtype {
-			CmdType::Register => Ok(MessageContent::RegStr(try!(ContentRegStr::from_bytes(&bytes)))),
-			CmdType::Unregister => Ok(MessageContent::RegStr(try!(ContentRegStr::from_bytes(&bytes)))),
+			CmdType::Register => Ok(MessageContent::RegStr(try!(ContentNodeDouble::from_bytes(&bytes)))),
+			CmdType::Unregister => Ok(MessageContent::RegStr(try!(ContentNodeDouble::from_bytes(&bytes)))),
 			_ => return Err(ParseFailure::InvalidCommand),
 		}
 		
@@ -87,15 +95,18 @@ impl ProtocolObject for Message {
 }
 
 
-pub struct ContentRegStr {
-	pub regstr: String, 
+pub struct ContentNodeDouble {
+	pub spring: String,
+	pub host: String, 
 }
 
-impl ContentRegStr {
-	
+impl ContentNodeDouble {
+	pub fn to_string(&self) -> String {
+		format!("{},{}", self.spring, self.host)
+	}
 }
 
-impl ProtocolObject for ContentRegStr {
+impl ProtocolObject for ContentNodeDouble {
 	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
 		
 		if bytes.len() == 0 { return Err(ParseFailure::InvalidContentFormat) }
@@ -105,16 +116,22 @@ impl ProtocolObject for ContentRegStr {
 			Err(_) => return Err(ParseFailure::ConversionError)
 		};
 		
-		Ok( ContentRegStr{ 
-				regstr: String::from(s) 
+		let parts : Vec<&str> = s.split(",").collect();
+		
+		if parts.len() != 2 || parts[0].len() == 0 || parts[1].len() == 0 { 
+			return Err(ParseFailure::InvalidContentFormat) 
+		}
+
+		Ok( ContentNodeDouble{ 
+				spring: String::from(parts[0]),
+				host: String::from(parts[1]), 
 			} )
 	}
 
 	fn to_bytes(&self) -> Vec<u8> {
-		Vec::new()
+		Vec::from(self.to_string().as_bytes())
 	}	
 }
-
 
 #[test]
 fn ts_from_bytes_fail_invalid_command() {
@@ -139,7 +156,7 @@ fn ts_from_bytes_fail_invalid_conversion() {
 
 #[test]
 fn ts_from_bytes_reg_pass() {
-	let o = Message::from_bytes(b"reg foobar");
+	let o = Message::from_bytes(b"reg foobar,hostbar");
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
 	assert_eq!(m.cmd, CmdType::Register);
@@ -154,12 +171,13 @@ fn ts_from_bytes_reg_pass() {
 		_ => return
 	};
 	
-	assert_eq!(c.regstr, "foobar");
+	assert_eq!(c.spring, "foobar");
+	assert_eq!(c.host, "hostbar");
 	
 }
 
 #[test]
-fn ts_from_bytes_reg_fail() {
+fn ts_from_bytes_reg_fail_zero() {
 	let o = Message::from_bytes(b"reg");
 	assert!(o.is_err());
 	assert!( match o {
@@ -169,8 +187,32 @@ fn ts_from_bytes_reg_fail() {
 }
 
 #[test]
+fn ts_from_bytes_reg_fail_malformed() {
+	let o = Message::from_bytes(b"reg foobar");
+	assert!(o.is_err());
+	assert!( match o {
+			Err(ParseFailure::InvalidContentFormat) => true,
+			_ => false,
+	});
+	let o = Message::from_bytes(b"reg foobar,");
+	assert!(o.is_err());
+	assert!( match o {
+			Err(ParseFailure::InvalidContentFormat) => true,
+			_ => false,
+	});
+
+	let o = Message::from_bytes(b"reg ,foobar");
+	assert!(o.is_err());
+	assert!( match o {
+			Err(ParseFailure::InvalidContentFormat) => true,
+			_ => false,
+	});
+}
+
+
+#[test]
 fn ts_from_bytes_ureg_pass() {
-	let o = Message::from_bytes(b"ureg foobar");
+	let o = Message::from_bytes(b"ureg foobar,hostbar");
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
 	assert_eq!(m.cmd, CmdType::Unregister);
@@ -184,7 +226,8 @@ fn ts_from_bytes_ureg_pass() {
 		_ => return
 	};
 	
-	assert_eq!(c.regstr, "foobar");
+	assert_eq!(c.spring, "foobar");
+	assert_eq!(c.host, "hostbar");
 }
 
 #[test]
@@ -195,4 +238,12 @@ fn ts_from_bytes_ureg_fail() {
 			Err(ParseFailure::InvalidContentFormat) => true,
 			_ => false,
 	});	
+}
+
+#[test]
+fn ts_content_node_double_pass() {
+	let o = ContentNodeDouble::from_bytes(b"spring,host");
+	assert!(o.is_ok());
+	let c : ContentNodeDouble = o.unwrap();
+	assert_eq!(c.to_string(), "spring,host");
 }

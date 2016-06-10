@@ -82,12 +82,6 @@ pub enum ParseFailure {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub enum CmdType {
-	Register, Unregister,
-	State,
-}
-
-#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Success {
 	Ok	
 }
