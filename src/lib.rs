@@ -8,4 +8,5 @@ pub mod protocol;
 //pub mod serialise;
 pub mod enums;
 //pub mod model;
+pub mod node;
 pub mod formats;

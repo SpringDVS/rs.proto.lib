@@ -32,26 +32,56 @@ pub enum DvspCmdType {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub enum DvspRcode {
-	NetspaceError = 101,
-	NetspaceDuplication = 102,
-	NetworkError = 103,
-	MalformedContent = 104,
-	Ok = 200,
+pub enum Response {
+	NetspaceError,
+	NetspaceDuplication,
+	NetworkError,
+	MalformedContent,
+	Ok,
 }
+
+impl Response {
+	pub fn from_str(s: &str) -> Option<Self> {
+		match s {
+			"101" => Some(Response::NetspaceError),
+			"102" => Some(Response::NetspaceDuplication),
+			"103" => Some(Response::NetworkError),
+			"104" => Some(Response::MalformedContent),
+			"200" => Some(Response::Ok),
+			_ => None,
+		}
+	}
+}
+
+impl fmt::Display for Response {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		let out = match self {
+				&Response::NetspaceError => "101",
+				&Response::NetspaceDuplication => "102",
+				&Response::NetworkError => "103",
+				&Response::MalformedContent => "104",
+				&Response::Ok => "200",							
+		};
+		write!(f, "{}", out)
+	} 
+}
+
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum NodeRole {
 	Undefined = 0,
 	Hub = 1,
 	Org = 2,
+	Hybrid = 3,
 }
+
 
 impl NodeRole {
 	pub fn from_str(s: &str) -> Option<Self> {
 		match s {
 			"org" => Some(NodeRole::Org),
 			"hub" => Some(NodeRole::Hub),
+			"hybrid" => Some(NodeRole::Hybrid),
 			_ => None,
 		}
 	}
@@ -62,6 +92,7 @@ impl fmt::Display for NodeRole {
 		let out = match self {
 				&NodeRole::Hub => "hub",
 				&NodeRole::Org => "org",
+				&NodeRole::Hybrid => "hybrid",
 				_ => "undefined",				
 		};
 		write!(f, "{}", out)
@@ -98,7 +129,7 @@ impl fmt::Display for NodeService {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub enum DvspNodeState {
+pub enum NodeState {
 	Disabled = 0,
 	Enabled = 1,
 	Unresponsive = 2,

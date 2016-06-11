@@ -72,9 +72,11 @@ fn ts_valid_ip_fail() {
 /// NodeSingle consists of the string Springname
 /// 
 /// Text Format: spring
+#[derive(Clone,Debug, PartialEq)]
 pub struct NodeSingleFmt {
 	pub spring: String,
 }
+
 
 impl NodeSingleFmt {
 	pub fn from_str(sns: &str) -> Result<Self, ParseFailure> {
@@ -104,6 +106,7 @@ impl fmt::Display for NodeSingleFmt {
 /// NodeDouble consists of the strings Springname and Hostname
 /// 
 /// Text Format: spring,host
+#[derive(Clone,Debug, PartialEq)]
 pub struct NodeDoubleFmt {
 	pub spring: String,
 	pub host: String,
@@ -144,6 +147,7 @@ impl fmt::Display for NodeDoubleFmt {
 /// NodeTriple consists of the strings Springname, Hostname and IP Address
 /// 
 /// Text Format: spring,host,###.###.###.###
+#[derive(Clone,Debug, PartialEq)]
 pub struct NodeTripleFmt {
 	pub spring: String,
 	pub host: String,
@@ -190,6 +194,7 @@ impl fmt::Display for NodeTripleFmt {
 /// NodeQuad consists of the strings Springname, Hostname, IP Address and service
 /// 
 /// Text Format: spring,host,###.###.###.###,service
+#[derive(Clone,Debug, PartialEq)]
 pub struct NodeQuadFmt {
 	pub spring: String,
 	pub host: String,

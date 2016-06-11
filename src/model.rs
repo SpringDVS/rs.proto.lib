@@ -4,22 +4,8 @@
  */
 use std::fmt::format;
 
-use ::protocol::{Ipv4, NodeTypeField};
-use ::enums::{DvspNodeState,DvspService,DvspNodeType,Success,Failure};
-use ::formats::{str_address_to_ipv4, ipv4_to_str_address};
-
-#[derive(Debug, Clone)]
-pub struct Node {
-	springname: String,
-	hostname: String,
-	address: Ipv4,
-	
-	service: DvspService,
-	state: DvspNodeState,
-	types: NodeTypeField,
-	
-	resource: String,
-}
+use ::protocol;
+//use ::formats::{str_address_to_ipv4, ipv4_to_str_address};
 
 #[derive(Debug)]
 pub struct Url {
@@ -64,126 +50,7 @@ pub trait Metaspace {
 }
 
 // --------- Implementations ----------- \\
-impl Node {
-	pub fn new( spring: String, host: String, address: Ipv4, service: DvspService, state: DvspNodeState, types: NodeTypeField  ) -> Node {
-		
-		let (hostname,res) = match host.find('/') {
-			None => (host.as_str(), "/"),
-			Some(p) => host.split_at(p)
-		};
-		
-		Node {
-			springname: spring,
-			hostname: String::from(hostname),
-			address: address,
-			
-			service: service,
-			state: state,
-			types: types,
-			resource: String::from(&res[1..]),
-		}
-			
-	}
-	
-	pub fn from_node_string(nodestr: &str) -> Result<Node,Failure> {
-		let atom : Vec<&str> = nodestr.split(',').collect();
-		if atom.len() != 3 && atom.len() != 4 {
-			return Err(Failure::InvalidArgument);
-		}
-		
-		let addr = try!(str_address_to_ipv4(atom[2]));
-		
-		Ok(
-			Node {
-				springname: String::from(atom[0]),
-				hostname: String::from(atom[1]),
-				address: addr,
-				
-				service: DvspService::Undefined,
-				state: DvspNodeState::Unspecified,
-				types: DvspNodeType::Undefined as u8,
-				resource: String::new(),
-			}
-		)
-	}
-	
-	pub fn from_springname(springname: &str) -> Result<Node,Failure> {
-		Ok(
-			Node {
-				springname: String::from(springname),
-				hostname: String::from("unknown"),
-				address: [0,0,0,0],
-				
-				service: DvspService::Undefined,
-				state: DvspNodeState::Unspecified,
-				types: DvspNodeType::Undefined as u8,
-				resource: String::new(),
-			}
-		)
-	}
-	
-	pub fn springname(&self) -> &str {
-		self.springname.as_ref()
-	}
-	
-	pub fn hostname(&self) -> &str {
-		self.hostname.as_ref()
-	}
-	
-	pub fn address(&self) -> Ipv4 {
-		self.address
-	}
-	
-	pub fn service(&self) -> DvspService {
-		self.service
-	}
-	
-	pub fn update_service(&mut self, service: DvspService) {
-		self.service = service;
-	}
 
-	
-	pub fn state(&self) -> DvspNodeState {
-		self.state
-	}
-	
-	pub fn resource(&self) -> &str {
-		&self.resource
-	}
-
-	pub fn update_state(&mut self, state: DvspNodeState) {
-		self.state = state;
-	}
-	
-	pub fn types(&self) -> NodeTypeField {
-		self.types
-	}
-	
-	pub fn update_types(&mut self, types: NodeTypeField) {
-		self.types = types;
-	}
-
-	
-	pub fn to_node_string(&self) -> String {
-		format(format_args!("{},{},{}", self.springname, self.hostname, ipv4_to_str_address(&self.address) ))
-	}
-	
-	pub fn to_node_register(&self) -> String {
-		if self.resource.is_empty() {
-			format(format_args!("{},{}", self.springname, self.hostname))
-		} else {
-			format(format_args!("{},{}/{}", self.springname, self.hostname, self.resource))
-		}
-	}
-	
-	pub fn to_host_resource(&self) -> String {
-		if self.resource.is_empty() {
-			format(format_args!("{}", self.hostname))
-		} else {
-			format(format_args!("{}/{}", self.hostname, self.resource))
-		}
-	}
-}
 
 impl Url {
 	

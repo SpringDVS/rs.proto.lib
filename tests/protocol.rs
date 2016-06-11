@@ -148,3 +148,27 @@ fn ts_from_bytes_content_network_fail_malformed() {
 	let o = ContentNetwork::from_bytes(b"foobar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
 	assert!(o.is_err());
 }
+
+
+#[test]
+fn ts_content_response_from_bytes_pass_empty() {
+	let o = ContentResponse::from_bytes(b"200");
+	assert!(o.is_ok());
+	
+	let cr : ContentResponse  = o.unwrap();
+	assert_eq!(cr.code, Response::Ok);
+	assert_eq!(cr.content, MessageContent::Empty);
+}
+
+#[test]
+fn ts_content_response_from_bytes_pass_network () {
+	let o = ContentResponse::from_bytes(b"200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
+	assert!(o.is_ok());
+	
+	let cr : ContentResponse  = o.unwrap();
+	assert_eq!(cr.code, Response::Ok);
+	assert!(match cr.content {
+			MessageContent::Network(_) => true,
+			_ => false,
+		});
+}

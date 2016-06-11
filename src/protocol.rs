@@ -7,7 +7,7 @@ use std::str;
 use std::fmt;
 pub use std::net::{Ipv4Addr, Ipv6Addr};
 
-pub use ::enums::{ParseFailure, NodeRole};
+pub use ::enums::{ParseFailure,NodeRole,Response,NodeService,NodeState};
 
 
 pub use ::formats::{NodeSingleFmt,NodeDoubleFmt,NodeTripleFmt,NodeQuadFmt};
@@ -23,7 +23,9 @@ pub enum CmdType {
 	Resolve,
 }
 
+
 /// Variant defining the content of the message
+#[derive(Clone, Debug, PartialEq)]
 pub enum MessageContent {
 	/// There is no body of content
 	Empty,
@@ -33,6 +35,9 @@ pub enum MessageContent {
 	
 	/// Contains a Node Single
 	NodeSingle(ContentNodeSingle),
+	
+	///Contains a Network
+	Network(ContentNetwork),
 }
 
 /// Empty content type
@@ -56,7 +61,7 @@ pub struct Message {
 
 impl Message {
 	
-	fn next(bytes: &[u8]) -> Result<(usize, &str), ParseFailure> {
+	pub fn next(bytes: &[u8]) -> Result<(usize, &str), ParseFailure> {
 		
 		for i in 0 .. bytes.len() { 
 			match bytes[i] {
@@ -112,7 +117,7 @@ impl ProtocolObject for Message {
 	
 }
 
-
+#[derive(Clone,Debug, PartialEq)]
 pub struct ContentRegistration {
 	pub ndouble: NodeDoubleFmt,
 	pub role: NodeRole
@@ -157,6 +162,7 @@ impl ProtocolObject for ContentRegistration {
 	}	
 }
 
+#[derive(Clone,Debug, PartialEq)]
 pub struct ContentNodeTriple {
 	pub ntriple: NodeTripleFmt
 }
@@ -187,7 +193,7 @@ impl ProtocolObject for ContentNodeTriple {
 	}	
 }
 
-
+#[derive(Clone,Debug, PartialEq)]
 pub struct ContentNodeSingle {
 	pub nsingle: NodeSingleFmt
 }
@@ -218,7 +224,7 @@ impl ProtocolObject for ContentNodeSingle {
 	}
 }
 
-
+#[derive(Clone,Debug, PartialEq)]
 pub struct ContentNetwork {
 	pub network: Vec<NodeQuadFmt>
 }
@@ -269,4 +275,71 @@ impl fmt::Display for ContentNetwork {
 	}
 }
 
+#[derive(Clone, PartialEq)]
+pub struct ContentResponse {
+	pub code: Response,
+	pub content: MessageContent,
+}
+
+impl ContentResponse {
+	pub fn to_string(&self) -> String {
+		format!("{}", self)
+	}	
+}
+
+impl ProtocolObject for ContentResponse {
+	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
+		
+		if bytes.len() == 0 { return Err(ParseFailure::InvalidContentFormat) }
+		
+		let s = match str::from_utf8(bytes) {
+			Ok(s) => s,
+			Err(_) => return Err(ParseFailure::ConversionError)
+		};
+		
+
+		let code = match Response::from_str(&s[0..3]) {
+			Some(c) => c,
+			None => return Err(ParseFailure::InvalidContentFormat),
+		};
+		
+		let mut content = MessageContent::Empty;
+		if s.len() > 3 {
+			let st = String::from(&s[4..]);
+			let index = match st.find(" ") {
+				Some(i) => i,
+				None => return Err(ParseFailure::InvalidContentFormat),
+			};
+			
+			let (t,r) = st.split_at(index);
+
+			content = match t {
+				"network" => MessageContent::Network(try!(ContentNetwork::from_bytes(&r[1..].as_bytes()))),
+				_ => return Err(ParseFailure::InvalidContentFormat),
+			}
+		}
+		
+		
+		Ok(ContentResponse {
+			code: code,
+			content: content
+		})
+	}
+
+	fn to_bytes(&self) -> Vec<u8> {
+		Vec::from(self.to_string().as_bytes())
+	}
+}
+
+impl fmt::Display for ContentResponse {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		let d = self.content.clone();
+		match d {
+			MessageContent::Network(s) => write!(f, "{} network {}", self.code, s),
+			_ =>  write!(f, "{}", self.code),
+			 
+		}
+		
+	}
+}
 
