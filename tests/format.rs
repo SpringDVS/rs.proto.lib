@@ -139,3 +139,47 @@ fn ts_format_node_triple_fmt_fail_malformed() {
 	assert!(o.is_err());
 	
 }
+
+#[test]
+fn ts_format_node_quad_fmt_pass() {
+	let o = NodeQuadFmt::from_str("foo,bar,127.1.4.3,http");
+	assert!(o.is_ok());
+	let nq : NodeQuadFmt = o.unwrap();
+	
+	assert_eq!(nq.spring, "foo");
+	assert_eq!(nq.host, "bar");
+	assert_eq!(nq.address, "127.1.4.3");
+	assert_eq!(nq.service, NodeService::Http);
+
+}
+
+#[test]
+fn ts_format_node_quad_fmt_pass_to_string() {
+	let o = NodeQuadFmt::from_str("foo,bar,127.1.4.3,dvsp");
+	assert!(o.is_ok());
+	let nq : NodeQuadFmt = o.unwrap();
+	
+	assert_eq!("foo,bar,127.1.4.3,dvsp", nq.to_string());
+}
+
+#[test]
+fn ts_format_node_quad_fmt_fail_invalid_service() {
+	let o = NodeQuadFmt::from_str("foo,bar,127.1.4.3,dvspd");
+	assert!(o.is_err());
+	assert!(match o {
+			Err(ParseFailure::InvalidService) => true,
+			_ => false	
+		});
+}
+#[test]
+fn ts_format_node_quad_fmt_fail_malformed() {
+
+	let o = NodeQuadFmt::from_str("foo,bar,127.1.4,dvsp");
+	assert!(o.is_err());
+	
+	let o = NodeQuadFmt::from_str("foo,bar,,dvsp");
+	assert!(o.is_err());
+	
+	let o = NodeQuadFmt::from_str("foo,127.1.4,dvsp");
+	assert!(o.is_err());
+}

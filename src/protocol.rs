@@ -30,7 +30,6 @@ pub enum MessageContent {
 	
 	/// Contains a Node Single
 	NodeSingle(ContentNodeSingle),
-	
 }
 
 /// Empty content type
@@ -76,7 +75,7 @@ impl Message {
 		match cmd {
 			"reg" => Ok(CmdType::Register),
 			"ureg" => Ok(CmdType::Unregister),
-			"stat" => Ok(CmdType::State),
+			"info" => Ok(CmdType::Info),
 			_  => Err(ParseFailure::InvalidCommand)
 		}
 	}

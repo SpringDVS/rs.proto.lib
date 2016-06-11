@@ -5,10 +5,12 @@
 
 
 use std::fmt;
+use std::str::FromStr;
 use regex::Regex;
+pub use std::net::{IpAddr};
 
 use ::protocol::{Ipv4};
-pub use ::enums::ParseFailure;
+pub use ::enums::{ParseFailure,NodeService};
 
 
 macro_rules! rng {
@@ -46,7 +48,30 @@ fn ts_valid_name_fail() {
 	assert_eq!(valid_name("foo*123"),false);
 }
 
+fn valid_ip(s: &str) -> bool {
+	match IpAddr::from_str(s) {
+		Ok(_) => true,
+		_ => false,
+	}
+}
 
+#[test]
+fn ts_valid_ip_pass() {
+	assert!(valid_ip("192.168.1.1"));
+	assert!(valid_ip("1.1.1.1"));
+	assert!(valid_ip("1.255.0.0"));
+}
+
+#[test]
+fn ts_valid_ip_fail() {
+	assert_eq!(valid_ip("192.168.1.1.3"), false);
+	assert_eq!(valid_ip("1.1"), false);
+	assert_eq!(valid_ip("1"), false);
+}
+
+/// NodeSingle consists of the string Springname
+/// 
+/// Text Format: spring
 pub struct NodeSingleFmt {
 	pub spring: String,
 }
@@ -76,7 +101,9 @@ impl fmt::Display for NodeSingleFmt {
 	}
 }	
 
-
+/// NodeDouble consists of the strings Springname and Hostname
+/// 
+/// Text Format: spring,host
 pub struct NodeDoubleFmt {
 	pub spring: String,
 	pub host: String,
@@ -114,6 +141,9 @@ impl fmt::Display for NodeDoubleFmt {
 	}
 }
 
+/// NodeTriple consists of the strings Springname, Hostname and IP Address
+/// 
+/// Text Format: spring,host,###.###.###.###
 pub struct NodeTripleFmt {
 	pub spring: String,
 	pub host: String,
@@ -126,8 +156,12 @@ impl NodeTripleFmt {
 		let s = snt.to_lowercase();
 		let parts : Vec<&str> = s.split(",").collect();
 		
-		if parts.len() != 3 || parts[2].len() < 7 { 
+		if parts.len() != 3 { 
 			return Err(ParseFailure::InvalidContentFormat) 
+		}
+		
+		if valid_ip(parts[2]) == false {
+			return Err(ParseFailure::InvalidAddress)
 		}
 
 		if valid_name(parts[0]) == false || valid_name(parts[1]) == false {
@@ -153,7 +187,59 @@ impl fmt::Display for NodeTripleFmt {
 	}
 }
 
+/// NodeQuad consists of the strings Springname, Hostname, IP Address and service
+/// 
+/// Text Format: spring,host,###.###.###.###,service
+pub struct NodeQuadFmt {
+	pub spring: String,
+	pub host: String,
+	pub address: String,
+	pub service: NodeService,
+}
 
+impl NodeQuadFmt {
+
+	pub fn from_str(snt: &str) -> Result<Self, ParseFailure> {
+		let s = snt.to_lowercase();
+		let parts : Vec<&str> = s.split(",").collect();
+		
+		if parts.len() != 4 { 
+			return Err(ParseFailure::InvalidContentFormat) 
+		}
+
+		if valid_name(parts[0]) == false || valid_name(parts[1]) == false {
+			return Err(ParseFailure::InvalidNaming)
+		}
+		
+		if valid_ip(parts[2]) == false {
+			return Err(ParseFailure::InvalidAddress)
+		}
+				
+		let service = match NodeService::from_str(parts[3]) {
+			Some(s) => s,
+			None => return Err(ParseFailure::InvalidService),
+		};
+
+		Ok( NodeQuadFmt { 
+				spring: String::from(parts[0]),
+				host: String::from(parts[1]),
+				address: String::from(parts[2]),
+				service: service,
+				 
+			}
+		)
+	}
+	
+	pub fn to_string(&self) -> String {
+		format!("{}", self)
+	}
+}
+
+impl fmt::Display for NodeQuadFmt {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f, "{},{},{},{}", self.spring, self.host, self.address, self.service)
+	}
+}
 
 /*
 pub fn str_address_to_ipv4(address: &str) -> Result<Ipv4, Failure> {

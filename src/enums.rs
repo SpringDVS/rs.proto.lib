@@ -2,6 +2,9 @@
  * Author: 	Charlie Fyvie-Gauld (cfg@zunautica.org)
  * License: GPLv3 (http://www.gnu.org/licenses/gpl-3.0.txt)
  */
+
+use std::fmt;
+
 // ----- Enumeration Lists ----- \\
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum DvspCmdType {
@@ -54,11 +57,44 @@ impl NodeRole {
 	}
 }
 
+impl fmt::Display for NodeRole {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		let out = match self {
+				&NodeRole::Hub => "hub",
+				&NodeRole::Org => "org",
+				_ => "undefined",				
+		};
+		write!(f, "{}", out)
+	} 
+}
+
+
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub enum DvspService {
+pub enum NodeService {
 	Undefined = 0,
 	Dvsp = 1,
 	Http = 2,
+}
+
+impl NodeService {
+	pub fn from_str(s: &str) -> Option<Self> {
+		match s {
+			"dvsp" => Some(NodeService::Dvsp),
+			"http" => Some(NodeService::Http),
+			_ => None,
+		}
+	}
+}
+
+impl fmt::Display for NodeService {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		let out = match self {
+				&NodeService::Dvsp => "dvsp",
+				&NodeService::Http => "http",
+				_ => "undefined",							
+		};
+		write!(f, "{}", out)
+	} 
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -91,6 +127,8 @@ pub enum ParseFailure {
 	InvalidInternalState,
 	InvalidRole,
 	InvalidNaming,
+	InvalidService,
+	InvalidAddress,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
