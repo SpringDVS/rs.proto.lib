@@ -20,27 +20,37 @@ pub enum CmdType {
 	Resolve,
 }
 
-pub struct Empty;
-
+/// Variant defining the content of the message
 pub enum MessageContent {
+	/// There is no body of content
 	Empty,
+	
+	/// Request for Registration
 	Registration(ContentRegistration),
+	
+	/// Contains a Node Single
 	NodeSingle(ContentNodeSingle),
 	
 }
 
+/// Empty content type
+pub struct Empty;
+
+/// Trait for anything that is processed as part of the protocol
 pub trait ProtocolObject : Sized {
 	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure>;
 	fn to_bytes(&self) -> Vec<u8>;
 	
 }
 
+/// Representing a single message within the protocol
 pub struct Message {
+	/// The command held in the message
 	pub cmd: CmdType,
+	
+	/// Empty or a content data structure
 	pub content: MessageContent,
 }
-
-
 
 impl Message {
 	
@@ -66,7 +76,7 @@ impl Message {
 		match cmd {
 			"reg" => Ok(CmdType::Register),
 			"ureg" => Ok(CmdType::Unregister),
-			"state" => Ok(CmdType::State),
+			"stat" => Ok(CmdType::State),
 			_  => Err(ParseFailure::InvalidCommand)
 		}
 	}
@@ -75,7 +85,7 @@ impl Message {
 		
 		match mtype {
 			CmdType::Register => Ok(MessageContent::Registration(try!(ContentRegistration::from_bytes(&bytes)))),
-			//CmdType::Unregister => Ok(MessageContent::RegStr(try!(ContentNodeDouble::from_bytes(&bytes)))),
+			CmdType::Unregister => Ok(MessageContent::NodeSingle(try!(ContentNodeSingle::from_bytes(&bytes)))),
 			_ => return Err(ParseFailure::InvalidCommand),
 		}
 		
@@ -129,7 +139,7 @@ impl ProtocolObject for ContentRegistration {
 		
 		let role = match NodeRole::from_str(parts[1]) {
 			Some(r) => r,
-			None => return Err(ParseFailure::InvalidContentFormat)
+			None => return Err(ParseFailure::InvalidRole)
 		};
 		
 		Ok(
@@ -205,46 +215,3 @@ impl ProtocolObject for ContentNodeSingle {
 		Vec::from(self.to_string().as_bytes())
 	}	
 }
-
-
-
-/*
-#[test]
-fn ts_from_bytes_ureg_pass() {
-	let o = Message::from_bytes(b"ureg foobar,hostbar");
-	assert!(o.is_ok());
-	let m : Message = o.unwrap();
-	assert_eq!(m.cmd, CmdType::Unregister);
-	assert!( match m.content {
-			MessageContent::RegStr(_) => true,
-			_ => false,
-	});
-	
-	let c = match m.content {
-		MessageContent::RegStr(s) => s,
-		_ => return
-	};
-	
-	assert_eq!(c.ndouble.spring, "foobar");
-	assert_eq!(c.ndouble.host, "hostbar");
-}
-
-#[test]
-fn ts_from_bytes_ureg_fail() {
-	let o = Message::from_bytes(b"ureg");
-	assert!(o.is_err());
-	assert!( match o {
-			Err(ParseFailure::InvalidContentFormat) => true,
-			_ => false,
-	});	
-}
-
-#[test]
-fn ts_content_node_double_pass() {
-	let o = ContentNodeDouble::from_bytes(b"spring,host");
-	assert!(o.is_ok());
-	let c : ContentNodeDouble = o.unwrap();
-	assert_eq!(c.to_string(), "spring,host");
-}
-
-*/

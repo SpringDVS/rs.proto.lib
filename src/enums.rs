@@ -89,6 +89,7 @@ pub enum ParseFailure {
 	InvalidCommand,
 	InvalidContentFormat,
 	InvalidInternalState,
+	InvalidRole,
 	InvalidNaming,
 }
 
