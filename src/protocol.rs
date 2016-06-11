@@ -4,8 +4,13 @@
  */
 
 use std::str;
+pub use std::net::{Ipv4Addr, Ipv6Addr};
+pub use ::enums::{ParseFailure, NodeRole};
 
-pub use ::enums::ParseFailure;
+pub use ::formats::{NodeDoubleFmt,NodeTripleFmt};
+
+pub type Ipv4 = [u8;4];
+pub type Ipv6 = [u8;6];
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum CmdType {
@@ -15,15 +20,15 @@ pub enum CmdType {
 	Resolve,
 }
 
-struct Empty;
+pub struct Empty;
 
 pub enum MessageContent {
 	Empty,
-	RegStr(ContentNodeDouble),
+	Registration(ContentRegistration),
 	
 }
 
-trait ProtocolObject : Sized {
+pub trait ProtocolObject : Sized {
 	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure>;
 	fn to_bytes(&self) -> Vec<u8>;
 	
@@ -68,8 +73,8 @@ impl Message {
 	fn parse_content(bytes: &[u8], mtype: CmdType) -> Result<MessageContent, ParseFailure> {
 		
 		match mtype {
-			CmdType::Register => Ok(MessageContent::RegStr(try!(ContentNodeDouble::from_bytes(&bytes)))),
-			CmdType::Unregister => Ok(MessageContent::RegStr(try!(ContentNodeDouble::from_bytes(&bytes)))),
+			CmdType::Register => Ok(MessageContent::Registration(try!(ContentRegistration::from_bytes(&bytes)))),
+			//CmdType::Unregister => Ok(MessageContent::RegStr(try!(ContentNodeDouble::from_bytes(&bytes)))),
 			_ => return Err(ParseFailure::InvalidCommand),
 		}
 		
@@ -95,18 +100,61 @@ impl ProtocolObject for Message {
 }
 
 
-pub struct ContentNodeDouble {
-	pub spring: String,
-	pub host: String, 
+pub struct ContentRegistration {
+	pub ndouble: NodeDoubleFmt,
+	pub role: NodeRole
 }
 
-impl ContentNodeDouble {
+impl ContentRegistration {
 	pub fn to_string(&self) -> String {
-		format!("{},{}", self.spring, self.host)
+		format!("{}", self.ndouble)
 	}
 }
 
-impl ProtocolObject for ContentNodeDouble {
+impl ProtocolObject for ContentRegistration {
+	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
+		
+		if bytes.len() == 0 { return Err(ParseFailure::InvalidContentFormat) }
+		let s = match str::from_utf8(bytes) {
+			Ok(s) => s,
+			Err(_) => return Err(ParseFailure::ConversionError)
+		};
+		
+		let parts: Vec<&str> = s.split(";").collect();
+		
+		if parts.len() < 3 || parts[0].len() == 0 || parts[1].len() == 0 || parts[2].len() == 0 { 
+			return Err(ParseFailure::InvalidContentFormat) 
+		}
+		
+		let role = match NodeRole::from_str(parts[1]) {
+			Some(r) => r,
+			None => return Err(ParseFailure::InvalidContentFormat)
+		};
+		
+		Ok(
+			ContentRegistration {
+				ndouble: try!(NodeDoubleFmt::from_str(parts[0])),
+				role: role,
+			}
+		)
+	}
+
+	fn to_bytes(&self) -> Vec<u8> {
+		Vec::from(self.to_string().as_bytes())
+	}	
+}
+
+pub struct ContentNodeTriple {
+	pub ntriple: NodeTripleFmt
+}
+
+impl ContentNodeTriple {
+	pub fn to_string(&self) -> String {
+		self.ntriple.to_string()
+	}
+}
+
+impl ProtocolObject for ContentNodeTriple {
 	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
 		
 		if bytes.len() == 0 { return Err(ParseFailure::InvalidContentFormat) }
@@ -114,17 +162,10 @@ impl ProtocolObject for ContentNodeDouble {
 		let s = match str::from_utf8(bytes) {
 			Ok(s) => s,
 			Err(_) => return Err(ParseFailure::ConversionError)
-		};
+		};	
 		
-		let parts : Vec<&str> = s.split(",").collect();
-		
-		if parts.len() != 2 || parts[0].len() == 0 || parts[1].len() == 0 { 
-			return Err(ParseFailure::InvalidContentFormat) 
-		}
-
-		Ok( ContentNodeDouble{ 
-				spring: String::from(parts[0]),
-				host: String::from(parts[1]), 
+		Ok( ContentNodeTriple { 
+			ntriple: try!(NodeTripleFmt::from_str(s))	 
 			} )
 	}
 
@@ -133,83 +174,8 @@ impl ProtocolObject for ContentNodeDouble {
 	}	
 }
 
-#[test]
-fn ts_from_bytes_fail_invalid_command() {
-	let o = Message::from_bytes(b"void foobar");
-	assert!(o.is_err());
-	assert!( match o {
-			Err(ParseFailure::InvalidCommand) => true,
-			_ => false,
-		});
-}
-#[test]
-fn ts_from_bytes_fail_invalid_conversion() {
-	let o = Message::from_bytes(&[0xc3,0x28]);
-	assert!(o.is_err());
-	assert!( match o {
-			Err(ParseFailure::ConversionError) => true,
-			_ => false,
-		});
-}
 
-
-
-#[test]
-fn ts_from_bytes_reg_pass() {
-	let o = Message::from_bytes(b"reg foobar,hostbar");
-	assert!(o.is_ok());
-	let m : Message = o.unwrap();
-	assert_eq!(m.cmd, CmdType::Register);
-	
-	assert!( match m.content {
-			MessageContent::RegStr(_) => true,
-			_ => false,
-	});
-	
-	let c = match m.content {
-		MessageContent::RegStr(s) => s,
-		_ => return
-	};
-	
-	assert_eq!(c.spring, "foobar");
-	assert_eq!(c.host, "hostbar");
-	
-}
-
-#[test]
-fn ts_from_bytes_reg_fail_zero() {
-	let o = Message::from_bytes(b"reg");
-	assert!(o.is_err());
-	assert!( match o {
-			Err(ParseFailure::InvalidContentFormat) => true,
-			_ => false,
-	});	
-}
-
-#[test]
-fn ts_from_bytes_reg_fail_malformed() {
-	let o = Message::from_bytes(b"reg foobar");
-	assert!(o.is_err());
-	assert!( match o {
-			Err(ParseFailure::InvalidContentFormat) => true,
-			_ => false,
-	});
-	let o = Message::from_bytes(b"reg foobar,");
-	assert!(o.is_err());
-	assert!( match o {
-			Err(ParseFailure::InvalidContentFormat) => true,
-			_ => false,
-	});
-
-	let o = Message::from_bytes(b"reg ,foobar");
-	assert!(o.is_err());
-	assert!( match o {
-			Err(ParseFailure::InvalidContentFormat) => true,
-			_ => false,
-	});
-}
-
-
+/*
 #[test]
 fn ts_from_bytes_ureg_pass() {
 	let o = Message::from_bytes(b"ureg foobar,hostbar");
@@ -226,8 +192,8 @@ fn ts_from_bytes_ureg_pass() {
 		_ => return
 	};
 	
-	assert_eq!(c.spring, "foobar");
-	assert_eq!(c.host, "hostbar");
+	assert_eq!(c.ndouble.spring, "foobar");
+	assert_eq!(c.ndouble.host, "hostbar");
 }
 
 #[test]
@@ -247,3 +213,5 @@ fn ts_content_node_double_pass() {
 	let c : ContentNodeDouble = o.unwrap();
 	assert_eq!(c.to_string(), "spring,host");
 }
+
+*/

@@ -38,10 +38,20 @@ pub enum DvspRcode {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub enum DvspNodeType {
+pub enum NodeRole {
 	Undefined = 0,
-	Root = 1,
+	Hub = 1,
 	Org = 2,
+}
+
+impl NodeRole {
+	pub fn from_str(s: &str) -> Option<Self> {
+		match s {
+			"org" => Some(NodeRole::Org),
+			"hub" => Some(NodeRole::Hub),
+			_ => None,
+		}
+	}
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -78,7 +88,8 @@ pub enum ParseFailure {
 	ConversionError,
 	InvalidCommand,
 	InvalidContentFormat,
-	InvalidInternalState
+	InvalidInternalState,
+	InvalidNaming,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
