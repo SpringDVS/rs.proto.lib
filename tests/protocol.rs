@@ -172,3 +172,11 @@ fn ts_content_response_from_bytes_pass_network () {
 			_ => false,
 		});
 }
+
+#[test]
+fn ts_content_response_to_string_pass_network () {
+	let o = ContentResponse::from_bytes(b"200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
+	assert!(o.is_ok());
+	let cr : ContentResponse = o.unwrap();
+	assert_eq!(format!("{}", cr), "200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
+}
