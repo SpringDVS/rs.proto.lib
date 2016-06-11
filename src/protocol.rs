@@ -4,10 +4,13 @@
  */
 
 use std::str;
+use std::fmt;
 pub use std::net::{Ipv4Addr, Ipv6Addr};
+
 pub use ::enums::{ParseFailure, NodeRole};
 
-pub use ::formats::{NodeSingleFmt,NodeDoubleFmt,NodeTripleFmt};
+
+pub use ::formats::{NodeSingleFmt,NodeDoubleFmt,NodeTripleFmt,NodeQuadFmt};
 
 pub type Ipv4 = [u8;4];
 pub type Ipv6 = [u8;6];
@@ -212,5 +215,58 @@ impl ProtocolObject for ContentNodeSingle {
 
 	fn to_bytes(&self) -> Vec<u8> {
 		Vec::from(self.to_string().as_bytes())
-	}	
+	}
 }
+
+
+pub struct ContentNetwork {
+	pub network: Vec<NodeQuadFmt>
+}
+
+impl ContentNetwork {
+	pub fn to_string(&self) -> String {
+		format!("{}", self)
+	}
+}
+
+impl ProtocolObject for ContentNetwork {
+	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
+		
+		if bytes.len() == 0 { return Err(ParseFailure::InvalidContentFormat) }
+		
+		let s = match str::from_utf8(bytes) {
+			Ok(s) => s,
+			Err(_) => return Err(ParseFailure::ConversionError)
+		};
+		
+		let parts : Vec<&str> = s.split(";").collect();
+		
+		let mut v: Vec<NodeQuadFmt> = Vec::new();
+		for sq in parts {
+			if sq.len() == 0 { continue }
+			v.push(try!(NodeQuadFmt::from_str(sq)))
+		}
+		
+		Ok(ContentNetwork {
+			network: v		
+		})
+	}
+
+	fn to_bytes(&self) -> Vec<u8> {
+		Vec::from(self.to_string().as_bytes())
+	}
+}
+
+impl fmt::Display for ContentNetwork {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		let mut s = String::new();
+		
+		for n in &self.network {
+			s.push_str(&format!("{};", n));
+		}
+		
+		write!(f, "{}", s)
+	}
+}
+
+
