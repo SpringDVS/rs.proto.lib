@@ -2,6 +2,39 @@ extern crate spring_dvs;
 
 use spring_dvs::formats::*;
 
+#[test]
+fn ts_format_node_single_fmt_pass() {
+	let o = NodeSingleFmt::from_str("foo");
+	assert!(o.is_ok());
+	let ns : NodeSingleFmt = o.unwrap();
+	assert_eq!(ns.spring, "foo");
+}
+
+#[test]
+fn ts_format_node_single_fmt_pass_to_string() {
+	let o = NodeSingleFmt::from_str("foo");
+	assert!(o.is_ok());
+	let nd : NodeSingleFmt = o.unwrap();
+	
+	assert_eq!("foo", nd.to_string());
+}
+
+#[test]
+fn ts_format_node_single_fmt_fail_zero() {
+	let o = NodeSingleFmt::from_str("");
+	assert!(o.is_err());
+}
+
+#[test]
+fn ts_format_node_single_fmt_fail_malformed() {
+
+	let o = NodeSingleFmt::from_str("foo*");
+	assert!(o.is_err());
+
+	let o = NodeSingleFmt::from_str("foo.bar");
+	assert!(o.is_err());
+}
+
 
 #[test]
 fn ts_format_node_double_fmt_pass() {

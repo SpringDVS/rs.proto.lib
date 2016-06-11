@@ -18,11 +18,6 @@ macro_rules! rng {
 	)
 }
 
-pub struct NodeDoubleFmt {
-	pub spring: String,
-	pub host: String,
-}
-
 
 fn valid_name(s: &str) -> bool {
 	if rng!(s.len(),1,63) == false {
@@ -51,6 +46,41 @@ fn ts_valid_name_fail() {
 	assert_eq!(valid_name("foo*123"),false);
 }
 
+
+pub struct NodeSingleFmt {
+	pub spring: String,
+}
+
+impl NodeSingleFmt {
+	pub fn from_str(sns: &str) -> Result<Self, ParseFailure> {
+		let s = sns.to_lowercase();
+		
+		if valid_name(&s) == false {
+			return Err(ParseFailure::InvalidNaming)
+		}
+
+		Ok( NodeSingleFmt { 
+				spring: String::from(s), 
+			}
+		)
+	}
+	
+	pub fn to_string(&self) -> String {
+		format!("{}", self)
+	}
+}
+
+impl fmt::Display for NodeSingleFmt {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f, "{}", self.spring)
+	}
+}	
+
+
+pub struct NodeDoubleFmt {
+	pub spring: String,
+	pub host: String,
+}
 
 impl NodeDoubleFmt {
 

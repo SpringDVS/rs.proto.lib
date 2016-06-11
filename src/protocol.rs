@@ -7,7 +7,7 @@ use std::str;
 pub use std::net::{Ipv4Addr, Ipv6Addr};
 pub use ::enums::{ParseFailure, NodeRole};
 
-pub use ::formats::{NodeDoubleFmt,NodeTripleFmt};
+pub use ::formats::{NodeSingleFmt,NodeDoubleFmt,NodeTripleFmt};
 
 pub type Ipv4 = [u8;4];
 pub type Ipv6 = [u8;6];
@@ -25,6 +25,7 @@ pub struct Empty;
 pub enum MessageContent {
 	Empty,
 	Registration(ContentRegistration),
+	NodeSingle(ContentNodeSingle),
 	
 }
 
@@ -173,6 +174,38 @@ impl ProtocolObject for ContentNodeTriple {
 		Vec::from(self.to_string().as_bytes())
 	}	
 }
+
+
+pub struct ContentNodeSingle {
+	pub nsingle: NodeSingleFmt
+}
+
+impl ContentNodeSingle {
+	pub fn to_string(&self) -> String {
+		self.nsingle.to_string()
+	}
+}
+
+impl ProtocolObject for ContentNodeSingle {
+	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
+		
+		if bytes.len() == 0 { return Err(ParseFailure::InvalidContentFormat) }
+		
+		let s = match str::from_utf8(bytes) {
+			Ok(s) => s,
+			Err(_) => return Err(ParseFailure::ConversionError)
+		};	
+		
+		Ok( ContentNodeSingle { 
+			nsingle: try!(NodeSingleFmt::from_str(s))	 
+			} )
+	}
+
+	fn to_bytes(&self) -> Vec<u8> {
+		Vec::from(self.to_string().as_bytes())
+	}	
+}
+
 
 
 /*
