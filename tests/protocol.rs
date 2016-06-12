@@ -157,7 +157,7 @@ fn ts_content_response_from_bytes_pass_empty() {
 	
 	let cr : ContentResponse  = o.unwrap();
 	assert_eq!(cr.code, Response::Ok);
-	assert_eq!(cr.content, MessageContent::Empty);
+	assert_eq!(cr.content, ResponseContent::Empty);
 }
 
 #[test]
@@ -168,9 +168,31 @@ fn ts_content_response_from_bytes_pass_network () {
 	let cr : ContentResponse  = o.unwrap();
 	assert_eq!(cr.code, Response::Ok);
 	assert!(match cr.content {
-			MessageContent::Network(_) => true,
+			ResponseContent::Network(_) => true,
 			_ => false,
 		});
+}
+
+#[test]
+fn ts_content_response_from_bytes_pass_node_info () {
+	let o = ContentResponse::from_bytes(b"200 node spring:foo,host:bar,state:unresponsive");
+	assert!(o.is_ok());
+	
+	let cr : ContentResponse  = o.unwrap();
+	assert_eq!(cr.code, Response::Ok);
+	assert!(match cr.content {
+			ResponseContent::NodeInfo(_) => true,
+			_ => false,
+		});
+	
+	let ni : ContentNodeInfo = match cr.content {
+		ResponseContent::NodeInfo(n) => n,
+		_ => return,
+	};
+	
+	assert_eq!(ni.info.spring, "foo");
+	assert_eq!(ni.info.host, "bar");
+	assert_eq!(ni.info.state, NodeState::Unresponsive);
 }
 
 #[test]
@@ -180,3 +202,4 @@ fn ts_content_response_to_string_pass_network () {
 	let cr : ContentResponse = o.unwrap();
 	assert_eq!(format!("{}", cr), "200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
 }
+

@@ -274,7 +274,7 @@ impl fmt::Display for NodeQuadFmt {
 	}
 }
 
-#[derive(Clone)]
+#[derive(Clone,Debug,PartialEq)]
 pub struct NodeInfoFmt {
 	pub spring: String,
 	pub host: String,

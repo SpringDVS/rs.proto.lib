@@ -10,7 +10,7 @@ pub use std::net::{Ipv4Addr, Ipv6Addr};
 pub use ::enums::{ParseFailure,NodeRole,Response,NodeService,NodeState};
 
 
-pub use ::formats::{NodeSingleFmt,NodeDoubleFmt,NodeTripleFmt,NodeQuadFmt};
+pub use ::formats::{NodeSingleFmt,NodeDoubleFmt,NodeTripleFmt,NodeQuadFmt,NodeInfoFmt};
 
 pub type Ipv4 = [u8;4];
 pub type Ipv6 = [u8;6];
@@ -21,6 +21,7 @@ pub enum CmdType {
 	State,
 	Info,
 	Resolve,
+	Response,
 }
 
 macro_rules! utf8_from {
@@ -40,9 +41,24 @@ pub enum MessageContent {
 	
 	/// Contains a Node Single
 	NodeSingle(ContentNodeSingle),
+
+	/// Contains a response
+	Response(ContentResponse),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum ResponseContent {
+	/// There is no body of content
+	Empty,
 	
-	///Contains a Network
+	/// Contains a Node Single
+	NodeSingle(ContentNodeSingle),
+	
+	/// Contains a Network
 	Network(ContentNetwork),
+	
+	/// Containes node info
+	NodeInfo(ContentNodeInfo),
 }
 
 /// Empty content type
@@ -85,6 +101,11 @@ impl Message {
 	}
 	
 	fn parse_cmd(cmd: &str) -> Result<CmdType, ParseFailure> {
+		
+		match cmd.parse::<usize>() {
+			Ok(_) => return Ok(CmdType::Response),
+			_ => {}
+		}
 		match cmd {
 			"reg" => Ok(CmdType::Register),
 			"ureg" => Ok(CmdType::Unregister),
@@ -98,6 +119,7 @@ impl Message {
 		match mtype {
 			CmdType::Register => Ok(MessageContent::Registration(try!(ContentRegistration::from_bytes(&bytes)))),
 			CmdType::Unregister => Ok(MessageContent::NodeSingle(try!(ContentNodeSingle::from_bytes(&bytes)))),
+			CmdType::Response=> Ok(MessageContent::Response(try!(ContentResponse::from_bytes(&bytes)))),
 			_ => return Err(ParseFailure::InvalidCommand),
 		}
 		
@@ -109,7 +131,12 @@ impl ProtocolObject for Message {
 
 		let (index, cmd) = try!(Message::next(bytes));
 		let mtype = try!(Message::parse_cmd(cmd));
-		let content = try!(Message::parse_content(&bytes[index..], mtype));
+		
+		let content = match mtype {
+			CmdType::Response => try!(Message::parse_content(&bytes, mtype)),
+			_ => try!(Message::parse_content(&bytes[index..], mtype)),
+		};
+
 		Ok(Message{
 				cmd: mtype,
 				content: content
@@ -269,10 +296,38 @@ impl fmt::Display for ContentNetwork {
 	}
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
+pub struct ContentNodeInfo {
+	pub info: NodeInfoFmt,
+	
+}
+impl ProtocolObject for ContentNodeInfo {
+	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
+		
+		if bytes.len() == 0 { return Err(ParseFailure::InvalidContentFormat) }
+		
+		let s = utf8_from!(bytes);
+		
+		Ok(ContentNodeInfo {
+			info: try!(NodeInfoFmt::from_str(s))
+		})
+	}
+
+	fn to_bytes(&self) -> Vec<u8> {
+		Vec::from(self.to_string().as_bytes())
+	}
+}
+
+impl fmt::Display for ContentNodeInfo {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f, "{}", self.info)
+	}
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct ContentResponse {
 	pub code: Response,
-	pub content: MessageContent,
+	pub content: ResponseContent,
 }
 
 impl ContentResponse {
@@ -291,7 +346,7 @@ impl ProtocolObject for ContentResponse {
 
 		let code = opt_parsefail!(Response::from_str(&s[0..3]));
 		
-		let mut content = MessageContent::Empty;
+		let mut content = ResponseContent::Empty;
 		if s.len() > 3 {
 			let st = String::from(&s[4..]);
 			let index = opt_parsefail!(st.find(" "));
@@ -299,7 +354,8 @@ impl ProtocolObject for ContentResponse {
 			let (t,r) = st.split_at(index);
 
 			content = match t {
-				"network" => MessageContent::Network(try!(ContentNetwork::from_bytes(&r[1..].as_bytes()))),
+				"network" => ResponseContent::Network(try!(ContentNetwork::from_bytes(&r[1..].as_bytes()))),
+				"node" => ResponseContent::NodeInfo(try!(ContentNodeInfo::from_bytes(&r[1..].as_bytes()))),
 				_ => return Err(ParseFailure::InvalidContentFormat),
 			}
 		}
@@ -320,7 +376,8 @@ impl fmt::Display for ContentResponse {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		let d = self.content.clone();
 		match d {
-			MessageContent::Network(s) => write!(f, "{} network {}", self.code, s),
+			ResponseContent::Network(s) => write!(f, "{} network {}", self.code, s),
+			ResponseContent::NodeInfo(s) => write!(f, "{} node {}", self.code, s),
 			_ =>  write!(f, "{}", self.code),
 			 
 		}
