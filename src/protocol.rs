@@ -23,6 +23,11 @@ pub enum CmdType {
 	Resolve,
 }
 
+macro_rules! utf8_from {
+	($bytes:expr) => (
+		res_parsefail!(str::from_utf8($bytes), ParseFailure::InvalidContentFormat)
+	);
+}
 
 /// Variant defining the content of the message
 #[derive(Clone, Debug, PartialEq)]
@@ -133,10 +138,8 @@ impl ProtocolObject for ContentRegistration {
 	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
 		
 		if bytes.len() == 0 { return Err(ParseFailure::InvalidContentFormat) }
-		let s = match str::from_utf8(bytes) {
-			Ok(s) => s,
-			Err(_) => return Err(ParseFailure::ConversionError)
-		};
+		
+		let s = utf8_from!(bytes);
 		
 		let parts: Vec<&str> = s.split(";").collect();
 		
@@ -175,10 +178,7 @@ impl ProtocolObject for ContentNodeTriple {
 		
 		if bytes.len() == 0 { return Err(ParseFailure::InvalidContentFormat) }
 		
-		let s = match str::from_utf8(bytes) {
-			Ok(s) => s,
-			Err(_) => return Err(ParseFailure::ConversionError)
-		};	
+		let s = utf8_from!(bytes);
 		
 		Ok( ContentNodeTriple { 
 			ntriple: try!(NodeTripleFmt::from_str(s))	 
@@ -237,10 +237,7 @@ impl ProtocolObject for ContentNetwork {
 		
 		if bytes.len() == 0 { return Err(ParseFailure::InvalidContentFormat) }
 		
-		let s = match str::from_utf8(bytes) {
-			Ok(s) => s,
-			Err(_) => return Err(ParseFailure::ConversionError)
-		};
+		let s = utf8_from!(bytes);
 		
 		let parts : Vec<&str> = s.split(";").collect();
 		
@@ -289,10 +286,7 @@ impl ProtocolObject for ContentResponse {
 		
 		if bytes.len() == 0 { return Err(ParseFailure::InvalidContentFormat) }
 		
-		let s = match str::from_utf8(bytes) {
-			Ok(s) => s,
-			Err(_) => return Err(ParseFailure::ConversionError)
-		};
+		let s = utf8_from!(bytes);
 		
 
 		let code = opt_parsefail!(Response::from_str(&s[0..3]));

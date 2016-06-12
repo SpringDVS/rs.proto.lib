@@ -35,6 +35,22 @@ macro_rules! opt_parsefail {
 	);
 }
 
+#[macro_export]
+macro_rules! res_parsefail {
+	($opt:expr) => (
+		match $opt {
+			Ok(s) => s,
+			Err(_) => return Err(ParseFailure::InvalidContentFormat),
+		}
+	);
+	($opt:expr,$fail:expr) => (
+		match $opt {
+			Ok(s) => s,
+			Err(_) => return Err($fail),
+		}
+		 
+	);
+}
 
 fn valid_name(s: &str) -> bool {
 	if rng!(s.len(),1,63) == false {
