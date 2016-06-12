@@ -144,10 +144,7 @@ impl ProtocolObject for ContentRegistration {
 			return Err(ParseFailure::InvalidContentFormat) 
 		}
 		
-		let role = match NodeRole::from_str(parts[1]) {
-			Some(r) => r,
-			None => return Err(ParseFailure::InvalidRole)
-		};
+		let role = opt_parsefail!(NodeRole::from_str(parts[1]),ParseFailure::InvalidRole);
 		
 		Ok(
 			ContentRegistration {
@@ -298,18 +295,12 @@ impl ProtocolObject for ContentResponse {
 		};
 		
 
-		let code = match Response::from_str(&s[0..3]) {
-			Some(c) => c,
-			None => return Err(ParseFailure::InvalidContentFormat),
-		};
+		let code = opt_parsefail!(Response::from_str(&s[0..3]));
 		
 		let mut content = MessageContent::Empty;
 		if s.len() > 3 {
 			let st = String::from(&s[4..]);
-			let index = match st.find(" ") {
-				Some(i) => i,
-				None => return Err(ParseFailure::InvalidContentFormat),
-			};
+			let index = opt_parsefail!(st.find(" "));
 			
 			let (t,r) = st.split_at(index);
 

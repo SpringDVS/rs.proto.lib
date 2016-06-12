@@ -201,9 +201,9 @@ fn ts_format_node_info_fmt_from_bytes_pass() {
 
 #[test]
 fn ts_format_node_info_fmt_display_pass() {
-	let o = NodeInfoFmt::from_str("spring:foo,host:bar,address:127.1.4.3,service:http");
+	let o = NodeInfoFmt::from_str("spring:foo,host:bar,address:127.1.4.3,service:http,role:hybrid");
 	assert!(o.is_ok());
 	let nf :  NodeInfoFmt = o.unwrap();
 	
-	assert_eq!(format!("{}", nf), "spring:foo,host:bar,address:127.1.4.3,service:http");
+	assert_eq!(format!("{}", nf), "spring:foo,host:bar,address:127.1.4.3,service:http,role:hybrid");
 }

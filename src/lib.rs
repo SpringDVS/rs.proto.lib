@@ -4,9 +4,11 @@
  */
 extern crate regex;
 
-pub mod protocol;
+
 //pub mod serialise;
 pub mod enums;
 //pub mod model;
 pub mod node;
+#[macro_use]
 pub mod formats;
+pub mod protocol;

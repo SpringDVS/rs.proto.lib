@@ -2,8 +2,6 @@
  * Author:  Charlie Fyvie-Gauld (cfg@zunautica.org)
  * License: GPLv3 (http://www.gnu.org/licenses/gpl-3.0.txt)
  */
-
-
 use std::fmt;
 use std::str::FromStr;
 use regex::Regex;
@@ -20,14 +18,21 @@ macro_rules! rng {
 	)
 }
 
+#[macro_export]
 macro_rules! opt_parsefail {
 	($opt:expr) => (
 		match $opt {
 			Some(s) => s,
 			None => return Err(ParseFailure::InvalidContentFormat),
 		}
+	);
+	($opt:expr,$fail:expr) => (
+		match $opt {
+			Some(s) => s,
+			None => return Err($fail),
+		}
 		 
-	)
+	);
 }
 
 
@@ -230,10 +235,7 @@ impl NodeQuadFmt {
 			return Err(ParseFailure::InvalidAddress)
 		}
 				
-		let service = match NodeService::from_str(parts[3]) {
-			Some(s) => s,
-			None => return Err(ParseFailure::InvalidService),
-		};
+		let service = opt_parsefail!(NodeService::from_str(parts[3]), ParseFailure::InvalidService);
 
 		Ok( NodeQuadFmt { 
 				spring: String::from(parts[0]),
@@ -294,12 +296,12 @@ impl NodeInfoFmt {
 									 } 
 								);
 			match key.trim() {
-				"spring" => ni.spring = String::from( value[1..].trim() ),
-				"host" => ni.host = String::from( value[1..].trim() ),
+				"spring"  => ni.spring = String::from( value[1..].trim() ),
+				"host"    => ni.host = String::from( value[1..].trim() ),
 				"address" => ni.address = String::from( value[1..].trim() ),
 				"service" => ni.service = opt_parsefail!(NodeService::from_str(value[1..].trim())),
-				"state" => ni.state = opt_parsefail!(NodeState::from_str(value[1..].trim())),
-				"role" => ni.role = opt_parsefail!(NodeRole::from_str(value[1..].trim())),
+				"state"   => ni.state = opt_parsefail!(NodeState::from_str(value[1..].trim())),
+				"role"    => ni.role = opt_parsefail!(NodeRole::from_str(value[1..].trim())),
 				_ => { }
 			}
 			
@@ -313,63 +315,14 @@ impl fmt::Display for NodeInfoFmt {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		let mut v : Vec<String> = Vec::new();
 		
-		if self.spring != "" { v.push(format!("spring:{}", self.spring)) }
-		if self.host != "" { v.push(format!("host:{}", self.host)) }
+		if self.spring  != "" { v.push(format!("spring:{}", self.spring))   }
+		if self.host    != "" { v.push(format!("host:{}", self.host))       }
 		if self.address != "" { v.push(format!("address:{}", self.address)) }
-		if self.service != NodeService::Undefined { v.push(format!("service:{}", self.service)) }
+		
+		if self.service != NodeService::Undefined   { v.push(format!("service:{}", self.service)) }
+		if self.state   != NodeState::Unspecified   { v.push(format!("state:{}", self.state))     }
+		if self.role    != NodeRole::Undefined      { v.push(format!("role:{}", self.role))       }
 		
 		write!(f, "{}", v.join(","))
 	}
 }
-/*
-pub fn str_address_to_ipv4(address: &str) -> Result<Ipv4, Failure> {
-	let atom: Vec<&str> = address.split('.').collect();
-	
-	if atom.len() != 4 {
-		return Err(Failure::InvalidFormat);
-	};
-		
-	let mut addr: Ipv4 = [0;4];
-	
-	for i in 0..4 {
-		
-		addr[i] = match atom[i].parse::<u32>().unwrap() {
-			v if v < 0xFF  => v,
-			_ => return Err(Failure::InvalidBytes)
-		} as u8;
-	}
-
-	Ok(addr)
-}
-
-pub fn ipv4_to_str_address(address: &Ipv4) -> String {
-	format(format_args!("{}.{}.{}.{}", address[0],address[1],address[2],address[3]))
-}
-
-
-pub fn nodes_to_node_list(nodes: &Vec<Node>) -> String {
-	let mut s = String::new();
-	for n in nodes {
-		s.push_str(&format(format_args!("{};", &n.to_node_string())));
-	}
-	
-	s
-}
-
-
-
-pub fn nodestring_from_node_register(nodereg: &str, address: &Ipv4) -> String {
-	//let mut ns : String = nodereg.to_string();
-	format(format_args!("{},{}", nodereg, ipv4_to_str_address(address)))
-	//ns
-}
-
-pub fn geosub_from_node_register_gtn(nodereg: &str) -> Result<String,Failure> {
-	let atom : Vec<&str> = nodereg.split(',').collect();
-	match atom.len() { 
-		4 => Ok(String::from(atom[3])),
-		_ => Err(Failure::InvalidFormat), 
-	}
-	
-}
-*/
