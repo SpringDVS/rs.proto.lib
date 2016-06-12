@@ -10,13 +10,23 @@ use regex::Regex;
 pub use std::net::{IpAddr};
 
 use ::protocol::{Ipv4};
-pub use ::enums::{ParseFailure,NodeService};
+pub use ::enums::{ParseFailure,NodeService,NodeState,NodeRole};
 
 
 macro_rules! rng {
 	($chk:expr, $from:expr, $to:expr) => (
 		//($from..$to).contains($chk)
 		if $chk >= $from && $chk <= $to { true } else { false } 
+	)
+}
+
+macro_rules! opt_parsefail {
+	($opt:expr) => (
+		match $opt {
+			Some(s) => s,
+			None => return Err(ParseFailure::InvalidContentFormat),
+		}
+		 
 	)
 }
 
@@ -246,6 +256,71 @@ impl fmt::Display for NodeQuadFmt {
 	}
 }
 
+#[derive(Clone)]
+pub struct NodeInfoFmt {
+	pub spring: String,
+	pub host: String,
+	pub address: String,
+	
+	pub service: NodeService,
+	pub state: NodeState,
+	pub role: NodeRole,
+}
+
+impl NodeInfoFmt {
+	pub fn from_str(s: &str) -> Result<Self, ParseFailure> {
+		
+		if s.len() == 0 { return Err(ParseFailure::InvalidContentFormat) }
+		let mut ni = NodeInfoFmt {
+			spring: String::new(),
+			host: String::new(),
+			address: String::new(),
+			
+			service: NodeService::Undefined,
+			state: NodeState::Unspecified,
+			role: NodeRole::Undefined,
+		};
+		
+		let parts : Vec<&str> = s.split(",").collect();
+		
+		for p in parts {
+			if p.len() == 0 { continue }
+			
+			let st = String::from(p);
+			let (key,value) = st.split_at(
+									 match st.find(':') {
+									 	Some(i) => i,
+									 	None => continue
+									 } 
+								);
+			match key.trim() {
+				"spring" => ni.spring = String::from( value[1..].trim() ),
+				"host" => ni.host = String::from( value[1..].trim() ),
+				"address" => ni.address = String::from( value[1..].trim() ),
+				"service" => ni.service = opt_parsefail!(NodeService::from_str(value[1..].trim())),
+				"state" => ni.state = opt_parsefail!(NodeState::from_str(value[1..].trim())),
+				"role" => ni.role = opt_parsefail!(NodeRole::from_str(value[1..].trim())),
+				_ => { }
+			}
+			
+		}
+		
+		Ok(ni)
+	}
+}
+
+impl fmt::Display for NodeInfoFmt {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		let mut v : Vec<String> = Vec::new();
+		
+		if self.spring != "" { v.push(format!("spring:{}", self.spring)) }
+		if self.host != "" { v.push(format!("host:{}", self.host)) }
+		if self.address != "" { v.push(format!("address:{}", self.address)) }
+		if self.service != NodeService::Undefined { v.push(format!("service:{}", self.service)) }
+		
+		write!(f, "{}", v.join(","))
+	}
+}
 /*
 pub fn str_address_to_ipv4(address: &str) -> Result<Ipv4, Failure> {
 	let atom: Vec<&str> = address.split('.').collect();

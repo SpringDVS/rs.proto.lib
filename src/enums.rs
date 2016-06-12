@@ -136,6 +136,30 @@ pub enum NodeState {
 	Unspecified = 3,
 }
 
+impl NodeState {
+	pub fn from_str(s: &str) -> Option<Self> {
+		match s {
+			"disabled" => Some(NodeState::Disabled),
+			"enabled" => Some(NodeState::Enabled),
+			"unresponsive" => Some(NodeState::Unresponsive),
+			"unspecified" => Some(NodeState::Unspecified),
+			_ => None,
+		}
+	}
+}
+
+impl fmt::Display for NodeState {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		let out = match self {
+				&NodeState::Disabled => "disabled",
+				&NodeState::Enabled => "enabled",
+				&NodeState::Unresponsive => "unresponsive",
+				&NodeState::Unspecified => "unspecified",							
+		};
+		write!(f, "{}", out)
+	} 
+}
+
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Bounds {
 	MaxNodeType = 3,
