@@ -68,12 +68,12 @@ impl fmt::Display for CmdType {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum NodeProperty {
+	All,
 	Hostname,
 	Address,
-	State,
-	Service,
-	Role,
-	All,
+	State(Option<NodeState>),
+	Service(Option<NodeService>),
+	Role(Option<NodeRole>),
 }
 
 impl NodeProperty  {
@@ -81,10 +81,24 @@ impl NodeProperty  {
 		match s {
 			"hostname" => Some(NodeProperty::Hostname),
 			"address" => Some(NodeProperty::Address),
-			"state" => Some(NodeProperty::State),
-			"service" => Some(NodeProperty::Service),
-			"role" => Some(NodeProperty::Role),
+			"state" => Some(NodeProperty::State(None)),
+			"service" => Some(NodeProperty::Service(None)),
+			"role" => Some(NodeProperty::Role(None)),
 			"all" => Some(NodeProperty::All),
+			"" => Some(NodeProperty::All),
+			_  => None
+		}		
+	}
+	
+	fn from_str_option(s: &str, o: &str) -> Option<NodeProperty> {
+		match s {
+			"hostname" => Some(NodeProperty::Hostname),
+			"address" => Some(NodeProperty::Address),
+			"state" => Some(NodeProperty::State(NodeState::from_str(o))),
+			"service" => Some(NodeProperty::Service(NodeService::from_str(o))),
+			"role" => Some(NodeProperty::Role(NodeRole::from_str(o))),
+			"all" => Some(NodeProperty::All),
+			"" => Some(NodeProperty::All),
 			_  => None
 		}		
 	}
@@ -93,12 +107,20 @@ impl NodeProperty  {
 impl fmt::Display for NodeProperty {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
+			&NodeProperty::All => write!(f, "all"),
+			
 			&NodeProperty::Hostname => write!(f, "hostname"),
 			&NodeProperty::Address => write!(f, "address"),
-			&NodeProperty::State => write!(f, "state"),
-			&NodeProperty::Service => write!(f, "service"),
-			&NodeProperty::Role => write!(f, "role"),
-			&NodeProperty::All => write!(f, "all"),
+			
+			&NodeProperty::State(None) => write!(f, "state"),
+			&NodeProperty::State(Some(ref s)) => write!(f, "state {}",s),
+			
+			&NodeProperty::Service(None) => write!(f, "service"),
+			&NodeProperty::Service(Some(ref s)) => write!(f, "service {}",s),
+			
+			&NodeProperty::Role(None) => write!(f, "role"),
+			&NodeProperty::Role(Some(ref s)) => write!(f, "role {}",s),
+			
 		}
 	}
 }
@@ -137,7 +159,7 @@ impl fmt::Display for MessageContent {
 /// Variant defining second level info content
 #[derive(Clone, Debug, PartialEq)]
 pub enum InfoContent {
-	Node(ContentNodeInfoRequest),
+	Node(ContentNodeProperty),
 	Network
 }
 
@@ -541,10 +563,16 @@ impl ProtocolObject for ContentInfoRequest {
 				None => st.len()
 			};
 			
-			let (t,r) = st.split_at(index);
+			let (t,r) =  match st.find(" ") {
+				Some(i) => st.split_at(i),
+				None => (st.as_str(), "")
+			};
+		
+			let nx = if r.len() > 0 { &r[1..] }  else { "" };
+			
 			let info = match t {
 				"network" => InfoContent::Network,
-				"node" => InfoContent::Node(try!(ContentNodeInfoRequest::from_bytes(r[1..].as_bytes()))),
+				"node" => InfoContent::Node(try!(ContentNodeProperty::from_bytes(nx.as_bytes()))),
 				_ => return Err(ParseFailure::InvalidContentFormat)
 			};
 			Ok(
@@ -571,24 +599,34 @@ impl fmt::Display for ContentInfoRequest {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct ContentNodeInfoRequest {
+pub struct ContentNodeProperty {
+	pub spring: String,
 	pub property: NodeProperty,
 }
 
-impl ContentNodeInfoRequest {
+impl ContentNodeProperty {
 	pub fn to_string(&self) -> String {
 		format!("{}", self)
 	}	
 }
 
-impl ProtocolObject for ContentNodeInfoRequest {
+impl ProtocolObject for ContentNodeProperty {
 	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
 		
 		if bytes.len() == 0 { return Err(ParseFailure::InvalidContentFormat) }
 		
-		let s = utf8_from!(bytes);
-		Ok(ContentNodeInfoRequest {
-			property: opt_parsefail!(NodeProperty::from_str(s))
+		let st = String::from(utf8_from!(bytes));
+		
+		let (spring,p) = match st.find(" ") {
+			Some(i) => st.split_at(i),
+			None => (st.as_str(), ""),
+		};
+		
+		let property = if p.len() > 0 { &p[1..] } else { "" };
+		
+		Ok(ContentNodeProperty {
+			spring : String::from(spring),	
+			property: opt_parsefail!(NodeProperty::from_str(property))
 		})
 	}
 
@@ -597,9 +635,9 @@ impl ProtocolObject for ContentNodeInfoRequest {
 	}
 }
 
-impl fmt::Display for ContentNodeInfoRequest {
+impl fmt::Display for ContentNodeProperty {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f, "{}", self.property)
+		write!(f, "{} {}", self.spring, self.property)
 		
 	}
 }

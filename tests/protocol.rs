@@ -334,92 +334,137 @@ fn ts_content_info_request_network_to_string_pass () {
 
 #[test]
 fn ts_content_info_request_node_from_bytes_pass () {
-	let o = ContentInfoRequest::from_bytes(b"node all"); 
+	let o = ContentInfoRequest::from_bytes(b"node spring all"); 
 	assert!(o.is_ok());
 	let cir : ContentInfoRequest = o.unwrap();
 	
 	let info = cir.info;
 	assert_match!(info, InfoContent::Node(_));
-	let ni : ContentNodeInfoRequest = match info {
+	let ni : ContentNodeProperty = match info {
 		InfoContent::Node(n) => n,
 		_ => return
 	};	
 	assert_eq!(ni.property, NodeProperty::All);
 	
-	let o = ContentInfoRequest::from_bytes(b"node hostname"); 
+	let o = ContentInfoRequest::from_bytes(b"node spring"); 
 	assert!(o.is_ok());
 	let cir : ContentInfoRequest = o.unwrap();
 	
 	let info = cir.info;
 	assert_match!(info, InfoContent::Node(_));
-	let ni : ContentNodeInfoRequest = match info {
+	let ni : ContentNodeProperty = match info {
+		InfoContent::Node(n) => n,
+		_ => return
+	};	
+	assert_eq!(ni.property, NodeProperty::All);
+	
+	let o = ContentInfoRequest::from_bytes(b"node spring hostname"); 
+	assert!(o.is_ok());
+	let cir : ContentInfoRequest = o.unwrap();
+	
+	let info = cir.info;
+	assert_match!(info, InfoContent::Node(_));
+	let ni : ContentNodeProperty = match info {
 		InfoContent::Node(n) => n,
 		_ => return
 	};	
 	assert_eq!(ni.property, NodeProperty::Hostname);
 	
-	let o = ContentInfoRequest::from_bytes(b"node address"); 
+	let o = ContentInfoRequest::from_bytes(b"node spring address"); 
 	assert!(o.is_ok());
 	let cir : ContentInfoRequest = o.unwrap();
 	
 	let info = cir.info;
 	assert_match!(info, InfoContent::Node(_));
-	let ni : ContentNodeInfoRequest = match info {
+	let ni : ContentNodeProperty = match info {
 		InfoContent::Node(n) => n,
 		_ => return
 	};	
 	assert_eq!(ni.property, NodeProperty::Address);
 	
-	let o = ContentInfoRequest::from_bytes(b"node service"); 
+	let o = ContentInfoRequest::from_bytes(b"node spring service"); 
 	assert!(o.is_ok());
 	let cir : ContentInfoRequest = o.unwrap();
 	
 	let info = cir.info;
 	assert_match!(info, InfoContent::Node(_));
-	let ni : ContentNodeInfoRequest = match info {
+	let ni : ContentNodeProperty = match info {
 		InfoContent::Node(n) => n,
 		_ => return
 	};	
-	assert_eq!(ni.property, NodeProperty::Service);
+	assert_eq!(ni.property, NodeProperty::Service(None));
 	
-	let o = ContentInfoRequest::from_bytes(b"node state"); 
+	let o = ContentInfoRequest::from_bytes(b"node spring state"); 
 	assert!(o.is_ok());
 	let cir : ContentInfoRequest = o.unwrap();
 	
 	let info = cir.info;
 	assert_match!(info, InfoContent::Node(_));
-	let ni : ContentNodeInfoRequest = match info {
+	let ni : ContentNodeProperty = match info {
 		InfoContent::Node(n) => n,
 		_ => return
 	};	
-	assert_eq!(ni.property, NodeProperty::State);
+	assert_eq!(ni.property, NodeProperty::State(None));
+	
+	let o = ContentInfoRequest::from_bytes(b"node spring role"); 
+	assert!(o.is_ok());
+	let cir : ContentInfoRequest = o.unwrap();
+	
+	let info = cir.info;
+	assert_match!(info, InfoContent::Node(_));
+	let ni : ContentNodeProperty = match info {
+		InfoContent::Node(n) => n,
+		_ => return
+	};	
+	assert_eq!(ni.property, NodeProperty::Role(None));
 }
 
 #[test]
 fn ts_content_info_request_node_from_bytes_fail() {
-	let o = ContentInfoRequest::from_bytes(b"node sads");
+	let o = ContentInfoRequest::from_bytes(b"node spring sads");
 	assert!(o.is_err());
 }
 
 #[test]
 fn ts_content_info_request_node_info_to_string_pass () {
-	let o = ContentInfoRequest::from_bytes(b"node all"); 
+	let o = ContentInfoRequest::from_bytes(b"node spring all"); 
 	assert!(o.is_ok());
-	assert_eq!(format!("{}", o.unwrap()), "node all");
+	assert_eq!(format!("{}", o.unwrap()), "node spring all");
 	
-	let o = ContentInfoRequest::from_bytes(b"node hostname"); 
+	let o = ContentInfoRequest::from_bytes(b"node spring hostname"); 
 	assert!(o.is_ok());
-	assert_eq!(format!("{}", o.unwrap()), "node hostname");
+	assert_eq!(format!("{}", o.unwrap()), "node spring hostname");
 	
-	let o = ContentInfoRequest::from_bytes(b"node address"); 
+	let o = ContentInfoRequest::from_bytes(b"node spring address"); 
 	assert!(o.is_ok());
-	assert_eq!(format!("{}", o.unwrap()), "node address");
+	assert_eq!(format!("{}", o.unwrap()), "node spring address");
 	
-	let o = ContentInfoRequest::from_bytes(b"node service"); 
+	let o = ContentInfoRequest::from_bytes(b"node spring service"); 
 	assert!(o.is_ok());
-	assert_eq!(format!("{}", o.unwrap()), "node service");
+	assert_eq!(format!("{}", o.unwrap()), "node spring service");
 	
-	let o = ContentInfoRequest::from_bytes(b"node state"); 
+	let o = ContentInfoRequest::from_bytes(b"node spring state"); 
 	assert!(o.is_ok());
-	assert_eq!(format!("{}", o.unwrap()), "node state");
+	assert_eq!(format!("{}", o.unwrap()), "node spring state");
+}
+
+
+#[test]
+fn ts_message_info_request_network_to_bytes () {
+	let o = Message::from_bytes(b"info network");
+	assert!(o.is_ok());
+	let m : Message = o.unwrap();
+	let r = String::from_utf8(m.to_bytes());
+	assert!(r.is_ok());
+	assert_eq!(r.unwrap(), "info network");
+}
+
+#[test]
+fn ts_message_info_request_node_info_to_bytes () {
+	let o = Message::from_bytes(b"info node spring all");
+	assert!(o.is_ok());
+	let m : Message = o.unwrap();
+	let r = String::from_utf8(m.to_bytes());
+	assert!(r.is_ok());
+	assert_eq!(r.unwrap(), "info node spring all");
 }
