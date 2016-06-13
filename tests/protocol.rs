@@ -35,7 +35,7 @@ fn ts_from_bytes_fail_invalid_conversion() {
 
 #[test]
 fn ts_from_bytes_reg_pass() {
-	let o = Message::from_bytes(b"reg foobar,hostbar;org;http");
+	let o = Message::from_bytes(b"register foobar,hostbar;org;http");
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
 	assert_eq!(m.cmd, CmdType::Register);
@@ -58,7 +58,7 @@ fn ts_from_bytes_reg_pass() {
 
 #[test]
 fn ts_from_bytes_reg_fail_zero() {
-	let o = Message::from_bytes(b"reg");
+	let o = Message::from_bytes(b"register");
 	assert!(o.is_err());
 	assert!( match o {
 			Err(ParseFailure::InvalidContentFormat) => true,
@@ -69,33 +69,33 @@ fn ts_from_bytes_reg_fail_zero() {
 #[test]
 fn ts_from_bytes_reg_fail_malformed() {
 
-	let o = Message::from_bytes(b"reg foobar,bar;orgd;a");
+	let o = Message::from_bytes(b"register foobar,bar;orgd;a");
 	assert!(o.is_err());
 	assert!( match o {
 			Err(ParseFailure::InvalidRole) => true,
 			_ => false,
 	});
 
-	let o = Message::from_bytes(b"reg foobar,bar;org;");
+	let o = Message::from_bytes(b"register foobar,bar;org;");
 	assert!(o.is_err());
 	assert!( match o {
 			Err(ParseFailure::InvalidContentFormat) => true,
 			_ => false,
 	});
-	let o = Message::from_bytes(b"reg foobar,bar;");
+	let o = Message::from_bytes(b"register foobar,bar;");
 	assert!(o.is_err());
 	assert!( match o {
 			Err(ParseFailure::InvalidContentFormat) => true,
 			_ => false,
 	});
 
-	let o = Message::from_bytes(b"reg bar,foobar;;foo");
+	let o = Message::from_bytes(b"register bar,foobar;;foo");
 	assert!(o.is_err());
 	assert!( match o {
 			Err(ParseFailure::InvalidContentFormat) => true,
 			_ => false,
 	});
-	let o = Message::from_bytes(b"reg bar,foobar;;");
+	let o = Message::from_bytes(b"register bar,foobar;;");
 	assert!(o.is_err());
 	assert!( match o {
 			Err(ParseFailure::InvalidContentFormat) => true,
@@ -105,18 +105,18 @@ fn ts_from_bytes_reg_fail_malformed() {
 
 #[test]
 fn ts_message_to_bytes_reg_pass() {
-	let o = Message::from_bytes(b"reg foobar,bar;org;dvsp");
+	let o = Message::from_bytes(b"register foobar,bar;org;dvsp");
 	assert!(o.is_ok());
 	
 	let m : Message = o.unwrap();
 	
 	let st = String::from_utf8(m.to_bytes()).unwrap();
-	assert_eq!(st, "reg foobar,bar;org;dvsp");
+	assert_eq!(st, "register foobar,bar;org;dvsp");
 }
 
 #[test]
 fn ts_from_bytes_ureg_pass() {
-	let o = Message::from_bytes(b"ureg foobar");
+	let o = Message::from_bytes(b"unregister foobar");
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
 	assert_eq!(m.cmd, CmdType::Unregister);
@@ -136,7 +136,7 @@ fn ts_from_bytes_ureg_pass() {
 
 #[test]
 fn ts_from_bytes_ureg_fail() {
-	let o = Message::from_bytes(b"ureg");
+	let o = Message::from_bytes(b"unregister");
 	assert!(o.is_err());
 	assert!( match o {
 			Err(ParseFailure::InvalidContentFormat) => true,
@@ -146,7 +146,7 @@ fn ts_from_bytes_ureg_fail() {
 
 #[test]
 fn ts_from_bytes_ureg_fail_invalid_name() {
-	let o = Message::from_bytes(b"ureg foo.bar");
+	let o = Message::from_bytes(b"unregister foo.bar");
 	assert!(o.is_err());
 	assert!( match o {
 			Err(ParseFailure::InvalidNaming) => true,
@@ -156,13 +156,13 @@ fn ts_from_bytes_ureg_fail_invalid_name() {
 
 #[test]
 fn ts_message_to_bytes_ureg_pass() {
-	let o = Message::from_bytes(b"ureg foobar");
+	let o = Message::from_bytes(b"unregister foobar");
 	assert!(o.is_ok());
 	
 	let m : Message = o.unwrap();
 	
 	let st = String::from_utf8(m.to_bytes()).unwrap();
-	assert_eq!(st, "ureg foobar");
+	assert_eq!(st, "unregister foobar");
 }
 
 #[test]
@@ -472,7 +472,7 @@ fn ts_message_info_request_node_info_to_bytes () {
 #[test]
 fn ts_message_update_node_property_from_bytes_pass () {
 	
-	let o = Message::from_bytes(b"updt spring state enabled"); 
+	let o = Message::from_bytes(b"update spring state enabled"); 
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
 	
@@ -487,10 +487,10 @@ fn ts_message_update_node_property_from_bytes_pass () {
 #[test]
 fn ts_message_update_node_property_from_bytes_fail () {
 	
-	let o = Message::from_bytes(b"updt spring blagh enabled"); 
+	let o = Message::from_bytes(b"update spring blagh enabled"); 
 	assert!(o.is_err());
 	
-	let o = Message::from_bytes(b"updt spring state void"); 
+	let o = Message::from_bytes(b"update spring state void"); 
 	assert!(o.is_err());
 }
 
@@ -498,11 +498,11 @@ fn ts_message_update_node_property_from_bytes_fail () {
 #[test]
 fn ts_message_update_node_property_value_to_bytes_pass () {
 	
-	let o = Message::from_bytes(b"updt spring service http"); 
+	let o = Message::from_bytes(b"update spring service http"); 
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
 	
 	let r = String::from_utf8(m.to_bytes());
 	assert!(r.is_ok());
-	assert_eq!(r.unwrap(), "updt spring service http");
+	assert_eq!(r.unwrap(), "update spring service http");
 }

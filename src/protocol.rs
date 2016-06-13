@@ -74,10 +74,10 @@ impl CmdType  {
 			_ => {}
 		}
 		match s {
-			"reg" => Some(CmdType::Register),
-			"ureg" => Some(CmdType::Unregister),
+			"register" => Some(CmdType::Register),
+			"unregister" => Some(CmdType::Unregister),
 			"info" => Some(CmdType::Info),
-			"updt" => Some(CmdType::Update),
+			"update" => Some(CmdType::Update),
 			_  => None
 		}		
 	}
@@ -86,8 +86,8 @@ impl CmdType  {
 impl fmt::Display for CmdType {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
-			&CmdType::Register => write!(f, "reg"),
-			&CmdType::Unregister => write!(f, "ureg"),
+			&CmdType::Register => write!(f, "register"),
+			&CmdType::Unregister => write!(f, "unregister"),
 			&CmdType::Info => write!(f, "info"),
 			_ => write!(f, ""),
 		}
@@ -186,7 +186,7 @@ impl fmt::Display for MessageContent {
 			&MessageContent::Info(ref s) => write!(f, "{}",s),
 			&MessageContent::Response(ref s) => write!(f, "{}",s),
 			&MessageContent::NodeSingle(ref s) => write!(f, "{}",s),
-			&MessageContent::Update(ref s) => write!(f, "updt {}",s),
+			&MessageContent::Update(ref s) => write!(f, "update {}",s),
 			&MessageContent::Registration(ref s) => write!(f, "{}",s)
 		}
 	}
