@@ -113,7 +113,7 @@ pub enum MessageContent {
 	Registration(ContentRegistration),
 	
 	/// Request for information
-	Info(InfoContent),
+	Info(ContentInfoRequest),
 	
 	/// Contains a NodeSingle
 	NodeSingle(ContentNodeSingle),
@@ -223,6 +223,7 @@ impl Message {
 			CmdType::Register => Ok(MessageContent::Registration(try!(ContentRegistration::from_bytes(&bytes)))),
 			CmdType::Unregister => Ok(MessageContent::NodeSingle(try!(ContentNodeSingle::from_bytes(&bytes)))),
 			CmdType::Response => Ok(MessageContent::Response(try!(ContentResponse::from_bytes(&bytes)))),
+			CmdType::Info => Ok(MessageContent::Info(try!(ContentInfoRequest::from_bytes(&bytes)))),
 			_ => return Err(ParseFailure::InvalidCommand),
 		}
 		
@@ -535,10 +536,12 @@ impl ProtocolObject for ContentInfoRequest {
 		if s.len() >= 4 {
 			
 			let st = String::from(s);
-			let index = opt_parsefail!(st.find(" "));
+			let index = match st.find(" ") {
+				Some(i) => i,
+				None => st.len()
+			};
 			
 			let (t,r) = st.split_at(index);
-			
 			let info = match t {
 				"network" => InfoContent::Network,
 				"node" => InfoContent::Node(try!(ContentNodeInfoRequest::from_bytes(r[1..].as_bytes()))),

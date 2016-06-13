@@ -299,3 +299,127 @@ fn ts_message_content_response_network_to_bytes_pass () {
 	assert_eq!(st, "200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;")
 	
 }
+
+
+
+
+#[test]
+fn ts_content_info_request_network_from_bytes_pass () {
+	let o = ContentInfoRequest::from_bytes(b"network"); 
+	assert!(o.is_ok());
+	let cir : ContentInfoRequest = o.unwrap();
+	assert_eq!(cir.info, InfoContent::Network);
+	
+	
+}
+
+#[test]
+fn ts_content_info_request_network_from_bytes_fail () {
+	let o = ContentInfoRequest::from_bytes(b"netwddodrk"); 
+	assert!(o.is_err());
+	assert_match!(o, Err(ParseFailure::InvalidContentFormat));
+
+	let o = ContentInfoRequest::from_bytes(b""); 
+	assert!(o.is_err());
+	assert_match!(o, Err(ParseFailure::InvalidContentFormat));	
+}
+
+#[test]
+fn ts_content_info_request_network_to_string_pass () {
+	let o = ContentInfoRequest::from_bytes(b"network"); 
+	assert!(o.is_ok());
+	let cir = o.unwrap();
+	assert_eq!(format!("{}", cir), "network");
+}
+
+#[test]
+fn ts_content_info_request_node_from_bytes_pass () {
+	let o = ContentInfoRequest::from_bytes(b"node all"); 
+	assert!(o.is_ok());
+	let cir : ContentInfoRequest = o.unwrap();
+	
+	let info = cir.info;
+	assert_match!(info, InfoContent::Node(_));
+	let ni : ContentNodeInfoRequest = match info {
+		InfoContent::Node(n) => n,
+		_ => return
+	};	
+	assert_eq!(ni.property, NodeProperty::All);
+	
+	let o = ContentInfoRequest::from_bytes(b"node hostname"); 
+	assert!(o.is_ok());
+	let cir : ContentInfoRequest = o.unwrap();
+	
+	let info = cir.info;
+	assert_match!(info, InfoContent::Node(_));
+	let ni : ContentNodeInfoRequest = match info {
+		InfoContent::Node(n) => n,
+		_ => return
+	};	
+	assert_eq!(ni.property, NodeProperty::Hostname);
+	
+	let o = ContentInfoRequest::from_bytes(b"node address"); 
+	assert!(o.is_ok());
+	let cir : ContentInfoRequest = o.unwrap();
+	
+	let info = cir.info;
+	assert_match!(info, InfoContent::Node(_));
+	let ni : ContentNodeInfoRequest = match info {
+		InfoContent::Node(n) => n,
+		_ => return
+	};	
+	assert_eq!(ni.property, NodeProperty::Address);
+	
+	let o = ContentInfoRequest::from_bytes(b"node service"); 
+	assert!(o.is_ok());
+	let cir : ContentInfoRequest = o.unwrap();
+	
+	let info = cir.info;
+	assert_match!(info, InfoContent::Node(_));
+	let ni : ContentNodeInfoRequest = match info {
+		InfoContent::Node(n) => n,
+		_ => return
+	};	
+	assert_eq!(ni.property, NodeProperty::Service);
+	
+	let o = ContentInfoRequest::from_bytes(b"node state"); 
+	assert!(o.is_ok());
+	let cir : ContentInfoRequest = o.unwrap();
+	
+	let info = cir.info;
+	assert_match!(info, InfoContent::Node(_));
+	let ni : ContentNodeInfoRequest = match info {
+		InfoContent::Node(n) => n,
+		_ => return
+	};	
+	assert_eq!(ni.property, NodeProperty::State);
+}
+
+#[test]
+fn ts_content_info_request_node_from_bytes_fail() {
+	let o = ContentInfoRequest::from_bytes(b"node sads");
+	assert!(o.is_err());
+}
+
+#[test]
+fn ts_content_info_request_node_info_to_string_pass () {
+	let o = ContentInfoRequest::from_bytes(b"node all"); 
+	assert!(o.is_ok());
+	assert_eq!(format!("{}", o.unwrap()), "node all");
+	
+	let o = ContentInfoRequest::from_bytes(b"node hostname"); 
+	assert!(o.is_ok());
+	assert_eq!(format!("{}", o.unwrap()), "node hostname");
+	
+	let o = ContentInfoRequest::from_bytes(b"node address"); 
+	assert!(o.is_ok());
+	assert_eq!(format!("{}", o.unwrap()), "node address");
+	
+	let o = ContentInfoRequest::from_bytes(b"node service"); 
+	assert!(o.is_ok());
+	assert_eq!(format!("{}", o.unwrap()), "node service");
+	
+	let o = ContentInfoRequest::from_bytes(b"node state"); 
+	assert!(o.is_ok());
+	assert_eq!(format!("{}", o.unwrap()), "node state");
+}
