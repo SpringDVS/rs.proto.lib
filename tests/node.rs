@@ -57,6 +57,14 @@ fn ts_node_from_str_format_node_info_pass() {
 }
 
 #[test]
+fn ts_node_from_str_format_node_info_fail() {
+	let o = Node::from_str("spring:foobar,hosting:barfoo,address:127.3.4.5,role:hybrid");
+	assert!(o.is_err());
+	let o = Node::from_str("spring:foobar,hostbarfoo,address:127.3.4.5,role:hybrid");
+	assert!(o.is_err());
+}
+
+#[test]
 fn ts_node_to_node_single_pass() {
 	let o = Node::from_str("spring:foobar,host:barfoo,address:127.3.4.5,role:hybrid,state:enabled,service:http");
 	assert!(o.is_ok());

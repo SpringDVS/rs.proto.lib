@@ -186,6 +186,7 @@ pub enum ParseFailure {
 	InvalidService,
 	InvalidAddress,
 	InvalidState,
+	InvalidProperty,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]

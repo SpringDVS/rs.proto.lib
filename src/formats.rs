@@ -313,7 +313,7 @@ impl NodeInfoFmt {
 			let (key,value) = st.split_at(
 									 match st.find(':') {
 									 	Some(i) => i,
-									 	None => continue
+									 	None => return Err(ParseFailure::InvalidContentFormat)
 									 } 
 								);
 			match key.trim() {
@@ -323,7 +323,7 @@ impl NodeInfoFmt {
 				"service" => ni.service = opt_parsefail!(NodeService::from_str(value[1..].trim()), ParseFailure::InvalidService),
 				"state"   => ni.state = opt_parsefail!(NodeState::from_str(value[1..].trim()), ParseFailure::InvalidState),
 				"role"    => ni.role = opt_parsefail!(NodeRole::from_str(value[1..].trim()), ParseFailure::InvalidRole),
-				_ => { }
+				_ => { return Err(ParseFailure::InvalidProperty) }
 			}
 			
 		}
