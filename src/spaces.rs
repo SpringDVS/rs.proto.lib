@@ -2,18 +2,18 @@
  * Author:  Charlie Fyvie-Gauld (cfg@zunautica.org)
  * License: GPLv3 (http://www.gnu.org/licenses/gpl-3.0.txt)
  */
-use std::fmt::format;
 
-use ::protocol;
-//use ::formats::{str_address_to_ipv4, ipv4_to_str_address};
+pub use ::protocol;
+pub use ::node::Node;
+use ::enums::{Failure,Success,NodeState,NodeRole};
 
 
 
 pub trait Netspace {
 	fn gsn_nodes(&self) -> Vec<Node>;
 	fn gsn_nodes_by_address(&self, address: String) -> Vec<Node>;
-	fn gsn_nodes_by_type(&self, types: NodeTypeField) -> Vec<Node>;
-	fn gsn_nodes_by_state(&self, state: DvspNodeState) -> Vec<Node>;
+	fn gsn_nodes_by_type(&self, types: NodeRole) -> Vec<Node>;
+	fn gsn_nodes_by_state(&self, state: NodeState) -> Vec<Node>;
 	
 	fn gsn_node_by_springname(&self, name: &str) -> Result<Node,Failure>;
 	fn gsn_node_by_hostname(&self, name: &str) -> Result<Node,Failure>;
@@ -40,6 +40,3 @@ pub trait Netspace {
 pub trait Metaspace {
 	fn gsn_resolve(metadata: String) -> Vec<String>;
 }
-
-// --------- Implementations ----------- \\
-

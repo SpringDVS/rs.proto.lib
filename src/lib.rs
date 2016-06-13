@@ -7,7 +7,7 @@ extern crate regex;
 
 //pub mod serialise;
 pub mod enums;
-//pub mod model;
+pub mod spaces;
 pub mod node;
 pub mod uri;
 #[macro_use]
