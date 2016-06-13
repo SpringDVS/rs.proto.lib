@@ -498,11 +498,11 @@ fn ts_message_update_node_property_from_bytes_fail () {
 #[test]
 fn ts_message_update_node_property_value_to_bytes_pass () {
 	
-	let o = Message::from_bytes(b"updt spring state enabled"); 
+	let o = Message::from_bytes(b"updt spring service http"); 
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
 	
 	let r = String::from_utf8(m.to_bytes());
 	assert!(r.is_ok());
-	assert_eq!(r.unwrap(), "updt spring state enabled");
+	assert_eq!(r.unwrap(), "updt spring service http");
 }

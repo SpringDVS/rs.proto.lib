@@ -2,6 +2,22 @@
  * Author: 	Charlie Fyvie-Gauld (cfg@zunautica.org)
  * License: GPLv3 (http://www.gnu.org/licenses/gpl-3.0.txt)
  */
+//! Module `protocol` 
+//!
+//! Covers the construction of protocol messages into
+//! internal data structure representation and converting 
+//! the internal representation into protocol messages
+//!
+//! The construction of the data structures is a cascade through
+//! the variants, resulting in a Message containing the correct
+//! nesting of variants.
+//!
+//! The construction of the protocol message is a format! 
+//! cascade through the valid Message object and the nested 
+//! content, resulting a syntactally correct string
+//! 
+//! When a message is constructed -- it must be in a completely
+//! valid state; aggresive failure when parsing is necessary.
 
 use std::str;
 use std::fmt;
@@ -14,6 +30,7 @@ pub use ::formats::{NodeSingleFmt,NodeDoubleFmt,NodeTripleFmt,NodeQuadFmt,NodeIn
 
 pub type Ipv4 = [u8;4];
 pub type Ipv6 = [u8;6];
+
 
 macro_rules! utf8_from {
 	($bytes:expr) => (
