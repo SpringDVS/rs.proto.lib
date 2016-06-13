@@ -9,6 +9,7 @@ extern crate regex;
 pub mod enums;
 //pub mod model;
 pub mod node;
+pub mod uri;
 #[macro_use]
 pub mod formats;
 pub mod protocol;
