@@ -7,7 +7,6 @@ use std::str::FromStr;
 use regex::Regex;
 pub use std::net::{IpAddr};
 
-use ::protocol::{Ipv4};
 pub use ::enums::{ParseFailure,NodeService,NodeState,NodeRole};
 
 

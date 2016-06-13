@@ -2,8 +2,6 @@
  * Author:  Charlie Fyvie-Gauld (cfg@zunautica.org)
  * License: GPLv3 (http://www.gnu.org/licenses/gpl-3.0.txt)
  */
-use std::fmt::format;
-
 pub use ::protocol::*;
 //pub use ::enums::{ParseFailure,NodeRole,Response,NodeService,NodeState};
 
