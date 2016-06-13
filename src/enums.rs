@@ -177,6 +177,7 @@ pub enum Failure {
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum ParseFailure {
 	ConversionError,
+	UnexpectedContent,
 	InvalidCommand,
 	InvalidContentFormat,
 	InvalidInternalState,
@@ -184,6 +185,7 @@ pub enum ParseFailure {
 	InvalidNaming,
 	InvalidService,
 	InvalidAddress,
+	InvalidState,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]

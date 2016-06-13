@@ -24,12 +24,46 @@ pub enum CmdType {
 	Response,
 }
 
+impl CmdType  {
+	fn from_str(s: &str) -> Option<CmdType> {
+		match s.parse::<usize>() {
+			Ok(_) => return Some(CmdType::Response),
+			_ => {}
+		}
+		match s {
+			"reg" => Some(CmdType::Register),
+			"ureg" => Some(CmdType::Unregister),
+			"info" => Some(CmdType::Info),
+			_  => None
+		}		
+	}
+}
+
+impl fmt::Display for CmdType {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match self {
+			&CmdType::Register => write!(f, "reg"),
+			&CmdType::Unregister => write!(f, "ureg"),
+			_ => write!(f, ""),
+		}
+	}
+}
+
 macro_rules! utf8_from {
 	($bytes:expr) => (
 		res_parsefail!(str::from_utf8($bytes), ParseFailure::InvalidContentFormat)
 	);
 }
 
+#[macro_export]
+macro_rules! msg_content {
+	($content:ident, $ctype:pat) => (
+		match $content {
+			$ctype(s) => s,
+			_ => return Err(ParseFailure::UnexpectedContent)
+		}
+	)
+}
 /// Variant defining the content of the message
 #[derive(Clone, Debug, PartialEq)]
 pub enum MessageContent {
@@ -46,6 +80,16 @@ pub enum MessageContent {
 	Response(ContentResponse),
 }
 
+impl fmt::Display for MessageContent {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match self {
+			&MessageContent::Empty => write!(f, ""),
+			s => write!(f, "{}",s)
+		}
+	}
+}
+
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum ResponseContent {
 	/// There is no body of content
@@ -59,6 +103,15 @@ pub enum ResponseContent {
 	
 	/// Containes node info
 	NodeInfo(ContentNodeInfo),
+}
+
+impl fmt::Display for ResponseContent {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match self {
+			&ResponseContent::Empty => write!(f, ""),
+			s => write!(f, "{}",s)
+		}
+	}
 }
 
 /// Empty content type
@@ -100,20 +153,6 @@ impl Message {
 		}	
 	}
 	
-	fn parse_cmd(cmd: &str) -> Result<CmdType, ParseFailure> {
-		
-		match cmd.parse::<usize>() {
-			Ok(_) => return Ok(CmdType::Response),
-			_ => {}
-		}
-		match cmd {
-			"reg" => Ok(CmdType::Register),
-			"ureg" => Ok(CmdType::Unregister),
-			"info" => Ok(CmdType::Info),
-			_  => Err(ParseFailure::InvalidCommand)
-		}
-	}
-	
 	fn parse_content(bytes: &[u8], mtype: CmdType) -> Result<MessageContent, ParseFailure> {
 		
 		match mtype {
@@ -130,7 +169,9 @@ impl ProtocolObject for Message {
 	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
 
 		let (index, cmd) = try!(Message::next(bytes));
-		let mtype = try!(Message::parse_cmd(cmd));
+		let mtype = match CmdType::from_str(cmd) {
+			Some(c) => c, None => return Err(ParseFailure::InvalidCommand) 
+		};
 		
 		let content = match mtype {
 			CmdType::Response => try!(Message::parse_content(&bytes, mtype)),
@@ -144,7 +185,16 @@ impl ProtocolObject for Message {
 	}
 
 	fn to_bytes(&self) -> Vec<u8> {
+//		let s : String = format!("{}", self.cmd);
+//		let c : Vec<u8> = match self.content {
+//			MessageContent::Empty => Vec<u8>::new(),
+//			_(s) => s.as_bytes(),
+//		}
+//		
+//		let mut out = s.as_mut_vec();
+
 		Vec::new()
+		
 	}
 	
 }

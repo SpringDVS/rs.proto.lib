@@ -2,6 +2,16 @@ extern crate spring_dvs;
 
 use spring_dvs::protocol::*;
 
+macro_rules! assert_match {
+	
+	($chk:ident, $pass:pat) => (
+		assert!(match $chk {
+					$pass => true,
+					_ => false
+			})
+	)
+}
+
 #[test]
 fn ts_from_bytes_fail_invalid_command() {
 	let o = Message::from_bytes(b"void foobar");
@@ -161,7 +171,7 @@ fn ts_content_response_from_bytes_pass_empty() {
 }
 
 #[test]
-fn ts_content_response_from_bytes_pass_network () {
+fn ts_content_response_from_bytes_pass_network_pass () {
 	let o = ContentResponse::from_bytes(b"200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
 	assert!(o.is_ok());
 	
@@ -174,7 +184,7 @@ fn ts_content_response_from_bytes_pass_network () {
 }
 
 #[test]
-fn ts_content_response_from_bytes_pass_node_info () {
+fn ts_content_response_from_bytes_pass_node_info_pass () {
 	let o = ContentResponse::from_bytes(b"200 node spring:foo,host:bar,state:unresponsive");
 	assert!(o.is_ok());
 	
@@ -196,10 +206,60 @@ fn ts_content_response_from_bytes_pass_node_info () {
 }
 
 #[test]
-fn ts_content_response_to_string_pass_network () {
+fn ts_message_content_response_nodeinfo_from_bytes_pass () {
+	let o = Message::from_bytes(b"200 node spring:foo,host:bar,state:unresponsive"); 
+	assert!(o.is_ok());
+	let m : Message = o.unwrap();
+	
+	let c = m.content;
+	
+	assert_match!(c, MessageContent::Response(_));
+	let r : ContentResponse = match c { MessageContent::Response(r) => r, _ => return };
+	assert_eq!(r.code, Response::Ok);
+	
+	let rc = r.content;
+	assert_match!(rc, ResponseContent::NodeInfo(_));
+	let ni : ContentNodeInfo = match rc { ResponseContent::NodeInfo(n) => n, _ => return };
+	
+	assert_eq!(format!("{}", ni), "spring:foo,host:bar,state:unresponsive");
+}
+
+
+
+#[test]
+fn ts_content_response_to_string_pass_network_pass () {
 	let o = ContentResponse::from_bytes(b"200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
 	assert!(o.is_ok());
 	let cr : ContentResponse = o.unwrap();
 	assert_eq!(format!("{}", cr), "200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
 }
 
+
+#[test]
+fn ts_message_content_response_network_from_bytes_pass () {
+	let o = Message::from_bytes(b"200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;"); 
+	assert!(o.is_ok());
+	let m : Message = o.unwrap();
+	
+	let c = m.content;
+	
+	assert_match!(c, MessageContent::Response(_));
+	let r : ContentResponse = match c { MessageContent::Response(r) => r, _ => return };
+	assert_eq!(r.code, Response::Ok);
+	
+	let rc = r.content;
+	assert_match!(rc, ResponseContent::Network(_));
+	
+	let nw : ContentNetwork = match rc { ResponseContent::Network(n) => n, _ => return };
+	
+	assert_eq!(format!("{}", nw), "foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
+}
+
+#[test]
+fn ts_message_content_response_network_to_bytes_pass () {
+	let o = Message::from_bytes(b"200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;"); 
+	assert!(o.is_ok());
+	let m : Message = o.unwrap();
+	//assert_eq!(m.to_bytes(), b"200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;")
+	
+}

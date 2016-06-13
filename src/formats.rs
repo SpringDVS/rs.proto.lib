@@ -200,7 +200,7 @@ impl NodeTripleFmt {
 		}
 
 		if valid_name(parts[0]) == false || valid_name(parts[1]) == false {
-			return Err(ParseFailure::InvalidContentFormat)
+			return Err(ParseFailure::InvalidNaming)
 		}
 
 		Ok( NodeTripleFmt { 
@@ -274,6 +274,12 @@ impl fmt::Display for NodeQuadFmt {
 	}
 }
 
+
+/// Node Info is similar to Node but is used fo sendin the
+/// information.
+///
+/// It will display any fields that are correctly set and
+/// ignore fields that are `unset`
 #[derive(Clone,Debug,PartialEq)]
 pub struct NodeInfoFmt {
 	pub spring: String,
@@ -315,9 +321,9 @@ impl NodeInfoFmt {
 				"spring"  => ni.spring = String::from( value[1..].trim() ),
 				"host"    => ni.host = String::from( value[1..].trim() ),
 				"address" => ni.address = String::from( value[1..].trim() ),
-				"service" => ni.service = opt_parsefail!(NodeService::from_str(value[1..].trim())),
-				"state"   => ni.state = opt_parsefail!(NodeState::from_str(value[1..].trim())),
-				"role"    => ni.role = opt_parsefail!(NodeRole::from_str(value[1..].trim())),
+				"service" => ni.service = opt_parsefail!(NodeService::from_str(value[1..].trim()), ParseFailure::InvalidService),
+				"state"   => ni.state = opt_parsefail!(NodeState::from_str(value[1..].trim()), ParseFailure::InvalidState),
+				"role"    => ni.role = opt_parsefail!(NodeRole::from_str(value[1..].trim()), ParseFailure::InvalidRole),
 				_ => { }
 			}
 			
