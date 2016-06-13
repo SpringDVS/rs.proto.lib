@@ -185,3 +185,35 @@ fn ts_model_uri_mut_route_pass() {
 	assert_eq!("spring://cci/res?query=test", uri.to_string());
 	
 }
+
+#[test]
+fn ts_uri_query_map_pass() {
+	let s = "spring://cci.esusx.uk/res?query=test&query2=test2";
+	let r = Uri::new(s);
+	
+	assert!(r.is_ok());
+	let uri = r.unwrap();
+	
+	
+	let o = uri.query_map();
+	assert!(o.is_some());
+	
+	let qm = o.unwrap();
+	
+	assert_eq!(qm.len(), 2);
+	assert_eq!(qm["query"], "test");
+	assert_eq!(qm["query2"], "test2");
+}
+
+#[test]
+fn ts_uri_query_map_fail() {
+	let s = "spring://cci.esusx.uk/res?";
+	let r = Uri::new(s);
+	
+	assert!(r.is_ok());
+	let uri = r.unwrap();
+	
+	
+	let o = uri.query_map();
+	assert!(o.is_none());
+}

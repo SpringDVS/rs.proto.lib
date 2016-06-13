@@ -1,4 +1,5 @@
 use std::str;
+use std::collections::HashMap;
 pub use ::enums::Failure;
 pub use ::node::Node;
 #[derive(Debug)]
@@ -12,9 +13,9 @@ pub struct Uri {
 
 impl Uri {
 	
-	pub fn new(Uri: &str) -> Result<Uri, Failure> {
+	pub fn new(uri: &str) -> Result<Uri, Failure> {
 		
-		let initial : Vec<&str> = Uri.split("://").collect();
+		let initial : Vec<&str> = uri.split("://").collect();
 
 		if initial[0] != "spring" || initial.len() < 2 {
 			return Err(Failure::InvalidFormat)
@@ -25,12 +26,12 @@ impl Uri {
 		let mut query: &str = "";
 
 
-		let mut atoms : Vec<&str> = initial[1].split('?').collect();
+		let atoms : Vec<&str> = initial[1].split('?').collect();
 		if atoms.len() > 1 {
 			query = atoms[1]
 		}
 
-		let mut atoms : Vec<&str> = atoms[0].split('/').collect();
+		let atoms : Vec<&str> = atoms[0].split('/').collect();
 
 		if atoms.len() > 1 {
 			for i in 1 .. atoms.len() {
@@ -109,6 +110,29 @@ impl Uri {
 			s.push_str(&self.query);
 		}
 		s
+	}
+	
+	pub fn query_map(&self) -> Option<HashMap<String, String>> {
+		if self.query.is_empty() { return None }
+		
+		
+		
+		let mut m = HashMap::new();
+			 
+		for val in self.query.split("&") {
+			let (k,v) = val.split_at(match val.find("=") {
+					None => val.len(),
+					Some(i) => i, 
+				});
+			
+			if v.len() > 0 {				 
+				m.insert(String::from(k),String::from(&v[1..])); 
+			} else { 
+				m.insert(String::from(k),String::from(v));
+			}
+		}
+			
+		Some(m)
 	}
 	
 }
