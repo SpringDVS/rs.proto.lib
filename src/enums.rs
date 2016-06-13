@@ -85,6 +85,15 @@ impl NodeRole {
 			_ => None,
 		}
 	}
+	
+	pub fn from_i64(n: i64) -> Self {
+		match n {
+			1 => NodeRole::Hub,
+			2 => NodeRole::Org,
+			3 => NodeRole::Hybrid,
+			_ => NodeRole::Undefined,
+		}
+	}
 }
 
 impl fmt::Display for NodeRole {
@@ -113,6 +122,14 @@ impl NodeService {
 			"dvsp" => Some(NodeService::Dvsp),
 			"http" => Some(NodeService::Http),
 			_ => None,
+		}
+	}
+	
+	pub fn from_i64(n: i64) -> Self {
+		match n {
+			1 => NodeService::Dvsp,
+			2 => NodeService::Http,
+			_ => NodeService::Undefined,
 		}
 	}
 }
@@ -144,6 +161,15 @@ impl NodeState {
 			"unresponsive" => Some(NodeState::Unresponsive),
 			"unspecified" => Some(NodeState::Unspecified),
 			_ => None,
+		}
+	}
+
+	pub fn from_i64(n: i64) -> Self {
+		match n {
+			1 => NodeState::Enabled,
+			2 => NodeState::Unresponsive,
+			0 => NodeState::Disabled,
+			_ => NodeState::Unspecified,
 		}
 	}
 }
