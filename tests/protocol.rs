@@ -260,6 +260,8 @@ fn ts_message_content_response_network_to_bytes_pass () {
 	let o = Message::from_bytes(b"200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;"); 
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
-	//assert_eq!(m.to_bytes(), b"200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;")
+	let s = m.to_bytes();
+	let st = String::from_utf8(s).unwrap();
+	assert_eq!(st, "200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;")
 	
 }

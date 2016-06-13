@@ -84,7 +84,9 @@ impl fmt::Display for MessageContent {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
 			&MessageContent::Empty => write!(f, ""),
-			s => write!(f, "{}",s)
+			&MessageContent::NodeSingle(ref s) => write!(f, "{}",s),
+			&MessageContent::Response(ref s) => write!(f, "{}",s),
+			&MessageContent::Registration(ref s) => write!(f, "{}",s)
 		}
 	}
 }
@@ -109,7 +111,10 @@ impl fmt::Display for ResponseContent {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
 			&ResponseContent::Empty => write!(f, ""),
-			s => write!(f, "{}",s)
+			&ResponseContent::NodeSingle(ref s) => write!(f, "{}", s),
+			&ResponseContent::Network(ref s) => write!(f, "{}", s),
+			&ResponseContent::NodeInfo(ref s) => write!(f, "{}", s),
+			
 		}
 	}
 }
@@ -185,16 +190,16 @@ impl ProtocolObject for Message {
 	}
 
 	fn to_bytes(&self) -> Vec<u8> {
-//		let s : String = format!("{}", self.cmd);
-//		let c : Vec<u8> = match self.content {
-//			MessageContent::Empty => Vec<u8>::new(),
-//			_(s) => s.as_bytes(),
-//		}
-//		
-//		let mut out = s.as_mut_vec();
-
-		Vec::new()
+		let mut v : Vec<String> = Vec::new();
 		
+		let s : String = format!("{}", self.cmd);
+		if s.is_empty() == false {
+			v.push(s)
+		}
+		
+		v.push(format!("{}", self.content));
+		let full : String = v.join(" ");	
+		Vec::from(full.as_str())
 	}
 	
 }
@@ -207,7 +212,7 @@ pub struct ContentRegistration {
 
 impl ContentRegistration {
 	pub fn to_string(&self) -> String {
-		format!("{}", self.ndouble)
+		format!("{}", self)
 	}
 }
 
@@ -237,6 +242,12 @@ impl ProtocolObject for ContentRegistration {
 	fn to_bytes(&self) -> Vec<u8> {
 		Vec::from(self.to_string().as_bytes())
 	}	
+}
+
+impl fmt::Display for ContentRegistration {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f,"{}",self.ndouble)
+	}
 }
 
 #[derive(Clone,Debug, PartialEq)]
@@ -295,6 +306,13 @@ impl ProtocolObject for ContentNodeSingle {
 
 	fn to_bytes(&self) -> Vec<u8> {
 		Vec::from(self.to_string().as_bytes())
+	}
+}
+
+
+impl fmt::Display for ContentNodeSingle {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f,"{}",self.nsingle)
 	}
 }
 
