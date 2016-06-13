@@ -11,7 +11,7 @@ use ::enums::{Failure,Success,NodeState,NodeRole};
 
 pub trait Netspace {
 	fn gsn_nodes(&self) -> Vec<Node>;
-	fn gsn_nodes_by_address(&self, address: String) -> Vec<Node>;
+	fn gsn_nodes_by_address(&self, address: &str) -> Vec<Node>;
 	fn gsn_nodes_by_type(&self, types: NodeRole) -> Vec<Node>;
 	fn gsn_nodes_by_state(&self, state: NodeState) -> Vec<Node>;
 	
@@ -27,7 +27,7 @@ pub trait Netspace {
 
 	fn gsn_node_update_state(&self, node: &Node) -> Result<Success,Failure>;
 	fn gsn_node_update_service(&self, node: &Node) -> Result<Success,Failure>;
-	fn gsn_node_update_types(&self, node: &Node) -> Result<Success,Failure>;
+	fn gsn_node_update_role(&self, node: &Node) -> Result<Success,Failure>;
 	
 	fn gtn_geosub_root_nodes(&self, gsn: &str) -> Vec<Node>;
 	fn gtn_geosub_node_by_springname(&self, name: &str, gsn: &str) -> Result<Node,Failure>;
