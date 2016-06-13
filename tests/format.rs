@@ -91,7 +91,7 @@ fn ts_format_node_double_fmt_fail_bad_names() {
 	assert!(o.is_err());
 	assert_match!(o, Err(ParseFailure::InvalidNaming));
 	
-	let o = NodeDoubleFmt::from_str("foo,foo.bar");
+	let o = NodeDoubleFmt::from_str("foo,foo[bar");
 	assert!(o.is_err());
 	assert_match!(o, Err(ParseFailure::InvalidNaming));
 }
@@ -129,7 +129,7 @@ fn ts_format_node_triple_fmt_fail_bad_names() {
 	assert!(o.is_err());
 	assert_match!(o, Err(ParseFailure::InvalidNaming));
 		
-	let o = NodeTripleFmt::from_str("foo,foo.bar,192.168.1.2");
+	let o = NodeTripleFmt::from_str("foo,[foobar,192.168.1.2");
 	assert!(o.is_err());
 	assert_match!(o, Err(ParseFailure::InvalidNaming));
 }

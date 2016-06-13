@@ -51,7 +51,7 @@ macro_rules! res_parsefail {
 	);
 }
 
-fn valid_name(s: &str) -> bool {
+fn valid_springname(s: &str) -> bool {
 	if rng!(s.len(),1,63) == false {
 		false
 	} else {
@@ -61,21 +61,48 @@ fn valid_name(s: &str) -> bool {
 }
 
 #[test]
-fn ts_valid_name_pass() {
-	assert!(valid_name("foo-bar"));
-	assert!(valid_name("foobar"));
-	assert!(valid_name("f"));
-	assert!(valid_name("foo123"));
+fn ts_valid_springname_pass() {
+	assert!(valid_springname("foo-bar"));
+	assert!(valid_springname("foobar"));
+	assert!(valid_springname("f"));
+	assert!(valid_springname("foo123"));
 }
 
 #[test]
-fn ts_valid_name_fail() {
-	assert_eq!(valid_name("foo.bar"),false);
-	assert_eq!(valid_name("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar"),false);
-	assert_eq!(valid_name(""),false);
-	assert_eq!(valid_name("foo.123"),false);
-	assert_eq!(valid_name("foo_123"),false);
-	assert_eq!(valid_name("foo*123"),false);
+fn ts_valid_springname_fail() {
+	assert_eq!(valid_springname("foo.bar"),false);
+	assert_eq!(valid_springname("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar"),false);
+	assert_eq!(valid_springname(""),false);
+	assert_eq!(valid_springname("foo.123"),false);
+	assert_eq!(valid_springname("foo_123"),false);
+	assert_eq!(valid_springname("foo*123"),false);
+}
+
+fn valid_hostname(s: &str) -> bool {
+	if rng!(s.len(),1,63) == false {
+		false
+	} else {
+		let rex = Regex::new(r"^[a-z0-9-s.]+$").unwrap();
+		rex.is_match(s)
+	}
+}
+
+#[test]
+fn ts_valid_hostname_pass() {
+	assert!(valid_hostname("foo.bar"));
+	assert!(valid_hostname("foo-bar"));
+	assert!(valid_hostname("f"));
+	assert!(valid_hostname("foo123"));
+}
+
+#[test]
+fn ts_valid_hostname_fail() {
+	assert_eq!(valid_hostname("foo(bar"),false);
+	assert_eq!(valid_hostname("foobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobarfoobar"),false);
+	assert_eq!(valid_hostname(""),false);
+	assert_eq!(valid_hostname("foo[123"),false);
+	assert_eq!(valid_hostname("foo_123"),false);
+	assert_eq!(valid_hostname("foo*123"),false);
 }
 
 fn valid_ip(s: &str) -> bool {
@@ -112,7 +139,7 @@ impl NodeSingleFmt {
 	pub fn from_str(sns: &str) -> Result<Self, ParseFailure> {
 		let s = sns.to_lowercase();
 		
-		if valid_name(&s) == false {
+		if valid_springname(&s) == false {
 			return Err(ParseFailure::InvalidNaming)
 		}
 
@@ -152,7 +179,7 @@ impl NodeDoubleFmt {
 			return Err(ParseFailure::InvalidContentFormat) 
 		}
 		
-		if valid_name(parts[0]) == false || valid_name(parts[1]) == false {
+		if valid_springname(parts[0]) == false || valid_hostname(parts[1]) == false {
 			return Err(ParseFailure::InvalidNaming)
 		}
 
@@ -198,7 +225,7 @@ impl NodeTripleFmt {
 			return Err(ParseFailure::InvalidAddress)
 		}
 
-		if valid_name(parts[0]) == false || valid_name(parts[1]) == false {
+		if valid_springname(parts[0]) == false || valid_hostname(parts[1]) == false {
 			return Err(ParseFailure::InvalidNaming)
 		}
 
@@ -242,7 +269,7 @@ impl NodeQuadFmt {
 			return Err(ParseFailure::InvalidContentFormat) 
 		}
 
-		if valid_name(parts[0]) == false || valid_name(parts[1]) == false {
+		if valid_springname(parts[0]) == false || valid_hostname(parts[1]) == false {
 			return Err(ParseFailure::InvalidNaming)
 		}
 		
