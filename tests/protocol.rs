@@ -333,7 +333,7 @@ fn ts_content_info_request_network_to_string_pass () {
 }
 
 #[test]
-fn ts_content_info_request_node_from_bytes_pass () {
+fn ts_content_info_request_node_property_from_bytes_pass () {
 	let o = ContentInfoRequest::from_bytes(b"node spring all"); 
 	assert!(o.is_ok());
 	let cir : ContentInfoRequest = o.unwrap();
@@ -426,7 +426,7 @@ fn ts_content_info_request_node_from_bytes_fail() {
 }
 
 #[test]
-fn ts_content_info_request_node_info_to_string_pass () {
+fn ts_content_info_request_node_property_to_string_pass () {
 	let o = ContentInfoRequest::from_bytes(b"node spring all"); 
 	assert!(o.is_ok());
 	assert_eq!(format!("{}", o.unwrap()), "node spring all");
@@ -467,4 +467,42 @@ fn ts_message_info_request_node_info_to_bytes () {
 	let r = String::from_utf8(m.to_bytes());
 	assert!(r.is_ok());
 	assert_eq!(r.unwrap(), "info node spring all");
+}
+
+#[test]
+fn ts_message_update_node_property_from_bytes_pass () {
+	
+	let o = Message::from_bytes(b"updt spring state enabled"); 
+	assert!(o.is_ok());
+	let m : Message = o.unwrap();
+	
+	assert_eq!(m.cmd, CmdType::Update);
+	let cnp : ContentNodeProperty = match m.content { 
+		MessageContent::Update(p) => p,
+		_ => return
+	};
+	assert_eq!(cnp.property, NodeProperty::State(Some(NodeState::Enabled)));
+}
+
+#[test]
+fn ts_message_update_node_property_from_bytes_fail () {
+	
+	let o = Message::from_bytes(b"updt spring blagh enabled"); 
+	assert!(o.is_err());
+	
+	let o = Message::from_bytes(b"updt spring state void"); 
+	assert!(o.is_err());
+}
+
+
+#[test]
+fn ts_message_update_node_property_value_to_bytes_pass () {
+	
+	let o = Message::from_bytes(b"updt spring state enabled"); 
+	assert!(o.is_ok());
+	let m : Message = o.unwrap();
+	
+	let r = String::from_utf8(m.to_bytes());
+	assert!(r.is_ok());
+	assert_eq!(r.unwrap(), "updt spring state enabled");
 }

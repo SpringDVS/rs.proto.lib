@@ -31,11 +31,21 @@ macro_rules! msg_content {
 	)
 }
 
+
+macro_rules! cascade_none {
+	($opt: expr) => (
+		match $opt {
+			Some(s) => Some(s),
+			_ => return None,
+		}
+	)
+}
+
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum CmdType {
 	Register, Unregister,
 	State,
-	Info,
+	Info, Update,
 	Resolve,
 	Response,
 }
@@ -50,6 +60,7 @@ impl CmdType  {
 			"reg" => Some(CmdType::Register),
 			"ureg" => Some(CmdType::Unregister),
 			"info" => Some(CmdType::Info),
+			"updt" => Some(CmdType::Update),
 			_  => None
 		}		
 	}
@@ -91,12 +102,16 @@ impl NodeProperty  {
 	}
 	
 	fn from_str_option(s: &str, o: &str) -> Option<NodeProperty> {
+		
+		// cascade_none is used so if there is an invalid property set
+		// the None is sent back through the callstack and invalidates
+		// the message 
 		match s {
 			"hostname" => Some(NodeProperty::Hostname),
 			"address" => Some(NodeProperty::Address),
-			"state" => Some(NodeProperty::State(NodeState::from_str(o))),
-			"service" => Some(NodeProperty::Service(NodeService::from_str(o))),
-			"role" => Some(NodeProperty::Role(NodeRole::from_str(o))),
+			"state" => Some(NodeProperty::State(cascade_none!(NodeState::from_str(o)))),
+			"service" => Some(NodeProperty::Service(cascade_none!(NodeService::from_str(o)))),
+			"role" => Some(NodeProperty::Role(cascade_none!(NodeRole::from_str(o)))),
 			"all" => Some(NodeProperty::All),
 			"" => Some(NodeProperty::All),
 			_  => None
@@ -137,6 +152,9 @@ pub enum MessageContent {
 	/// Request for information
 	Info(ContentInfoRequest),
 	
+	/// Request an Update
+	Update(ContentNodeProperty),
+	
 	/// Contains a NodeSingle
 	NodeSingle(ContentNodeSingle),
 
@@ -151,6 +169,7 @@ impl fmt::Display for MessageContent {
 			&MessageContent::Info(ref s) => write!(f, "{}",s),
 			&MessageContent::Response(ref s) => write!(f, "{}",s),
 			&MessageContent::NodeSingle(ref s) => write!(f, "{}",s),
+			&MessageContent::Update(ref s) => write!(f, "updt {}",s),
 			&MessageContent::Registration(ref s) => write!(f, "{}",s)
 		}
 	}
@@ -246,6 +265,7 @@ impl Message {
 			CmdType::Unregister => Ok(MessageContent::NodeSingle(try!(ContentNodeSingle::from_bytes(&bytes)))),
 			CmdType::Response => Ok(MessageContent::Response(try!(ContentResponse::from_bytes(&bytes)))),
 			CmdType::Info => Ok(MessageContent::Info(try!(ContentInfoRequest::from_bytes(&bytes)))),
+			CmdType::Update => Ok(MessageContent::Update(try!(ContentNodeProperty::from_bytes(&bytes)))),
 			_ => return Err(ParseFailure::InvalidCommand),
 		}
 		
@@ -558,11 +578,7 @@ impl ProtocolObject for ContentInfoRequest {
 		if s.len() >= 4 {
 			
 			let st = String::from(s);
-			let index = match st.find(" ") {
-				Some(i) => i,
-				None => st.len()
-			};
-			
+
 			let (t,r) =  match st.find(" ") {
 				Some(i) => st.split_at(i),
 				None => (st.as_str(), "")
@@ -615,19 +631,29 @@ impl ProtocolObject for ContentNodeProperty {
 		
 		if bytes.len() == 0 { return Err(ParseFailure::InvalidContentFormat) }
 		
-		let st = String::from(utf8_from!(bytes));
-		
-		let (spring,p) = match st.find(" ") {
-			Some(i) => st.split_at(i),
-			None => (st.as_str(), ""),
+		let s : &str = utf8_from!(bytes);
+
+		let (spring, property, value) : (&str,&str,&str) = {
+			let parts : Vec<&str> = s.split(" ").collect();
+			match parts.len() {
+				1 => (parts[0],"",""),
+				2 => (parts[0],parts[1],""),
+				3 => (parts[0],parts[1],parts[2]),
+				_ => return Err(ParseFailure::InvalidContentFormat)
+			}
 		};
 		
-		let property = if p.len() > 0 { &p[1..] } else { "" };
-		
-		Ok(ContentNodeProperty {
-			spring : String::from(spring),	
-			property: opt_parsefail!(NodeProperty::from_str(property))
-		})
+		if value.len() == 0 {
+			Ok(ContentNodeProperty {
+				spring : String::from(spring),	
+				property: opt_parsefail!(NodeProperty::from_str(property))
+			})
+		} else {
+			Ok(ContentNodeProperty {
+				spring : String::from(spring),	
+				property: opt_parsefail!(NodeProperty::from_str_option(property, value))
+			})
+		}
 	}
 
 	fn to_bytes(&self) -> Vec<u8> {
