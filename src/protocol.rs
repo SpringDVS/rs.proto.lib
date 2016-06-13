@@ -19,6 +19,12 @@
 //! When a message is constructed -- it must be in a completely
 //! valid state; aggresive failure when parsing is necessary.
 
+
+
+// ToDo:
+//  - resolve
+//  - request
+ 
 use std::str;
 use std::fmt;
 pub use std::net::{Ipv4Addr, Ipv6Addr};

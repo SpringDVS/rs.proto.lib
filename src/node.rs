@@ -43,6 +43,14 @@ impl Node {
 	}
 	
 	pub fn from_str(s: &str) -> Result<Node,ParseFailure> {
+		match  s.find(":") {
+			Some(_) =>  {
+					let t : NodeInfoFmt = try!(NodeInfoFmt::from_str(s));
+					return Ok(Node::new(&t.spring, &t.host, &t.address, t.service,t.state, t.role))
+				},
+			_ => { }
+		};
+		
 		let  v : Vec<&str> = s.split(",").collect();
 		Ok(
 			match v.len() {
@@ -61,11 +69,71 @@ impl Node {
 				4 => {
 					let t : NodeQuadFmt = try!(NodeQuadFmt::from_str(s));
 					Node::new(&t.spring, &t.host, &t.address, t.service,NodeState::Unspecified, NodeRole::Undefined)
-				}
+				},
 				
 				_ => return Err(ParseFailure::ConversionError)
 			}
 		)
+	}
+	
+	pub fn to_node_single(&self) -> Option<NodeSingleFmt> {
+		if self.springname.is_empty() { return None }
+		
+		Some(NodeSingleFmt { 
+			spring: self.springname.clone()
+		})
+	}
+	
+	pub fn to_node_double(&self) -> Option<NodeDoubleFmt> {
+		
+		if self.springname.is_empty() { return None }
+		if self.hostname.is_empty() { return None }
+		
+		Some(NodeDoubleFmt { 
+			spring: self.springname.clone(),
+			host: self.hostname.clone()
+		})
+	}
+	pub fn to_node_triple(&self) -> Option<NodeTripleFmt> {
+		if self.springname.is_empty() { return None }
+		if self.hostname.is_empty() { return None }
+		if self.address.is_empty() { return None }
+		
+		Some(NodeTripleFmt { 
+			spring: self.springname.clone(),
+			host: self.hostname.clone(),
+			address: self.address.clone(),
+		})
+	}
+	
+	pub fn to_node_quad(&self) -> Option<NodeQuadFmt> {
+
+		if self.springname.is_empty() { return None }
+		if self.hostname.is_empty() { return None }
+		if self.address.is_empty() { return None }
+
+		Some(NodeQuadFmt { 
+			spring: self.springname.clone(),
+			host: self.hostname.clone(),
+			address: self.address.clone(),
+			service: self.service,
+		})
+	}
+	
+	pub fn to_node_info(&self) -> Option<NodeInfoFmt> {
+		
+		if self.springname.is_empty() { return None }
+		if self.hostname.is_empty() { return None }
+		if self.address.is_empty() { return None }
+
+		Some(NodeInfoFmt {
+			spring: self.springname.clone(),
+			host: self.hostname.clone(),
+			address: self.address.clone(),
+			service: self.service,
+			state: self.state,
+			role: self.role,
+		})
 	}
 	
 	pub fn springname(&self) -> &str {
