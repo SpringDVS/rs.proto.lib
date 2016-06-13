@@ -35,7 +35,7 @@ fn ts_from_bytes_fail_invalid_conversion() {
 
 #[test]
 fn ts_from_bytes_reg_pass() {
-	let o = Message::from_bytes(b"reg foobar,hostbar;org;a");
+	let o = Message::from_bytes(b"reg foobar,hostbar;org;http");
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
 	assert_eq!(m.cmd, CmdType::Register);
@@ -53,6 +53,7 @@ fn ts_from_bytes_reg_pass() {
 	assert_eq!(c.ndouble.spring, "foobar");
 	assert_eq!(c.ndouble.host, "hostbar");
 	assert_eq!(c.role, NodeRole::Org);
+	assert_eq!(c.service, NodeService::Http);
 }
 
 #[test]
@@ -100,6 +101,17 @@ fn ts_from_bytes_reg_fail_malformed() {
 			Err(ParseFailure::InvalidContentFormat) => true,
 			_ => false,
 	});
+}
+
+#[test]
+fn ts_message_to_bytes_reg_pass() {
+	let o = Message::from_bytes(b"reg foobar,bar;org;dvsp");
+	assert!(o.is_ok());
+	
+	let m : Message = o.unwrap();
+	
+	let st = String::from_utf8(m.to_bytes()).unwrap();
+	assert_eq!(st, "reg foobar,bar;org;dvsp");
 }
 
 #[test]
@@ -224,6 +236,17 @@ fn ts_message_content_response_nodeinfo_from_bytes_pass () {
 	assert_eq!(format!("{}", ni), "spring:foo,host:bar,state:unresponsive");
 }
 
+
+#[test]
+fn ts_message_content_response_node_info_to_bytes_pass () {
+	let o = Message::from_bytes(b"200 node spring:foo,host:bar,state:unresponsive"); 
+	assert!(o.is_ok());
+	let m : Message = o.unwrap();
+	let s = m.to_bytes();
+	let st = String::from_utf8(s).unwrap();
+	assert_eq!(st, "200 node spring:foo,host:bar,state:unresponsive");
+	
+}
 
 
 #[test]

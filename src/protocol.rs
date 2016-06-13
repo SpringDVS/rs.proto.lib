@@ -207,7 +207,8 @@ impl ProtocolObject for Message {
 #[derive(Clone,Debug, PartialEq)]
 pub struct ContentRegistration {
 	pub ndouble: NodeDoubleFmt,
-	pub role: NodeRole
+	pub role: NodeRole,
+	pub service: NodeService,
 }
 
 impl ContentRegistration {
@@ -230,11 +231,13 @@ impl ProtocolObject for ContentRegistration {
 		}
 		
 		let role = opt_parsefail!(NodeRole::from_str(parts[1]),ParseFailure::InvalidRole);
+		let service = opt_parsefail!(NodeService::from_str(parts[2]), ParseFailure::InvalidService);
 		
 		Ok(
 			ContentRegistration {
 				ndouble: try!(NodeDoubleFmt::from_str(parts[0])),
 				role: role,
+				service: service,
 			}
 		)
 	}
@@ -246,7 +249,7 @@ impl ProtocolObject for ContentRegistration {
 
 impl fmt::Display for ContentRegistration {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f,"{}",self.ndouble)
+		write!(f,"{};{};{}",self.ndouble,self.role,self.service)
 	}
 }
 
