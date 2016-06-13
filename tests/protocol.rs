@@ -155,6 +155,17 @@ fn ts_from_bytes_ureg_fail_invalid_name() {
 }
 
 #[test]
+fn ts_message_to_bytes_ureg_pass() {
+	let o = Message::from_bytes(b"ureg foobar");
+	assert!(o.is_ok());
+	
+	let m : Message = o.unwrap();
+	
+	let st = String::from_utf8(m.to_bytes()).unwrap();
+	assert_eq!(st, "ureg foobar");
+}
+
+#[test]
 fn ts_from_bytes_content_network_pass() {
 	let o = ContentNetwork::from_bytes(b"foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
 	assert!(o.is_ok());

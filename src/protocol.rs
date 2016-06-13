@@ -15,6 +15,22 @@ pub use ::formats::{NodeSingleFmt,NodeDoubleFmt,NodeTripleFmt,NodeQuadFmt,NodeIn
 pub type Ipv4 = [u8;4];
 pub type Ipv6 = [u8;6];
 
+macro_rules! utf8_from {
+	($bytes:expr) => (
+		res_parsefail!(str::from_utf8($bytes), ParseFailure::InvalidContentFormat)
+	);
+}
+
+#[macro_export]
+macro_rules! msg_content {
+	($content:ident, $ctype:pat) => (
+		match $content {
+			$ctype(s) => s,
+			_ => return Err(ParseFailure::UnexpectedContent)
+		}
+	)
+}
+
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum CmdType {
 	Register, Unregister,
@@ -44,27 +60,50 @@ impl fmt::Display for CmdType {
 		match self {
 			&CmdType::Register => write!(f, "reg"),
 			&CmdType::Unregister => write!(f, "ureg"),
+			&CmdType::Info => write!(f, "info"),
 			_ => write!(f, ""),
 		}
 	}
 }
 
-macro_rules! utf8_from {
-	($bytes:expr) => (
-		res_parsefail!(str::from_utf8($bytes), ParseFailure::InvalidContentFormat)
-	);
+#[derive(Clone, Debug, PartialEq)]
+pub enum NodeProperty {
+	Hostname,
+	Address,
+	State,
+	Service,
+	Role,
+	All,
 }
 
-#[macro_export]
-macro_rules! msg_content {
-	($content:ident, $ctype:pat) => (
-		match $content {
-			$ctype(s) => s,
-			_ => return Err(ParseFailure::UnexpectedContent)
-		}
-	)
+impl NodeProperty  {
+	fn from_str(s: &str) -> Option<NodeProperty> {
+		match s {
+			"hostname" => Some(NodeProperty::Hostname),
+			"address" => Some(NodeProperty::Address),
+			"state" => Some(NodeProperty::State),
+			"service" => Some(NodeProperty::Service),
+			"role" => Some(NodeProperty::Role),
+			"all" => Some(NodeProperty::All),
+			_  => None
+		}		
+	}
 }
-/// Variant defining the content of the message
+
+impl fmt::Display for NodeProperty {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match self {
+			&NodeProperty::Hostname => write!(f, "hostname"),
+			&NodeProperty::Address => write!(f, "address"),
+			&NodeProperty::State => write!(f, "state"),
+			&NodeProperty::Service => write!(f, "service"),
+			&NodeProperty::Role => write!(f, "role"),
+			&NodeProperty::All => write!(f, "all"),
+		}
+	}
+}
+
+/// Variant defining first level content of the message
 #[derive(Clone, Debug, PartialEq)]
 pub enum MessageContent {
 	/// There is no body of content
@@ -73,7 +112,10 @@ pub enum MessageContent {
 	/// Request for Registration
 	Registration(ContentRegistration),
 	
-	/// Contains a Node Single
+	/// Request for information
+	Info(InfoContent),
+	
+	/// Contains a NodeSingle
 	NodeSingle(ContentNodeSingle),
 
 	/// Contains a response
@@ -84,14 +126,31 @@ impl fmt::Display for MessageContent {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
 			&MessageContent::Empty => write!(f, ""),
-			&MessageContent::NodeSingle(ref s) => write!(f, "{}",s),
+			&MessageContent::Info(ref s) => write!(f, "{}",s),
 			&MessageContent::Response(ref s) => write!(f, "{}",s),
+			&MessageContent::NodeSingle(ref s) => write!(f, "{}",s),
 			&MessageContent::Registration(ref s) => write!(f, "{}",s)
 		}
 	}
 }
 
+/// Variant defining second level info content
+#[derive(Clone, Debug, PartialEq)]
+pub enum InfoContent {
+	Node(ContentNodeInfoRequest),
+	Network
+}
 
+impl fmt::Display for InfoContent {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match self {
+			&InfoContent::Network => write!(f, "network"),
+			&InfoContent::Node(ref s) => write!(f,"node {}",s)
+		}
+	}
+}
+
+/// Variant defining second level response content
 #[derive(Clone, Debug, PartialEq)]
 pub enum ResponseContent {
 	/// There is no body of content
@@ -163,7 +222,7 @@ impl Message {
 		match mtype {
 			CmdType::Register => Ok(MessageContent::Registration(try!(ContentRegistration::from_bytes(&bytes)))),
 			CmdType::Unregister => Ok(MessageContent::NodeSingle(try!(ContentNodeSingle::from_bytes(&bytes)))),
-			CmdType::Response=> Ok(MessageContent::Response(try!(ContentResponse::from_bytes(&bytes)))),
+			CmdType::Response => Ok(MessageContent::Response(try!(ContentResponse::from_bytes(&bytes)))),
 			_ => return Err(ParseFailure::InvalidCommand),
 		}
 		
@@ -456,3 +515,88 @@ impl fmt::Display for ContentResponse {
 	}
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct ContentInfoRequest {
+	pub info: InfoContent,
+}
+
+impl ContentInfoRequest {
+	pub fn to_string(&self) -> String {
+		format!("{}", self)
+	}	
+}
+
+impl ProtocolObject for ContentInfoRequest {
+	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
+		
+		if bytes.len() == 0 { return Err(ParseFailure::InvalidContentFormat) }
+		
+		let s = utf8_from!(bytes);
+		if s.len() >= 4 {
+			
+			let st = String::from(s);
+			let index = opt_parsefail!(st.find(" "));
+			
+			let (t,r) = st.split_at(index);
+			
+			let info = match t {
+				"network" => InfoContent::Network,
+				"node" => InfoContent::Node(try!(ContentNodeInfoRequest::from_bytes(r[1..].as_bytes()))),
+				_ => return Err(ParseFailure::InvalidContentFormat)
+			};
+			Ok(
+				ContentInfoRequest{
+					info: info,
+				}
+			)
+			
+		} else {
+			Err(ParseFailure::InvalidContentFormat)
+		}
+	}
+
+	fn to_bytes(&self) -> Vec<u8> {
+		Vec::from(self.to_string().as_bytes())
+	}
+}
+
+impl fmt::Display for ContentInfoRequest {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f, "{}", self.info)
+		
+	}
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ContentNodeInfoRequest {
+	pub property: NodeProperty,
+}
+
+impl ContentNodeInfoRequest {
+	pub fn to_string(&self) -> String {
+		format!("{}", self)
+	}	
+}
+
+impl ProtocolObject for ContentNodeInfoRequest {
+	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
+		
+		if bytes.len() == 0 { return Err(ParseFailure::InvalidContentFormat) }
+		
+		let s = utf8_from!(bytes);
+		Ok(ContentNodeInfoRequest {
+			property: opt_parsefail!(NodeProperty::from_str(s))
+		})
+	}
+
+	fn to_bytes(&self) -> Vec<u8> {
+		Vec::from(self.to_string().as_bytes())
+	}
+}
+
+impl fmt::Display for ContentNodeInfoRequest {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f, "{}", self.property)
+		
+	}
+}
