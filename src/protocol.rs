@@ -63,11 +63,10 @@ macro_rules!  msg_registration{($e: expr) => (match $e { MessageContent::Registr
 macro_rules!  msg_update{($e: expr) => (match $e { MessageContent::Update(ref r) => r, _ => panic!("msg_update -- Unexpected value: {}", $e) }) }
 
 #[macro_export]
-macro_rules!  msg_info{($e: expr) => (match $e { MessageContent::Update(ref r) => r, _ => panic!("msg_info -- Unexpected value: {}", $e) }) }
+macro_rules!  msg_info{($e: expr) => (match $e { MessageContent::Info(ref r) => r, _ => panic!("msg_info -- Unexpected value: {}", $e) }) }
 
 #[macro_export]
 macro_rules!  msg_single{($e: expr) => (match $e { MessageContent::NodeSingle(ref r) => r, _ => panic!("msg_single -- Unexpected value: {}", $e) }) }
-
 
 
 
@@ -186,6 +185,10 @@ impl fmt::Display for NodeProperty {
 	}
 }
 
+#[macro_export]
+macro_rules!  msg_info_property{($e: expr) => (match msg_info!($e).info { InfoContent::Node(ref r) => r, _ => panic!("msg_single -- Unexpected value: {}", $e) }) }
+
+
 /// Variant defining first level content of the message
 #[derive(Clone, Debug, PartialEq)]
 pub enum MessageContent {
@@ -264,6 +267,8 @@ impl fmt::Display for ResponseContent {
 		}
 	}
 }
+#[macro_export]
+macro_rules!  msg_response_nodeinfo{($e: expr) => (match msg_response!($e).content { ResponseContent::NodeInfo(ref r) => r, _ => panic!("msg_response_nodeinfo -- Unexpected value: {}", $e) }) }
 
 /// Empty content type
 pub struct Empty;
@@ -519,6 +524,14 @@ impl fmt::Display for ContentNetwork {
 pub struct ContentNodeInfo {
 	pub info: NodeInfoFmt,
 	
+}
+
+impl ContentNodeInfo {
+	pub fn new(info: NodeInfoFmt) -> ContentNodeInfo {
+		ContentNodeInfo {
+			info: info
+		}
+	}
 }
 impl ProtocolObject for ContentNodeInfo {
 	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
