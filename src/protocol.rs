@@ -27,7 +27,7 @@
  
 use std::str;
 use std::fmt;
-pub use std::net::{Ipv4Addr, Ipv6Addr};
+pub use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 pub use ::enums::{ParseFailure,NodeRole,Response,NodeService,NodeState};
 
@@ -53,6 +53,22 @@ macro_rules! msg_content {
 		}
 	)
 }
+#[macro_export]
+macro_rules!  msg_response{($e: expr) => (match $e { MessageContent::Response(ref r) => r, _ => panic!("msg_reponse -- Unexpected value: {}", $e) }) }
+
+#[macro_export]
+macro_rules!  msg_registration{($e: expr) => (match $e { MessageContent::Registration(ref r) => r, _ => panic!("msg_registration -- Unexpected value: {}", $e) }) }
+
+#[macro_export]
+macro_rules!  msg_update{($e: expr) => (match $e { MessageContent::Update(ref r) => r, _ => panic!("msg_update -- Unexpected value: {}", $e) }) }
+
+#[macro_export]
+macro_rules!  msg_info{($e: expr) => (match $e { MessageContent::Update(ref r) => r, _ => panic!("msg_info -- Unexpected value: {}", $e) }) }
+
+#[macro_export]
+macro_rules!  msg_single{($e: expr) => (match $e { MessageContent::NodeSingle(ref r) => r, _ => panic!("msg_single -- Unexpected value: {}", $e) }) }
+
+
 
 
 macro_rules! cascade_none {
@@ -62,6 +78,13 @@ macro_rules! cascade_none {
 			_ => return None,
 		}
 	)
+}
+
+pub fn ipaddr_str(addr: IpAddr) -> String {
+	match addr {
+		IpAddr::V4(i) => format!("{}", i),
+		IpAddr::V6(i) => format!("{}", i),
+	}
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
