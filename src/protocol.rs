@@ -29,10 +29,10 @@ use std::str;
 use std::fmt;
 pub use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
-pub use ::enums::{ParseFailure,NodeRole,Response,NodeService,NodeState};
+pub use enums::{ParseFailure,NodeRole,Response,NodeService,NodeState};
 
 
-pub use ::formats::{NodeSingleFmt,NodeDoubleFmt,NodeTripleFmt,NodeQuadFmt,NodeInfoFmt};
+pub use formats::{NodeSingleFmt,NodeDoubleFmt,NodeTripleFmt,NodeQuadFmt,NodeInfoFmt};
 
 pub type Ipv4 = [u8;4];
 pub type Ipv6 = [u8;6];

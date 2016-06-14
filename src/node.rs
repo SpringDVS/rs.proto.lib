@@ -2,8 +2,9 @@
  * Author:  Charlie Fyvie-Gauld (cfg@zunautica.org)
  * License: GPLv3 (http://www.gnu.org/licenses/gpl-3.0.txt)
  */
-pub use ::protocol::*;
-//pub use ::enums::{ParseFailure,NodeRole,Response,NodeService,NodeState};
+pub use protocol::*;
+
+
 
 
 
@@ -87,6 +88,10 @@ impl Node {
 		)
 	}
 	
+	pub fn from_node_single(n: NodeSingleFmt) -> Self {
+		Node::new(&n.spring, "", "", NodeService::Undefined, NodeState::Unspecified, NodeRole::Undefined)
+	}
+
 	pub fn to_node_single(&self) -> Option<NodeSingleFmt> {
 		if self.springname.is_empty() { return None }
 		
@@ -94,7 +99,11 @@ impl Node {
 			spring: self.springname.clone()
 		})
 	}
-	
+
+	pub fn from_node_double(n: NodeDoubleFmt) -> Self {
+		Node::new(&n.spring, &n.host, "", NodeService::Undefined, NodeState::Unspecified, NodeRole::Undefined)
+	}
+
 	pub fn to_node_double(&self) -> Option<NodeDoubleFmt> {
 		
 		if self.springname.is_empty() { return None }
@@ -105,6 +114,11 @@ impl Node {
 			host: self.hostname.clone()
 		})
 	}
+	
+	pub fn from_node_triple(n: NodeTripleFmt) -> Self {
+		Node::new(&n.spring, &n.host, &n.address, NodeService::Undefined, NodeState::Unspecified, NodeRole::Undefined)
+	}
+
 	pub fn to_node_triple(&self) -> Option<NodeTripleFmt> {
 		if self.springname.is_empty() { return None }
 		if self.hostname.is_empty() { return None }
@@ -116,7 +130,11 @@ impl Node {
 			address: self.address.clone(),
 		})
 	}
-	
+
+	pub fn from_node_quad(n: NodeQuadFmt) -> Self {
+		Node::new(&n.spring, &n.host, &n.address, n.service, NodeState::Unspecified, NodeRole::Undefined)
+	}
+
 	pub fn to_node_quad(&self) -> Option<NodeQuadFmt> {
 
 		if self.springname.is_empty() { return None }

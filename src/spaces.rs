@@ -3,9 +3,9 @@
  * License: GPLv3 (http://www.gnu.org/licenses/gpl-3.0.txt)
  */
 
-pub use ::protocol;
+pub use protocol::*;
 pub use ::node::Node;
-use ::enums::{Success,NodeState,NodeRole};
+use ::enums::{Success};
 
 #[derive(Debug,PartialEq)]
 pub enum NetspaceFailure {
