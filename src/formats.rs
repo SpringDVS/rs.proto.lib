@@ -318,6 +318,17 @@ pub struct NodeInfoFmt {
 }
 
 impl NodeInfoFmt {
+	pub fn new() -> NodeInfoFmt {
+		NodeInfoFmt {
+			spring: String::new(),
+			host: String::new(),
+			address: String::new(),
+			
+			service: NodeService::Undefined,
+			state: NodeState::Unspecified,
+			role: NodeRole::Undefined,
+		}		
+	}
 	pub fn from_str(s: &str) -> Result<Self, ParseFailure> {
 		
 		if s.len() == 0 { return Err(ParseFailure::InvalidContentFormat) }
