@@ -88,7 +88,7 @@ impl Node {
 		)
 	}
 	
-	pub fn from_node_single(n: NodeSingleFmt) -> Self {
+	pub fn from_node_single(n: &NodeSingleFmt) -> Self {
 		Node::new(&n.spring, "", "", NodeService::Undefined, NodeState::Unspecified, NodeRole::Undefined)
 	}
 
@@ -100,7 +100,7 @@ impl Node {
 		})
 	}
 
-	pub fn from_node_double(n: NodeDoubleFmt) -> Self {
+	pub fn from_node_double(n: &NodeDoubleFmt) -> Self {
 		Node::new(&n.spring, &n.host, "", NodeService::Undefined, NodeState::Unspecified, NodeRole::Undefined)
 	}
 
@@ -115,7 +115,7 @@ impl Node {
 		})
 	}
 	
-	pub fn from_node_triple(n: NodeTripleFmt) -> Self {
+	pub fn from_node_triple(n: &NodeTripleFmt) -> Self {
 		Node::new(&n.spring, &n.host, &n.address, NodeService::Undefined, NodeState::Unspecified, NodeRole::Undefined)
 	}
 
@@ -131,7 +131,7 @@ impl Node {
 		})
 	}
 
-	pub fn from_node_quad(n: NodeQuadFmt) -> Self {
+	pub fn from_node_quad(n: &NodeQuadFmt) -> Self {
 		Node::new(&n.spring, &n.host, &n.address, n.service, NodeState::Unspecified, NodeRole::Undefined)
 	}
 
@@ -163,6 +163,24 @@ impl Node {
 			state: self.state,
 			role: self.role,
 		})
+	}
+	
+	pub fn to_node_info_property(&self, property: NodeProperty) -> NodeInfoFmt {
+		
+		let mut info = NodeInfoFmt::new();
+		
+		match property {
+			
+			NodeProperty::Hostname => { info.host = self.hostname.clone() },
+			NodeProperty::Address => { info.address = self.address.clone() },
+			NodeProperty::Service(_) => { info.service = self.service },
+			NodeProperty::Role(_) => { info.role = self.role },
+			NodeProperty::State(_) => { info.state = self.state },
+			
+			NodeProperty::All => {},
+		};
+		
+		info
 	}
 	
 	pub fn springname(&self) -> &str {
