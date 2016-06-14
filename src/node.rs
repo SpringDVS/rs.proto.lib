@@ -21,7 +21,7 @@ pub struct Node {
 }
 
 impl Node {
-	pub fn new( spring: &str, host: &str, address: &str, service: NodeService, state: NodeState, role: NodeRole  ) -> Node {
+	pub fn new( spring: &str, host: &str, address: &str, service: NodeService, state: NodeState, role: NodeRole  ) -> Self {
 		
 		
 		let (hostname,res) = match host.find("/") {
@@ -40,6 +40,17 @@ impl Node {
 			resource: String::from(&res[1..]),
 		}
 			
+	}
+	
+	pub fn from_registration(reg: &ContentRegistration, address: &str) -> Self {
+		Node::new(
+			&reg.ndouble.spring,
+			&reg.ndouble.host,
+			&String::from(address),
+			reg.service,
+			NodeState::Disabled,
+			reg.role,
+		)
 	}
 	
 	pub fn from_str(s: &str) -> Result<Node,ParseFailure> {
