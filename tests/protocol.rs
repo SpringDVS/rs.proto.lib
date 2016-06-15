@@ -1,10 +1,11 @@
+#[macro_use]
 extern crate spring_dvs;
 
 use spring_dvs::protocol::*;
 
 macro_rules! assert_match {
 	
-	($chk:ident, $pass:pat) => (
+	($chk:expr, $pass:pat) => (
 		assert!(match $chk {
 					$pass => true,
 					_ => false
@@ -505,4 +506,40 @@ fn ts_message_update_node_property_value_to_bytes_pass () {
 	let r = String::from_utf8(m.to_bytes());
 	assert!(r.is_ok());
 	assert_eq!(r.unwrap(), "update spring service http");
+}
+
+#[test]
+fn ts_content_resolve_pass () {
+	let r = ContentUri::from_bytes(b"spring://esusx.uk");
+	assert!(r.is_ok());
+	let cr : ContentUri = r.unwrap();
+	
+	assert_eq!(cr.uri.route().len(), 2);
+	assert_eq!(cr.uri.gtn(), "uk");
+}
+
+#[test]
+fn ts_content_resolve_fail () {
+	let r = ContentUri::from_bytes(b"sprog://esusx.uk");
+	assert!(r.is_err());
+}
+
+#[test]
+fn ts_message_resolve_pass () {
+	
+	let o = Message::from_bytes(b"resolve spring://cci.esusx.uk"); 
+	assert!(o.is_ok());
+	let m : Message = o.unwrap();
+	
+	assert_match!(m.content, MessageContent::Resolve(_));
+	let cr = msg_resolve!(m.content);
+	assert_eq!(cr.uri.route().len(), 3);
+	assert_eq!(cr.uri.gtn(), "uk");
+}
+
+#[test]
+fn ts_message_resolve_fail () {
+	
+	let o = Message::from_bytes(b"resolve sprinddg://cci.esusx.uk"); 
+	assert!(o.is_err());
 }

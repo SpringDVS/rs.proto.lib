@@ -221,6 +221,10 @@ macro_rules!  msg_info{($e: expr) => (match $e { MessageContent::Info(ref r) => 
 #[macro_export]
 macro_rules!  msg_single{($e: expr) => (match $e { MessageContent::NodeSingle(ref r) => r, _ => panic!("msg_single -- Unexpected value: {:?}", $e) }) }
 
+#[macro_export]
+macro_rules!  msg_resolve{($e: expr) => (match $e { MessageContent::Resolve(ref r) => r, _ => panic!("msg_resolve -- Unexpected value: {:?}", $e) }) }
+
+
 impl fmt::Display for MessageContent {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
@@ -333,7 +337,7 @@ impl Message {
 			CmdType::Response => Ok(MessageContent::Response(try!(ContentResponse::from_bytes(&bytes)))),
 			CmdType::Info => Ok(MessageContent::Info(try!(ContentInfoRequest::from_bytes(&bytes)))),
 			CmdType::Update => Ok(MessageContent::Update(try!(ContentNodeProperty::from_bytes(&bytes)))),
-			_ => return Err(ParseFailure::InvalidCommand),
+			CmdType::Resolve => Ok(MessageContent::Resolve(try!(ContentUri::from_bytes(&bytes)))),
 		}
 		
 	}
