@@ -1,8 +1,10 @@
 use std::str;
+use std::fmt;
 use std::collections::HashMap;
 pub use ::enums::Failure;
 pub use ::node::Node;
-#[derive(Debug)]
+
+#[derive(Debug, PartialEq)]
 pub struct Uri {
 	
 	gsn: Vec<String>,
@@ -84,32 +86,7 @@ impl Uri {
 	}
 	
 	pub fn to_string(&self) -> String {
-		
-		let mut s = "spring://".to_string();
-		let last = self.gsn.len()-1;
-		
-		for i in 0 .. last {
-			s.push_str(&self.gsn[i]);
-			s.push('.');
-		}
-		
-		s.push_str(&self.gsn[last]);
-		
-
-		if self.res.len() > 0 {
-			for p in &self.res {
-				if p.is_empty() { continue }
-				
-				s.push('/');
-				s.push_str(p.as_str());
-			}
-		}
-
-		if self.query.len() > 0 {
-			s.push('?');
-			s.push_str(&self.query);
-		}
-		s
+		format!("{}", self)
 	}
 	
 	pub fn query_map(&self) -> Option<HashMap<String, String>> {
@@ -164,5 +141,36 @@ impl Clone for Uri {
 			self.gtn = source.gtn().to_string();
 			self.res = source.res().clone();
 			self.query = source.query().to_string();
+	}
+}
+
+impl fmt::Display for Uri {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		let mut s = "spring://".to_string();
+		let last = self.gsn.len()-1;
+		
+		for i in 0 .. last {
+			s.push_str(&self.gsn[i]);
+			s.push('.');
+		}
+		
+		s.push_str(&self.gsn[last]);
+		
+
+		if self.res.len() > 0 {
+			for p in &self.res {
+				if p.is_empty() { continue }
+				
+				s.push('/');
+				s.push_str(p.as_str());
+			}
+		}
+
+		if self.query.len() > 0 {
+			s.push('?');
+			s.push_str(&self.query);
+		}
+		write!(f,"{}", s)
+		
 	}
 }
