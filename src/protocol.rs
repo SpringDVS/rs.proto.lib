@@ -33,6 +33,7 @@ pub use enums::{ParseFailure,NodeRole,Response,NodeService,NodeState};
 
 
 pub use formats::{NodeSingleFmt,NodeDoubleFmt,NodeTripleFmt,NodeQuadFmt,NodeInfoFmt};
+pub use uri::Uri;
 
 pub type Ipv4 = [u8;4];
 pub type Ipv6 = [u8;6];
@@ -75,7 +76,6 @@ pub fn ipaddr_str(addr: IpAddr) -> String {
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum CmdType {
 	Register, Unregister,
-	State,
 	Info, Update,
 	Resolve,
 	Response,
@@ -92,6 +92,7 @@ impl CmdType  {
 			"unregister" => Some(CmdType::Unregister),
 			"info" => Some(CmdType::Info),
 			"update" => Some(CmdType::Update),
+			"resolve" => Some(CmdType::Resolve),
 			_  => None
 		}		
 	}
@@ -104,6 +105,7 @@ impl fmt::Display for CmdType {
 			&CmdType::Unregister => write!(f, "unregister"),
 			&CmdType::Info => write!(f, "info"),
 			&CmdType::Update => write!(f, "update"),
+			&CmdType::Resolve => write!(f, "resolve"),
 			_ => write!(f, ""),
 		}
 	}
@@ -193,6 +195,9 @@ pub enum MessageContent {
 	/// Request an Update
 	Update(ContentNodeProperty),
 	
+	/// Request to Resolve
+	Resolve(ContentUri),
+	
 	/// Contains a NodeSingle
 	NodeSingle(ContentNodeSingle),
 
@@ -224,7 +229,8 @@ impl fmt::Display for MessageContent {
 			&MessageContent::Response(ref s) => write!(f, "{}",s),
 			&MessageContent::NodeSingle(ref s) => write!(f, "{}",s),
 			&MessageContent::Update(ref s) => write!(f, "{}",s),
-			&MessageContent::Registration(ref s) => write!(f, "{}",s)
+			&MessageContent::Registration(ref s) => write!(f, "{}",s),
+			&MessageContent::Resolve(ref s) => write!(f, "{}",s),
 		}
 	}
 }
@@ -736,3 +742,31 @@ impl fmt::Display for ContentNodeProperty {
 		
 	}
 }
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ContentUri {
+	pub uri: Uri
+}
+
+impl ProtocolObject for ContentUri {
+	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
+		Ok(ContentUri {
+			uri : match Uri::new(utf8_from!(bytes)) {
+				Ok(u) => u,
+				Err(_) => return Err(ParseFailure::InvalidContentFormat)
+			}
+		})
+	}
+	
+	fn to_bytes(&self) -> Vec<u8> {
+		Vec::from(self.to_string().as_bytes())
+	}
+}
+
+impl fmt::Display for ContentUri {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f, "{}", self.uri)
+		
+	}
+}
+
