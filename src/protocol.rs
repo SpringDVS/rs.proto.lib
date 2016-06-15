@@ -174,6 +174,8 @@ impl fmt::Display for NodeProperty {
 
 #[macro_export]
 macro_rules!  msg_info_property{($e: expr) => (match msg_info!($e).info { InfoContent::Node(ref r) => r, _ => panic!("msg_info_property -- Unexpected value: {:?}", $e) }) }
+
+#[macro_export]
 macro_rules!  msg_info_network{($e: expr) => (match msg_info!($e).info { InfoContent::Node(ref r) => r, _ => panic!("msg_info_network -- Unexpected value: {:?}", $e) }) }
 
 /// Variant defining first level content of the message
@@ -272,7 +274,9 @@ impl fmt::Display for ResponseContent {
 }
 #[macro_export]
 macro_rules!  msg_response_nodeinfo{($e: expr) => (match msg_response!($e).content { ResponseContent::NodeInfo(ref r) => r, _ => panic!("msg_response_nodeinfo -- Unexpected value: {:?}", $e) }) }
+#[macro_export]
 macro_rules!  msg_response_network{($e: expr) => (match msg_response!($e).content { ResponseContent::Network(ref r) => r, _ => panic!("msg_response_network -- Unexpected value: {:?}", $e) }) }
+#[macro_export]
 macro_rules!  msg_response_single{($e: expr) => (match msg_response!($e).content { ResponseContent::NodeSingle(ref r) => r, _ => panic!("msg_response_single -- Unexpected value: {:?}", $e) }) }
 /// Empty content type
 pub struct Empty;
