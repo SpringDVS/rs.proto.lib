@@ -177,7 +177,10 @@ impl Node {
 			NodeProperty::Role(_) => { info.role = self.role },
 			NodeProperty::State(_) => { info.state = self.state },
 			
-			NodeProperty::All => {},
+			NodeProperty::All => { match self.to_node_info() { 
+										Some(o) => info = o, None => {} 
+									}
+								},
 		};
 		
 		info
