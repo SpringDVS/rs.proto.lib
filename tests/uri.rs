@@ -217,3 +217,29 @@ fn ts_uri_query_map_fail() {
 	let o = uri.query_map();
 	assert!(o.is_none());
 }
+
+#[test]
+fn ts_uri_query_param_pass() {
+	let r = Uri::new("spring://cci.esusx.uk/res?__meta=outcode&q2=test");
+	
+	assert!(r.is_ok());
+	let uri = r.unwrap();
+	let o = uri.query_param("__meta");
+	assert!(o.is_some());
+	assert_eq!(o.unwrap(), "outcode");
+}
+
+#[test]
+fn ts_uri_query_param_fail() {
+	let r = Uri::new("spring://cci.esusx.uk/res?__meta=outcode&q2=test");
+	assert!(r.is_ok());
+	
+	let uri = r.unwrap();
+	assert!(uri.query_param("void").is_none());
+	
+	let r = Uri::new("spring://cci.esusx.uk/res?");
+	assert!(r.is_ok());
+	let uri = r.unwrap();
+	
+	assert!(uri.query_param("void").is_none())
+}

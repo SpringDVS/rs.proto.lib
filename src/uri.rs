@@ -135,6 +135,18 @@ impl Uri {
 		Some(m)
 	}
 	
+	pub fn query_param(&self, param: &str) -> Option<String> {
+		let qm = match self.query_map() {
+			Some(qm) => qm,
+			None => return None
+		};
+		
+		match qm.get(param) {
+			Some(s) => Some(s.clone()),
+			None => None
+		}
+	}
+	
 }
 
 impl Clone for Uri {
