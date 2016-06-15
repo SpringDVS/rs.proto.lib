@@ -53,20 +53,6 @@ macro_rules! msg_content {
 		}
 	)
 }
-#[macro_export]
-macro_rules!  msg_response{($e: expr) => (match $e { MessageContent::Response(ref r) => r, _ => panic!("msg_reponse -- Unexpected value: {}", $e) }) }
-
-#[macro_export]
-macro_rules!  msg_registration{($e: expr) => (match $e { MessageContent::Registration(ref r) => r, _ => panic!("msg_registration -- Unexpected value: {}", $e) }) }
-
-#[macro_export]
-macro_rules!  msg_update{($e: expr) => (match $e { MessageContent::Update(ref r) => r, _ => panic!("msg_update -- Unexpected value: {}", $e) }) }
-
-#[macro_export]
-macro_rules!  msg_info{($e: expr) => (match $e { MessageContent::Info(ref r) => r, _ => panic!("msg_info -- Unexpected value: {}", $e) }) }
-
-#[macro_export]
-macro_rules!  msg_single{($e: expr) => (match $e { MessageContent::NodeSingle(ref r) => r, _ => panic!("msg_single -- Unexpected value: {}", $e) }) }
 
 
 
@@ -117,6 +103,7 @@ impl fmt::Display for CmdType {
 			&CmdType::Register => write!(f, "register"),
 			&CmdType::Unregister => write!(f, "unregister"),
 			&CmdType::Info => write!(f, "info"),
+			&CmdType::Update => write!(f, "update"),
 			_ => write!(f, ""),
 		}
 	}
@@ -186,8 +173,8 @@ impl fmt::Display for NodeProperty {
 }
 
 #[macro_export]
-macro_rules!  msg_info_property{($e: expr) => (match msg_info!($e).info { InfoContent::Node(ref r) => r, _ => panic!("msg_single -- Unexpected value: {}", $e) }) }
-
+macro_rules!  msg_info_property{($e: expr) => (match msg_info!($e).info { InfoContent::Node(ref r) => r, _ => panic!("msg_info_property -- Unexpected value: {:?}", $e) }) }
+macro_rules!  msg_info_network{($e: expr) => (match msg_info!($e).info { InfoContent::Node(ref r) => r, _ => panic!("msg_info_network -- Unexpected value: {:?}", $e) }) }
 
 /// Variant defining first level content of the message
 #[derive(Clone, Debug, PartialEq)]
@@ -211,6 +198,22 @@ pub enum MessageContent {
 	Response(ContentResponse),
 }
 
+// First level macros
+#[macro_export]
+macro_rules!  msg_response{($e: expr) => (match $e { MessageContent::Response(ref r) => r, _ => panic!("msg_reponse -- Unexpected value: {:?}", $e) }) }
+
+#[macro_export]
+macro_rules!  msg_registration{($e: expr) => (match $e { MessageContent::Registration(ref r) => r, _ => panic!("msg_registration -- Unexpected value: {:?}", $e) }) }
+
+#[macro_export]
+macro_rules!  msg_update{($e: expr) => (match $e { MessageContent::Update(ref r) => r, _ => panic!("msg_update -- Unexpected value: {:?}", $e) }) }
+
+#[macro_export]
+macro_rules!  msg_info{($e: expr) => (match $e { MessageContent::Info(ref r) => r, _ => panic!("msg_info -- Unexpected value: {:?}", $e) }) }
+
+#[macro_export]
+macro_rules!  msg_single{($e: expr) => (match $e { MessageContent::NodeSingle(ref r) => r, _ => panic!("msg_single -- Unexpected value: {:?}", $e) }) }
+
 impl fmt::Display for MessageContent {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
@@ -218,7 +221,7 @@ impl fmt::Display for MessageContent {
 			&MessageContent::Info(ref s) => write!(f, "{}",s),
 			&MessageContent::Response(ref s) => write!(f, "{}",s),
 			&MessageContent::NodeSingle(ref s) => write!(f, "{}",s),
-			&MessageContent::Update(ref s) => write!(f, "update {}",s),
+			&MessageContent::Update(ref s) => write!(f, "{}",s),
 			&MessageContent::Registration(ref s) => write!(f, "{}",s)
 		}
 	}
@@ -268,8 +271,9 @@ impl fmt::Display for ResponseContent {
 	}
 }
 #[macro_export]
-macro_rules!  msg_response_nodeinfo{($e: expr) => (match msg_response!($e).content { ResponseContent::NodeInfo(ref r) => r, _ => panic!("msg_response_nodeinfo -- Unexpected value: {}", $e) }) }
-
+macro_rules!  msg_response_nodeinfo{($e: expr) => (match msg_response!($e).content { ResponseContent::NodeInfo(ref r) => r, _ => panic!("msg_response_nodeinfo -- Unexpected value: {:?}", $e) }) }
+macro_rules!  msg_response_network{($e: expr) => (match msg_response!($e).content { ResponseContent::Network(ref r) => r, _ => panic!("msg_response_network -- Unexpected value: {:?}", $e) }) }
+macro_rules!  msg_response_single{($e: expr) => (match msg_response!($e).content { ResponseContent::NodeSingle(ref r) => r, _ => panic!("msg_response_single -- Unexpected value: {:?}", $e) }) }
 /// Empty content type
 pub struct Empty;
 
@@ -281,6 +285,7 @@ pub trait ProtocolObject : Sized {
 }
 
 /// Representing a single message within the protocol
+#[derive(Debug)]
 pub struct Message {
 	/// The command held in the message
 	pub cmd: CmdType,
@@ -288,6 +293,7 @@ pub struct Message {
 	/// Empty or a content data structure
 	pub content: MessageContent,
 }
+
 
 impl Message {
 	
