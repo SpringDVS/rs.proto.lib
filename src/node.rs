@@ -21,6 +21,19 @@ pub struct Node {
 	resource: String,
 }
 
+pub fn nodevec_quadvec(v: Vec<Node>) -> Vec<NodeQuadFmt> {
+
+	let mut out : Vec<NodeQuadFmt> = Vec::new();
+	for n in v {
+		match n.to_node_quad() {
+			Some(q) => out.push(q),
+			None => continue,
+		}
+	}
+
+	out
+}
+
 impl Node {
 	pub fn new( spring: &str, host: &str, address: &str, service: NodeService, state: NodeState, role: NodeRole  ) -> Self {
 		
