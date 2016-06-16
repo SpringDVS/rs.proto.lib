@@ -194,3 +194,21 @@ fn ts_node_to_node_info_fail() {
 	
 	assert_eq!(n.to_node_info(), None);
 }
+
+#[test]
+fn ts_nodevec_quadvec() {
+	let  v = vec![
+		Node::from_str("foobar,barfoo,127.3.4.5,http").unwrap(),
+		Node::from_str("barfoo,barfoo,127.3.4.5,http").unwrap(),
+		Node::from_str("farboo,barfoo,127.3.4.5,http").unwrap(),
+	];
+	
+	let qv = nodevec_quadvec(v);
+	
+	assert_eq!(qv.len(), 3);
+	assert_eq!(qv[0].spring, "foobar");
+	assert_eq!(qv[1].spring, "barfoo");
+	assert_eq!(qv[2].spring, "farboo");
+	
+		
+}
