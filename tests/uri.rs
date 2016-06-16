@@ -163,7 +163,7 @@ fn ts_model_uri_clone_from_pass() {
 	assert!(r.is_ok());
 	let uri = r.unwrap();
 	
-	let mut cpy: Uri = Uri::new("spring://").unwrap();
+	let mut cpy: Uri = Uri::new("spring://abc").unwrap();
 	cpy.clone_from(&uri);
 	
 	assert_eq!(s, cpy.to_string());
@@ -185,6 +185,16 @@ fn ts_model_uri_mut_route_pass() {
 	assert_eq!("spring://cci/res?query=test", uri.to_string());
 	
 }
+
+#[test]
+fn ts_uri_fail_no_uri() {
+	let s = "spring://";
+	let r = Uri::new(s);
+	
+	assert!(r.is_err());
+	
+}
+
 
 #[test]
 fn ts_uri_query_map_pass() {
