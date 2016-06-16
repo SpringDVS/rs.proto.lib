@@ -37,6 +37,7 @@ pub enum Response {
 	NetspaceDuplication,
 	NetworkError,
 	UnsupportedAction,
+	UnsupportedService,
 	MalformedContent,
 	Ok,
 }
@@ -48,7 +49,10 @@ impl Response {
 			"102" => Some(Response::NetspaceDuplication),
 			"103" => Some(Response::NetworkError),
 			"104" => Some(Response::MalformedContent),
-			"121" => Some(Response::UnsupportedAction), 
+			
+			"121" => Some(Response::UnsupportedAction),
+			"122" => Some(Response::UnsupportedService),
+
 			"200" => Some(Response::Ok),
 			
 			_ => None,
@@ -63,7 +67,10 @@ impl fmt::Display for Response {
 				&Response::NetspaceDuplication => "102",
 				&Response::NetworkError => "103",
 				&Response::MalformedContent => "104",
+
 				&Response::UnsupportedAction => "121",
+				&Response::UnsupportedService => "122",
+
 				&Response::Ok => "200",							
 		};
 		write!(f, "{}", out)
