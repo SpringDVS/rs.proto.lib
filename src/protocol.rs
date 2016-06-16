@@ -73,6 +73,25 @@ pub fn ipaddr_str(addr: IpAddr) -> String {
 	}
 }
 
+pub enum Port {
+	Dvsp,
+	Http,
+	Stream,
+}
+
+impl fmt::Display for Port {
+
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match self {
+			&Port::Dvsp => write!(f, "55301"),
+			&Port::Http => write!(f, "80"),
+			&Port::Stream => write!(f, "55300"),
+		}
+	}
+}	
+
+
+
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum CmdType {
 	Register, Unregister,
@@ -306,6 +325,15 @@ pub struct Message {
 	
 	/// Empty or a content data structure
 	pub content: MessageContent,
+}
+
+impl Message {
+	pub fn new(cmd: CmdType, content: MessageContent) -> Message {
+		Message {
+			cmd: cmd,
+			content: content,
+		}
+	}
 }
 
 
