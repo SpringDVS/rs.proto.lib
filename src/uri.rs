@@ -4,6 +4,7 @@ use std::collections::HashMap;
 pub use ::enums::Failure;
 pub use ::node::Node;
 
+
 #[derive(Debug, PartialEq)]
 pub struct Uri {
 	
@@ -20,6 +21,10 @@ impl Uri {
 		let initial : Vec<&str> = uri.split("://").collect();
 
 		if initial[0] != "spring" || initial.len() < 2 {
+			return Err(Failure::InvalidFormat)
+		}
+		
+		if initial[1].len() == 0 {
 			return Err(Failure::InvalidFormat)
 		}
 
@@ -52,6 +57,8 @@ impl Uri {
 		};
 		
 		for s in v {
+			if s.is_empty() { continue };
+			
 			gsn.push(String::from(s))
 		}
 		
