@@ -543,3 +543,25 @@ fn ts_message_resolve_fail () {
 	let o = Message::from_bytes(b"resolve sprinddg://cci.esusx.uk"); 
 	assert!(o.is_err());
 }
+
+#[test]
+fn ts_message_service_pass () {
+	
+	let o = Message::from_bytes(b"service spring://cci.esusx.uk/service/"); 
+	assert!(o.is_ok());
+	let m : Message = o.unwrap();
+	
+	assert_match!(m.content, MessageContent::Service(_));
+	let cs = msg_service!(m.content);
+	assert_eq!(cs.uri.route().len(), 3);
+	assert_eq!(cs.uri.gtn(), "uk");
+	assert_eq!(cs.uri.res().len(), 1);
+	assert_eq!(cs.uri.res()[0], "service");
+}
+
+#[test]
+fn ts_message_service_fail () {
+	
+	let o = Message::from_bytes(b"service sprinddg://cci.esusx.uk/service/"); 
+	assert!(o.is_err());
+}

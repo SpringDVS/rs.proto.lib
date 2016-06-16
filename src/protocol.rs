@@ -97,7 +97,7 @@ pub enum CmdType {
 	Register, Unregister,
 	Info, Update,
 	Resolve,
-	Response,
+	Service, Response,
 }
 
 impl CmdType  {
@@ -111,6 +111,7 @@ impl CmdType  {
 			"unregister" => Some(CmdType::Unregister),
 			"info" => Some(CmdType::Info),
 			"update" => Some(CmdType::Update),
+			"service" => Some(CmdType::Service),
 			"resolve" => Some(CmdType::Resolve),
 			_  => None
 		}		
@@ -125,6 +126,7 @@ impl fmt::Display for CmdType {
 			&CmdType::Info => write!(f, "info"),
 			&CmdType::Update => write!(f, "update"),
 			&CmdType::Resolve => write!(f, "resolve"),
+			&CmdType::Service => write!(f, "service"),
 			_ => write!(f, ""),
 		}
 	}
@@ -220,8 +222,13 @@ pub enum MessageContent {
 	/// Contains a NodeSingle
 	NodeSingle(ContentNodeSingle),
 
+	/// Contains a request
+	Service(ContentUri),
+
 	/// Contains a response
 	Response(ContentResponse),
+	
+	
 }
 
 // First level macros
@@ -243,6 +250,9 @@ macro_rules!  msg_single{($e: expr) => (match $e { MessageContent::NodeSingle(re
 #[macro_export]
 macro_rules!  msg_resolve{($e: expr) => (match $e { MessageContent::Resolve(ref r) => r, _ => panic!("msg_resolve -- Unexpected value: {:?}", $e) }) }
 
+#[macro_export]
+macro_rules!  msg_service{($e: expr) => (match $e { MessageContent::Service(ref r) => r, _ => panic!("msg_service -- Unexpected value: {:?}", $e) }) }
+
 
 impl fmt::Display for MessageContent {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -253,6 +263,7 @@ impl fmt::Display for MessageContent {
 			&MessageContent::NodeSingle(ref s) => write!(f, "{}",s),
 			&MessageContent::Update(ref s) => write!(f, "{}",s),
 			&MessageContent::Registration(ref s) => write!(f, "{}",s),
+			&MessageContent::Service(ref s) => write!(f, "{}",s),
 			&MessageContent::Resolve(ref s) => write!(f, "{}",s),
 		}
 	}
@@ -366,6 +377,7 @@ impl Message {
 			CmdType::Info => Ok(MessageContent::Info(try!(ContentInfoRequest::from_bytes(&bytes)))),
 			CmdType::Update => Ok(MessageContent::Update(try!(ContentNodeProperty::from_bytes(&bytes)))),
 			CmdType::Resolve => Ok(MessageContent::Resolve(try!(ContentUri::from_bytes(&bytes)))),
+			CmdType::Service => Ok(MessageContent::Service(try!(ContentUri::from_bytes(&bytes)))),
 		}
 		
 	}
