@@ -33,7 +33,7 @@ pub use enums::{ParseFailure,NodeRole,Response,NodeService,NodeState};
 
 
 pub use formats::{NodeSingleFmt,NodeDoubleFmt,NodeTripleFmt,NodeQuadFmt,NodeInfoFmt};
-pub use uri::Uri;
+use uri::Uri;
 
 pub type Ipv4 = [u8;4];
 pub type Ipv6 = [u8;6];
