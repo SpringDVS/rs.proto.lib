@@ -51,6 +51,7 @@ macro_rules! res_parsefail {
 	);
 }
 
+
 fn valid_springname(s: &str) -> bool {
 	if rng!(s.len(),1,63) == false {
 		false

@@ -513,7 +513,7 @@ impl ProtocolObject for ContentNodeSingle {
 		let s = match str::from_utf8(bytes) {
 			Ok(s) => s,
 			Err(_) => return Err(ParseFailure::ConversionError)
-		};	
+		};
 		
 		Ok( ContentNodeSingle { 
 			nsingle: try!(NodeSingleFmt::from_str(s))	 
