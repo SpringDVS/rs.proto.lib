@@ -41,6 +41,8 @@ pub trait Netspace {
 	fn gtn_geosub_register_node(&self, node: &Node, gsn: &str) -> Result<Success,NetspaceFailure>;
 	fn gtn_geosub_unregister_node(&self, node: &Node, gsn: &str) -> Result<Success,NetspaceFailure>;
 	
+	fn gsn_check_token(&self, token: &str) -> bool;
+	
 }
 
 pub trait Metaspace {

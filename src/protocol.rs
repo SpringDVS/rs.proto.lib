@@ -422,6 +422,7 @@ pub struct ContentRegistration {
 	pub ndouble: NodeDoubleFmt,
 	pub role: NodeRole,
 	pub service: NodeService,
+	pub token: String,
 }
 
 impl ContentRegistration {
@@ -439,18 +440,19 @@ impl ProtocolObject for ContentRegistration {
 		
 		let parts: Vec<&str> = s.split(";").collect();
 		
-		if parts.len() < 3 || parts[0].len() == 0 || parts[1].len() == 0 || parts[2].len() == 0 { 
+		if parts.len() < 4 || parts[0].len() == 0 || parts[1].len() == 0 || parts[2].len() == 0 { 
 			return Err(ParseFailure::InvalidContentFormat) 
 		}
 		
 		let role = opt_parsefail!(NodeRole::from_str(parts[1]),ParseFailure::InvalidRole);
 		let service = opt_parsefail!(NodeService::from_str(parts[2]), ParseFailure::InvalidService);
-		
+		let token = String::from(parts[3]);
 		Ok(
 			ContentRegistration {
 				ndouble: try!(NodeDoubleFmt::from_str(parts[0])),
 				role: role,
 				service: service,
+				token: token,
 			}
 		)
 	}
@@ -462,7 +464,7 @@ impl ProtocolObject for ContentRegistration {
 
 impl fmt::Display for ContentRegistration {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f,"{};{};{}",self.ndouble,self.role,self.service)
+		write!(f,"{};{};{};{}",self.ndouble,self.role,self.service, self.token)
 	}
 }
 
