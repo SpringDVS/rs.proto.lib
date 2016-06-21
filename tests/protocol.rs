@@ -302,8 +302,36 @@ fn ts_message_content_response_network_to_bytes_pass () {
 	
 }
 
+#[test]
+fn ts_message_content_response_service_text_from_bytes_pass () {
+	let o = Message::from_bytes(b"200 service/text foobar"); 
+	assert!(o.is_ok());
+	let m : Message = o.unwrap();
+	
+	let c = m.content;
+	
+	assert_match!(c, MessageContent::Response(_));
+	let r : ContentResponse = match c { MessageContent::Response(r) => r, _ => return };
+	assert_eq!(r.code, Response::Ok);
+	
+	let rc = r.content;
+	assert_match!(rc, ResponseContent::ServiceText(_));
+	
+	let nw : ContentServiceText = match rc { ResponseContent::ServiceText(n) => n, _ => return };
+	
+	assert_eq!(format!("{}", nw), "foobar");
+}
 
-
+#[test]
+fn ts_message_content_response_service_text_to_bytes_pass () {
+	let o = Message::from_bytes(b"200 service/text foobar"); 
+	assert!(o.is_ok());
+	let m : Message = o.unwrap();
+	let s = m.to_bytes();
+	let st = String::from_utf8(s).unwrap();
+	assert_eq!(st, "200 service/text foobar")
+	
+}
 
 #[test]
 fn ts_content_info_request_network_from_bytes_pass () {

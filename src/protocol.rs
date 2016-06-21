@@ -297,8 +297,11 @@ pub enum ResponseContent {
 	/// Contains a Network
 	Network(ContentNetwork),
 	
-	/// Containes node info
+	/// Contains node info
 	NodeInfo(ContentNodeInfo),
+	
+	/// Contains a service response
+	ServiceText(ContentServiceText),
 }
 
 impl fmt::Display for ResponseContent {
@@ -308,6 +311,7 @@ impl fmt::Display for ResponseContent {
 			&ResponseContent::NodeSingle(ref s) => write!(f, "{}", s),
 			&ResponseContent::Network(ref s) => write!(f, "{}", s),
 			&ResponseContent::NodeInfo(ref s) => write!(f, "{}", s),
+			&ResponseContent::ServiceText(ref s) => write!(f, "{}", s),
 			
 		}
 	}
@@ -318,6 +322,8 @@ macro_rules!  msg_response_nodeinfo{($e: expr) => (match msg_response!($e).conte
 macro_rules!  msg_response_network{($e: expr) => (match msg_response!($e).content { ResponseContent::Network(ref r) => r, _ => panic!("msg_response_network -- Unexpected value: {:?}", $e) }) }
 #[macro_export]
 macro_rules!  msg_response_single{($e: expr) => (match msg_response!($e).content { ResponseContent::NodeSingle(ref r) => r, _ => panic!("msg_response_single -- Unexpected value: {:?}", $e) }) }
+#[macro_export]
+macro_rules!  msg_response_service{($e: expr) => (match msg_response!($e).content { ResponseContent::Service(ref r) => r, _ => panic!("msg_response_service -- Unexpected value: {:?}", $e) }) }
 /// Empty content type
 pub struct Empty;
 
@@ -650,6 +656,7 @@ impl ProtocolObject for ContentResponse {
 			content = match t {
 				"network" => ResponseContent::Network(try!(ContentNetwork::from_bytes(&r[1..].as_bytes()))),
 				"node" => ResponseContent::NodeInfo(try!(ContentNodeInfo::from_bytes(&r[1..].as_bytes()))),
+				"service/text" => ResponseContent::ServiceText(try!(ContentServiceText::from_bytes(&r[1..].as_bytes()))),
 				_ => return Err(ParseFailure::InvalidContentFormat),
 			}
 		}
@@ -672,6 +679,7 @@ impl fmt::Display for ContentResponse {
 		match d {
 			ResponseContent::Network(s) => write!(f, "{} network {}", self.code, s),
 			ResponseContent::NodeInfo(s) => write!(f, "{} node {}", self.code, s),
+			ResponseContent::ServiceText(s) => write!(f, "{} service/text {}", self.code, s),
 			_ =>  write!(f, "{}", self.code),
 			 
 		}
@@ -816,3 +824,26 @@ impl fmt::Display for ContentUri {
 	}
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct ContentServiceText {
+	pub content: String,
+}
+
+impl ProtocolObject for ContentServiceText {
+	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
+		Ok(ContentServiceText {
+			content: String::from(utf8_from!(bytes))
+		})
+	}
+	
+	fn to_bytes(&self) -> Vec<u8> {
+		Vec::from(self.to_string().as_bytes())
+	}
+}
+
+impl fmt::Display for ContentServiceText {
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		write!(f, "{}", self.content)
+		
+	}
+}
