@@ -13,3 +13,4 @@ pub mod uri;
 #[macro_use]
 pub mod formats;
 pub mod protocol;
+pub mod http;
