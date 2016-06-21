@@ -233,7 +233,7 @@ pub enum MessageContent {
 
 // First level macros
 #[macro_export]
-macro_rules!  msg_response{($e: expr) => (match $e { MessageContent::Response(ref r) => r, _ => panic!("msg_reponse -- Unexpected value: {:?}", $e) }) }
+macro_rules!  msg_response{($e: expr) => (match $e { MessageContent::Response(ref r) => r, _ => panic!("msg_response -- Unexpected value: {:?}", $e) }) }
 
 #[macro_export]
 macro_rules!  msg_registration{($e: expr) => (match $e { MessageContent::Registration(ref r) => r, _ => panic!("msg_registration -- Unexpected value: {:?}", $e) }) }
@@ -323,7 +323,7 @@ macro_rules!  msg_response_network{($e: expr) => (match msg_response!($e).conten
 #[macro_export]
 macro_rules!  msg_response_single{($e: expr) => (match msg_response!($e).content { ResponseContent::NodeSingle(ref r) => r, _ => panic!("msg_response_single -- Unexpected value: {:?}", $e) }) }
 #[macro_export]
-macro_rules!  msg_response_service{($e: expr) => (match msg_response!($e).content { ResponseContent::Service(ref r) => r, _ => panic!("msg_response_service -- Unexpected value: {:?}", $e) }) }
+macro_rules!  msg_response_servicetext{($e: expr) => (match msg_response!($e).content { ResponseContent::ServiceText(ref r) => r, _ => panic!("msg_response_service -- Unexpected value: {:?}", $e) }) }
 /// Empty content type
 pub struct Empty;
 
