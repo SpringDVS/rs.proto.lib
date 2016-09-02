@@ -197,7 +197,7 @@ fn ts_content_response_from_bytes_pass_empty() {
 
 #[test]
 fn ts_content_response_from_bytes_pass_network_pass () {
-	let o = ContentResponse::from_bytes(b"200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
+	let o = ContentResponse::from_bytes(b"200 99 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
 	assert!(o.is_ok());
 	
 	let cr : ContentResponse  = o.unwrap();
@@ -210,9 +210,9 @@ fn ts_content_response_from_bytes_pass_network_pass () {
 
 #[test]
 fn ts_content_response_from_bytes_pass_node_info_pass () {
-	let o = ContentResponse::from_bytes(b"200 node spring:foo,host:bar,state:unresponsive");
+	let o = ContentResponse::from_bytes(b"200 99 node spring:foo,host:bar,state:unresponsive");
 	assert!(o.is_ok());
-	
+
 	let cr : ContentResponse  = o.unwrap();
 	assert_eq!(cr.code, Response::Ok);
 	assert!(match cr.content {
@@ -232,7 +232,7 @@ fn ts_content_response_from_bytes_pass_node_info_pass () {
 
 #[test]
 fn ts_message_content_response_nodeinfo_from_bytes_pass () {
-	let o = Message::from_bytes(b"200 node spring:foo,host:bar,state:unresponsive"); 
+	let o = Message::from_bytes(b"200 99 node spring:foo,host:bar,state:unresponsive"); 
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
 	
@@ -252,28 +252,28 @@ fn ts_message_content_response_nodeinfo_from_bytes_pass () {
 
 #[test]
 fn ts_message_content_response_node_info_to_bytes_pass () {
-	let o = Message::from_bytes(b"200 node spring:foo,host:bar,state:unresponsive"); 
+	let o = Message::from_bytes(b"200 99 node spring:foo,host:bar,state:unresponsive"); 
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
 	let s = m.to_bytes();
 	let st = String::from_utf8(s).unwrap();
-	assert_eq!(st, "200 node spring:foo,host:bar,state:unresponsive");
+	assert_eq!(st, "200 99 node spring:foo,host:bar,state:unresponsive");
 	
 }
 
 
 #[test]
 fn ts_content_response_to_string_pass_network_pass () {
-	let o = ContentResponse::from_bytes(b"200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
+	let o = ContentResponse::from_bytes(b"200 99 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
 	assert!(o.is_ok());
 	let cr : ContentResponse = o.unwrap();
-	assert_eq!(format!("{}", cr), "200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
+	assert_eq!(format!("{}", cr), "200 99 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
 }
 
 
 #[test]
 fn ts_message_content_response_network_from_bytes_pass () {
-	let o = Message::from_bytes(b"200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;"); 
+	let o = Message::from_bytes(b"200 99 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;"); 
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
 	
@@ -293,18 +293,18 @@ fn ts_message_content_response_network_from_bytes_pass () {
 
 #[test]
 fn ts_message_content_response_network_to_bytes_pass () {
-	let o = Message::from_bytes(b"200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;"); 
+	let o = Message::from_bytes(b"200 99 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;"); 
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
 	let s = m.to_bytes();
 	let st = String::from_utf8(s).unwrap();
-	assert_eq!(st, "200 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;")
+	assert_eq!(st, "200 99 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;")
 	
 }
 
 #[test]
 fn ts_message_content_response_service_text_from_bytes_pass () {
-	let o = Message::from_bytes(b"200 service/text foobar"); 
+	let o = Message::from_bytes(b"200 99 service/text foobar"); 
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
 	
@@ -324,12 +324,12 @@ fn ts_message_content_response_service_text_from_bytes_pass () {
 
 #[test]
 fn ts_message_content_response_service_text_to_bytes_pass () {
-	let o = Message::from_bytes(b"200 service/text foobar"); 
+	let o = Message::from_bytes(b"200 99 service/text foobar"); 
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
 	let s = m.to_bytes();
 	let st = String::from_utf8(s).unwrap();
-	assert_eq!(st, "200 service/text foobar")
+	assert_eq!(st, "200 99 service/text foobar")
 	
 }
 

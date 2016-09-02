@@ -38,7 +38,7 @@ use uri::Uri;
 pub type Ipv4 = [u8;4];
 pub type Ipv6 = [u8;6];
 
-
+#[macro_export]
 macro_rules! utf8_from {
 	($bytes:expr) => (
 		res_parsefail!(str::from_utf8($bytes), ParseFailure::InvalidContentFormat)
@@ -627,6 +627,7 @@ impl fmt::Display for ContentNodeInfo {
 #[derive(Clone, Debug, PartialEq)]
 pub struct ContentResponse {
 	pub code: Response,
+	pub len: u32,
 	pub content: ResponseContent,
 }
 
@@ -645,13 +646,23 @@ impl ProtocolObject for ContentResponse {
 		
 
 		let code = opt_parsefail!(Response::from_str(&s[0..3]));
-		
+		let mut len : u32 = 0;
 		let mut content = ResponseContent::Empty;
+		
 		if s.len() > 3 {
+
 			let st = String::from(&s[4..]);
 			let index = opt_parsefail!(st.find(" "));
 			
-			let (t,r) = st.split_at(index);
+
+			let (l,p) = st.split_at(index);
+			
+			len = res_parsefail!(l.parse());
+			
+			let payload = String::from(&p[1..]);
+			let index = opt_parsefail!(payload.find(" "));
+			let (t,r) = payload.split_at(index);
+			
 
 			content = match t {
 				"network" => ResponseContent::Network(try!(ContentNetwork::from_bytes(&r[1..].as_bytes()))),
@@ -664,6 +675,7 @@ impl ProtocolObject for ContentResponse {
 		
 		Ok(ContentResponse {
 			code: code,
+			len: len,
 			content: content
 		})
 	}
@@ -677,9 +689,9 @@ impl fmt::Display for ContentResponse {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		let d = self.content.clone();
 		match d {
-			ResponseContent::Network(s) => write!(f, "{} network {}", self.code, s),
-			ResponseContent::NodeInfo(s) => write!(f, "{} node {}", self.code, s),
-			ResponseContent::ServiceText(s) => write!(f, "{} service/text {}", self.code, s),
+			ResponseContent::Network(s) => write!(f, "{} {} network {}", self.code, (self.len+7), s),
+			ResponseContent::NodeInfo(s) => write!(f, "{} {} node {}", self.code, (self.len+5), s),
+			ResponseContent::ServiceText(s) => write!(f, "{} {} service/text {}", self.code, (self.len+13), s),
 			_ =>  write!(f, "{}", self.code),
 			 
 		}
