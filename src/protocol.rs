@@ -688,10 +688,20 @@ impl ProtocolObject for ContentResponse {
 impl fmt::Display for ContentResponse {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		let d = self.content.clone();
+		
 		match d {
-			ResponseContent::Network(s) => write!(f, "{} {} network {}", self.code, (self.len+7), s),
-			ResponseContent::NodeInfo(s) => write!(f, "{} {} node {}", self.code, (self.len+5), s),
-			ResponseContent::ServiceText(s) => write!(f, "{} {} service/text {}", self.code, (self.len+13), s),
+			ResponseContent::Network(s) => {
+				let content = format!("{}", s);
+				write!(f, "{} {} network {}", self.code, (content.len()+8), content)
+			},
+			ResponseContent::NodeInfo(s) => {
+				let content = format!("{}", s);
+				write!(f, "{} {} node {}", self.code, (content.len()+5), content)
+			},
+			ResponseContent::ServiceText(s) => {
+				let content = format!("{}", s);
+				write!(f, "{} {} service/text {}", self.code, (content.len()+13), content)
+			},
 			_ =>  write!(f, "{}", self.code),
 			 
 		}
