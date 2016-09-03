@@ -252,33 +252,33 @@ fn ts_message_content_response_nodeinfo_from_bytes_pass () {
 
 #[test]
 fn ts_message_content_response_node_info_to_bytes_pass () {
-	let o = Message::from_bytes(b"200 99 node spring:foo,host:bar,state:unresponsive"); 
+	let o = Message::from_bytes(b"200 43 node spring:foo,host:bar,state:unresponsive"); 
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
 	let s = m.to_bytes();
 	let st = String::from_utf8(s).unwrap();
-	assert_eq!(st, "200 99 node spring:foo,host:bar,state:unresponsive");
+	assert_eq!(st, "200 43 node spring:foo,host:bar,state:unresponsive");
 	
 }
 
 
 #[test]
 fn ts_content_response_to_string_pass_network_pass () {
-	let o = ContentResponse::from_bytes(b"200 99 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
+	let o = ContentResponse::from_bytes(b"200 55 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
 	assert!(o.is_ok());
 	let cr : ContentResponse = o.unwrap();
-	assert_eq!(format!("{}", cr), "200 99 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
-}
+	assert_eq!(format!("{}", cr), "200 54 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;");
 
+}
 
 #[test]
 fn ts_message_content_response_network_from_bytes_pass () {
-	let o = Message::from_bytes(b"200 99 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;"); 
+	let o = Message::from_bytes(b"200 54 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;"); 
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
-	
+
 	let c = m.content;
-	
+
 	assert_match!(c, MessageContent::Response(_));
 	let r : ContentResponse = match c { MessageContent::Response(r) => r, _ => return };
 	assert_eq!(r.code, Response::Ok);
@@ -293,18 +293,18 @@ fn ts_message_content_response_network_from_bytes_pass () {
 
 #[test]
 fn ts_message_content_response_network_to_bytes_pass () {
-	let o = Message::from_bytes(b"200 99 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;"); 
+	let o = Message::from_bytes(b"200 54 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;"); 
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
 	let s = m.to_bytes();
 	let st = String::from_utf8(s).unwrap();
-	assert_eq!(st, "200 99 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;")
+	assert_eq!(st, "200 54 network foo,bar,127.0.0.1,dvsp;bar,foo,127.0.0.2,http;")
 	
 }
 
 #[test]
 fn ts_message_content_response_service_text_from_bytes_pass () {
-	let o = Message::from_bytes(b"200 99 service/text foobar"); 
+	let o = Message::from_bytes(b"200 19 service/text foobar"); 
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
 	
@@ -324,12 +324,12 @@ fn ts_message_content_response_service_text_from_bytes_pass () {
 
 #[test]
 fn ts_message_content_response_service_text_to_bytes_pass () {
-	let o = Message::from_bytes(b"200 99 service/text foobar"); 
+	let o = Message::from_bytes(b"200 19 service/text foobar"); 
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
 	let s = m.to_bytes();
 	let st = String::from_utf8(s).unwrap();
-	assert_eq!(st, "200 99 service/text foobar")
+	assert_eq!(st, "200 19 service/text foobar")
 	
 }
 
