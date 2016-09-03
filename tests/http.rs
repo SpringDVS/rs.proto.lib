@@ -31,31 +31,30 @@ info node foo state
 fn ts_http_deserialise_http_response_pass() {
 	let req :String = "
 POST /spring/ HTTP/1.1\r
-Host: {}\r
+Host: \r
 User-Agent: SpringDVS\r
 Content-Type: text/plain\r
-Content-Length: {}\r\n\r
+Content-Length: \r\n\r
 200
 ".to_string();
 	let mut v: Vec<u8> = Vec::new();
 	v.extend_from_slice(req.as_bytes()); 
 	let r = HttpWrapper::deserialise_response(v);
 	assert!(r.is_ok());
-	let msg = r.unwrap();
-	assert_eq!(msg.cmd, CmdType::Response);
+	let (msg,split) = r.unwrap();
+	assert_eq!(msg.as_slice(), b"200");
+	assert_eq!(split, 103);
 }
 
 #[test]
-fn ts_http_deserialise_tcp_response_pass() {
+fn ts_http_deserialise_tcp_response_fail() {
 	let req :String = "
 200
 ".to_string();
 	let mut v: Vec<u8> = Vec::new();
 	v.extend_from_slice(req.as_bytes()); 
 	let r = HttpWrapper::deserialise_response(v);
-	assert!(r.is_ok());
-	let msg = r.unwrap();
-	assert_eq!(msg.cmd, CmdType::Response);
+	assert!(r.is_err());
 }
 
 

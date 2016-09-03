@@ -2,11 +2,14 @@
  * Author:  Charlie Fyvie-Gauld (cfg@zunautica.org)
  * License: GPLv3 (http://www.gnu.org/licenses/gpl-3.0.txt)
  */
+use std::str;
 use std::str::FromStr;
 use std::net::{SocketAddr};
 use protocol::{ProtocolObject, Message};
 use enums::{Failure};
+
 pub struct HttpWrapper;
+
 
 impl HttpWrapper {
 
@@ -148,32 +151,22 @@ Content-Length: {}\r\n\r\n", bytes.len()
 		Ok(m)
 	}
 	
-	pub fn deserialise_response(bytes: Vec<u8>) -> Result<Message,Failure> {
+	pub fn deserialise_response(bytes: Vec<u8>) -> Result<(Vec<u8>,usize),Failure> {
 		let s : String = match String::from_utf8(bytes) {
 			Ok(s) => s,
 			Err(_) => return Err(Failure::InvalidBytes)
 		};
 
 		match s.find("\r\n\r\n") {
-			Some(_) => {
+			Some(i) => {
 				
 				let atoms : Vec<&str> = s.split("\r\n\r\n").collect();
 				if atoms.len() != 2 { return Err(Failure::InvalidFormat) }
 				
-				let m = match Message::from_bytes(atoms[1].trim().as_bytes()) {
-					Ok(m) => m,
-					Err(_) => return Err(Failure::InvalidConversion)
-				};
-
-				Ok(m)
+				Ok( (Vec::from(atoms[1].trim().as_bytes()), i+4+1) )
 			} 
 			None => {
-				let m = match Message::from_bytes(s.trim().as_bytes()) {
-					Ok(m) => m,
-					Err(_) => return Err(Failure::InvalidConversion)
-				};
-
-				Ok(m)
+				Err(Failure::InvalidConversion)
 			}
 		}
 	}
