@@ -36,7 +36,7 @@ fn ts_from_bytes_fail_invalid_conversion() {
 
 #[test]
 fn ts_from_bytes_reg_pass() {
-	let o = Message::from_bytes(b"register foobar,hostbar;org;http;abcdef");
+	let o = Message::from_bytes(b"register foobar,hostbar;org;http;abcdef\nPUBLIC KEY\nAbCdEf");
 	assert!(o.is_ok());
 	let m : Message = o.unwrap();
 	assert_eq!(m.cmd, CmdType::Register);
@@ -56,6 +56,7 @@ fn ts_from_bytes_reg_pass() {
 	assert_eq!(c.role, NodeRole::Org);
 	assert_eq!(c.service, NodeService::Http);
 	assert_eq!(c.token, "abcdef");
+	assert_eq!(c.key, "PUBLIC KEY\nAbCdEf");
 }
 
 #[test]
@@ -71,7 +72,7 @@ fn ts_from_bytes_reg_fail_zero() {
 #[test]
 fn ts_from_bytes_reg_fail_malformed() {
 
-	let o = Message::from_bytes(b"register foobar,bar;orgd;a;b");
+	let o = Message::from_bytes(b"register foobar,bar;orgd;a;b\nPUBLIC KEY\nAbCdEf");
 	assert!(o.is_err());
 	assert!( match o {
 			Err(ParseFailure::InvalidRole) => true,
@@ -107,13 +108,15 @@ fn ts_from_bytes_reg_fail_malformed() {
 
 #[test]
 fn ts_message_to_bytes_reg_pass() {
-	let o = Message::from_bytes(b"register foobar,bar;org;dvsp;abcdef");
+	let o = Message::from_bytes(b"register foobar,bar;org;dvsp;abcdef
+PUBLIC KEY
+AbCdEf");
 	assert!(o.is_ok());
 	
 	let m : Message = o.unwrap();
 	
 	let st = String::from_utf8(m.to_bytes()).unwrap();
-	assert_eq!(st, "register foobar,bar;org;dvsp;abcdef");
+	assert_eq!(st, "register foobar,bar;org;dvsp;abcdef\nPUBLIC KEY\nAbCdEf");
 }
 
 #[test]

@@ -19,6 +19,7 @@ pub struct Node {
 	role: NodeRole,
 	
 	resource: String,
+	key: String
 }
 
 pub fn nodevec_quadvec(v: Vec<Node>) -> Vec<NodeQuadFmt> {
@@ -35,7 +36,7 @@ pub fn nodevec_quadvec(v: Vec<Node>) -> Vec<NodeQuadFmt> {
 }
 
 impl Node {
-	pub fn new( spring: &str, host: &str, address: &str, service: NodeService, state: NodeState, role: NodeRole  ) -> Self {
+	pub fn new( spring: &str, host: &str, address: &str, service: NodeService, state: NodeState, role: NodeRole, key: &str ) -> Self {
 		
 		
 		let (hostname,res) = match host.find("/") {
@@ -52,6 +53,7 @@ impl Node {
 			state: state,
 			role: role,
 			resource: String::from(&res[1..]),
+			key: String::from(key)
 		}
 			
 	}
@@ -64,6 +66,7 @@ impl Node {
 			reg.service,
 			NodeState::Disabled,
 			reg.role,
+			&reg.key,
 		)
 	}
 	
@@ -71,7 +74,7 @@ impl Node {
 		match  s.find(":") {
 			Some(_) =>  {
 					let t : NodeInfoFmt = try!(NodeInfoFmt::from_str(s));
-					return Ok(Node::new(&t.spring, &t.host, &t.address, t.service,t.state, t.role))
+					return Ok(Node::new(&t.spring, &t.host, &t.address, t.service,t.state, t.role,""))
 				},
 			_ => { }
 		};
@@ -81,19 +84,19 @@ impl Node {
 			match v.len() {
 				1 => {
 					let t : NodeSingleFmt = try!(NodeSingleFmt::from_str(s));
-					Node::new(&t.spring, "","0.0.0.0",NodeService::Undefined,NodeState::Unspecified, NodeRole::Undefined)
+					Node::new(&t.spring, "","0.0.0.0",NodeService::Undefined,NodeState::Unspecified, NodeRole::Undefined,"")
 				},
 				2 => {
 					let t : NodeDoubleFmt = try!(NodeDoubleFmt::from_str(s));
-					Node::new(&t.spring, &t.host,"0.0.0.0",NodeService::Undefined,NodeState::Unspecified, NodeRole::Undefined)
+					Node::new(&t.spring, &t.host,"0.0.0.0",NodeService::Undefined,NodeState::Unspecified, NodeRole::Undefined,"")
 				},
 				3 => {
 					let t : NodeTripleFmt = try!(NodeTripleFmt::from_str(s));
-					Node::new(&t.spring, &t.host, &t.address,NodeService::Undefined,NodeState::Unspecified, NodeRole::Undefined)
+					Node::new(&t.spring, &t.host, &t.address,NodeService::Undefined,NodeState::Unspecified, NodeRole::Undefined,"")
 				},
 				4 => {
 					let t : NodeQuadFmt = try!(NodeQuadFmt::from_str(s));
-					Node::new(&t.spring, &t.host, &t.address, t.service,NodeState::Unspecified, NodeRole::Undefined)
+					Node::new(&t.spring, &t.host, &t.address, t.service,NodeState::Unspecified, NodeRole::Undefined,"")
 				},
 				
 				_ => return Err(ParseFailure::ConversionError)
@@ -102,7 +105,7 @@ impl Node {
 	}
 	
 	pub fn from_node_single(n: &NodeSingleFmt) -> Self {
-		Node::new(&n.spring, "", "", NodeService::Undefined, NodeState::Unspecified, NodeRole::Undefined)
+		Node::new(&n.spring, "", "", NodeService::Undefined, NodeState::Unspecified, NodeRole::Undefined,"")
 	}
 
 	pub fn to_node_single(&self) -> Option<NodeSingleFmt> {
@@ -114,7 +117,7 @@ impl Node {
 	}
 
 	pub fn from_node_double(n: &NodeDoubleFmt) -> Self {
-		Node::new(&n.spring, &n.host, "", NodeService::Undefined, NodeState::Unspecified, NodeRole::Undefined)
+		Node::new(&n.spring, &n.host, "", NodeService::Undefined, NodeState::Unspecified, NodeRole::Undefined,"")
 	}
 
 	pub fn to_node_double(&self) -> Option<NodeDoubleFmt> {
@@ -129,7 +132,7 @@ impl Node {
 	}
 	
 	pub fn from_node_triple(n: &NodeTripleFmt) -> Self {
-		Node::new(&n.spring, &n.host, &n.address, NodeService::Undefined, NodeState::Unspecified, NodeRole::Undefined)
+		Node::new(&n.spring, &n.host, &n.address, NodeService::Undefined, NodeState::Unspecified, NodeRole::Undefined,"")
 	}
 
 	pub fn to_node_triple(&self) -> Option<NodeTripleFmt> {
@@ -145,7 +148,7 @@ impl Node {
 	}
 
 	pub fn from_node_quad(n: &NodeQuadFmt) -> Self {
-		Node::new(&n.spring, &n.host, &n.address, n.service, NodeState::Unspecified, NodeRole::Undefined)
+		Node::new(&n.spring, &n.host, &n.address, n.service, NodeState::Unspecified, NodeRole::Undefined,"")
 	}
 
 	pub fn to_node_quad(&self) -> Option<NodeQuadFmt> {
@@ -238,5 +241,9 @@ impl Node {
 	
 	pub fn update_role(&mut self, role: NodeRole) {
 		self.role = role;
+	}
+	
+	pub fn update_key(&mut self, key: &str) {
+		self.key = String::from(key)
 	}
 }

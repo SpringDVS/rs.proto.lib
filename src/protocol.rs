@@ -26,6 +26,7 @@
 //  - request
  
 use std::str;
+use std::str::FromStr;
 use std::fmt;
 pub use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
@@ -428,6 +429,7 @@ pub struct ContentRegistration {
 	pub ndouble: NodeDoubleFmt,
 	pub role: NodeRole,
 	pub service: NodeService,
+	pub key: String,
 	pub token: String,
 }
 
@@ -444,7 +446,11 @@ impl ProtocolObject for ContentRegistration {
 		
 		let s = utf8_from!(bytes);
 		
-		let parts: Vec<&str> = s.split(";").collect();
+		let index = opt_parsefail!(s.find("\n"));
+		
+		let (main,keystr) = s.split_at(index);
+		
+		let parts: Vec<&str> = main.split(";").collect();
 		
 		if parts.len() < 4 || parts[0].len() == 0 || parts[1].len() == 0 || parts[2].len() == 0 { 
 			return Err(ParseFailure::InvalidContentFormat) 
@@ -452,12 +458,19 @@ impl ProtocolObject for ContentRegistration {
 		
 		let role = opt_parsefail!(NodeRole::from_str(parts[1]),ParseFailure::InvalidRole);
 		let service = opt_parsefail!(NodeService::from_str(parts[2]), ParseFailure::InvalidService);
+		
+	
+		
 		let token = String::from(parts[3]);
+		
+		let key = String::from(keystr.trim_left());
+		
 		Ok(
 			ContentRegistration {
 				ndouble: try!(NodeDoubleFmt::from_str(parts[0])),
 				role: role,
 				service: service,
+				key: key,
 				token: token,
 			}
 		)
@@ -470,7 +483,7 @@ impl ProtocolObject for ContentRegistration {
 
 impl fmt::Display for ContentRegistration {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		write!(f,"{};{};{};{}",self.ndouble,self.role,self.service, self.token)
+		write!(f,"{};{};{};{}\n{}",self.ndouble,self.role,self.service, self.token,self.key)
 	}
 }
 
