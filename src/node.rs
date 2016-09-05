@@ -218,6 +218,10 @@ impl Node {
 		self.service
 	}
 	
+	pub fn key(&self) -> &str {
+		self.key.as_ref()
+	}
+	
 	pub fn update_service(&mut self, service: NodeService) {
 		self.service = service;
 	}
