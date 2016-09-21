@@ -9,7 +9,7 @@ use protocol::{ProtocolObject, Message};
 use enums::{Failure};
 
 pub struct HttpWrapper;
-
+// ToDo: Bump to HTTP/1.1 when chunked encoding is handled
 
 impl HttpWrapper {
 
@@ -33,7 +33,7 @@ impl HttpWrapper {
 	pub fn serialise_request(msg: &Message, host: &str) -> Vec<u8> {
 		let serial = msg.to_bytes();
 		let header : String = format!(
-"POST /spring/ HTTP/1.1\r
+"POST /spring/ HTTP/1.0\r
 Host: {}\r
 User-Agent: SpringDVS\r
 Content-Type: text/plain\r
@@ -65,7 +65,7 @@ Content-Length: {}\r\n\r\n", host, serial.len()
 	pub fn serialise_bytes_request(bytes: &Vec<u8>, host: &str) -> Vec<u8> {
 
 		let header : String = format!(
-"POST /spring/ HTTP/1.1\r
+"POST /spring/ HTTP/1.0\r
 Host: {}\r
 User-Agent: SpringDVS\r
 Content-Type: text/plain\r
