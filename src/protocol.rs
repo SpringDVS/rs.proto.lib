@@ -26,7 +26,6 @@
 //  - request
  
 use std::str;
-use std::str::FromStr;
 use std::fmt;
 pub use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
