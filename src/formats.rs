@@ -83,7 +83,7 @@ fn valid_hostname(s: &str) -> bool {
 	if rng!(s.len(),1,63) == false {
 		false
 	} else {
-		let rex = Regex::new(r"^[a-z0-9-s.]+$").unwrap();
+		let rex = Regex::new(r"^[a-z0-9-s./]+$").unwrap();
 		rex.is_match(s)
 	}
 }
