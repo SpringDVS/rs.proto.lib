@@ -44,6 +44,11 @@ pub trait Netspace {
 	fn gtn_geosub_unregister_node(&self, node: &Node, gsn: &str) -> Result<Success,NetspaceFailure>;
 	
 	fn gsn_check_token(&self, token: &str) -> bool;
+	fn gsn_add_token(&self, token: &str, springname: &str);
+	fn gsn_remove_token(&self, token: &str);
+	fn gsn_remove_token_by_springname(&self, springname: &str);
+	fn gsn_tokens(&self) -> Vec<(String,String)>;
+	fn gsn_token_by_springname(&self, springname: &str) -> Vec<(String,String)>;
 	
 }
 
