@@ -250,4 +250,16 @@ impl Node {
 	pub fn update_key(&mut self, key: &str) {
 		self.key = String::from(key)
 	}
+	
+	pub fn update_address(&mut self, address: &str) {
+		self.address = address.to_string()
+	}
+	
+	pub fn update_hostname(&mut self, hostname: &str) {
+		self.hostname = hostname.to_string()
+	}
+	
+	pub fn update_resource(&mut self, resource: &str) {
+		self.resource = resource.to_string()
+	}
 }
