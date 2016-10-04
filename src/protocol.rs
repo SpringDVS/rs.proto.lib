@@ -57,7 +57,7 @@ macro_rules! msg_content {
 }
 
 
-
+#[macro_export]
 macro_rules! cascade_none {
 	($opt: expr) => (
 		match $opt {
