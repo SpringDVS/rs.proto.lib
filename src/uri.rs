@@ -92,6 +92,13 @@ impl Uri {
 		&self.res
 	}
 	
+	pub fn res_index(&self, index: usize) -> Option<&str> {
+		match self.res.get(index) {
+			Some(s) => Some(&s),
+			None => None
+		}
+	}
+	
 	pub fn to_string(&self) -> String {
 		format!("{}", self)
 	}
