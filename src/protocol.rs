@@ -646,8 +646,17 @@ pub struct ContentResponse {
 impl ContentResponse {
 	pub fn to_string(&self) -> String {
 		format!("{}", self)
+	}
+	
+	pub fn new_service_text(msg: &str) -> ContentResponse {
+		ContentResponse {
+			code: Response::Ok,
+			len: msg.len() as u32,
+			content: ResponseContent::ServiceText(ContentServiceText::new(msg))
+		}
 	}	
 }
+
 
 impl ProtocolObject for ContentResponse {
 	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
@@ -863,6 +872,15 @@ pub struct ContentServiceText {
 	pub content: String,
 }
 
+impl ContentServiceText {
+	
+	pub fn new(content: &str) -> ContentServiceText {
+		ContentServiceText {
+			content: content.to_string()
+		}
+	}
+}
+
 impl ProtocolObject for ContentServiceText {
 	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
 		Ok(ContentServiceText {
@@ -880,4 +898,11 @@ impl fmt::Display for ContentServiceText {
 		write!(f, "{}", self.content)
 		
 	}
+}
+
+pub fn generate_response_service_text(msg: &str) -> Message {
+	Message::new(
+		CmdType::Response,
+		MessageContent::Response(ContentResponse::new_service_text(msg))
+	)
 }
