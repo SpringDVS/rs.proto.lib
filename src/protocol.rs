@@ -654,9 +654,23 @@ impl ContentResponse {
 			len: msg.len() as u32,
 			content: ResponseContent::ServiceText(ContentServiceText::new(msg))
 		}
+	}
+	
+	pub fn new_empty_response(code: Response) -> ContentResponse {
+		ContentResponse {
+			code: code,
+			len: 0,
+			content: ResponseContent::Empty
+		}
 	}	
 }
 
+pub fn generate_response_empty_code(code: Response) -> Message {
+	Message::new(
+		CmdType::Response,
+		MessageContent::Response(ContentResponse::new_empty_response(code))
+	)	
+}
 
 impl ProtocolObject for ContentResponse {
 	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
