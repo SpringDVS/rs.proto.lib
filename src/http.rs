@@ -8,8 +8,17 @@ use std::net::{SocketAddr};
 use protocol::{ProtocolObject, Message};
 use enums::{Failure};
 
+use std::io::prelude::*;
+use std::net::{TcpStream};
+
 pub struct HttpWrapper;
+
 // ToDo: Bump to HTTP/1.1 when chunked encoding is handled
+
+// ToDo *2:
+//   Handle all the standard and de-facto headers here
+//   - Forwarded:
+//   - X-Real-IP:
 
 impl HttpWrapper {
 
@@ -78,6 +87,96 @@ Content-Length: {}\r\n\r\n", host, bytes.len()
 		v
 	}
 
+	/// Takes bytes and wrap in HTTP POST request
+	///
+	/// # Arguments
+	///
+	/// * `bytes` - A slice of bytes to be wrapped 
+	/// * `host` - The host of the target node
+	/// * `post` - The host of the target node
+	pub fn wrap_request(bytes: &[u8], host: &str, path: &str) -> Vec<u8> {
+
+		let header : String = format!(
+"POST /{} HTTP/1.0\r
+Host: {}\r
+User-Agent: SpringPrim/0.3\r
+Content-Type: text/plain\r
+Content-Length: {}\r\n\r\n", path, host, bytes.len()
+		);
+		
+		let mut v = Vec::new();
+		v.extend_from_slice(header.as_ref());
+		v.extend_from_slice(bytes.as_ref());
+		v
+	}
+	
+	pub fn unwrap_response(bytes: &[u8]) -> Option<(Vec<u8>,Vec<u8>)> {
+		let s = match str::from_utf8(bytes) {
+			Ok(s) => s,
+			Err(_) => return None
+		};
+
+		match s.find("\r\n\r\n") {
+			Some(_) => {
+				
+				let atoms : Vec<&str> = s.split("\r\n\r\n").collect();
+				if atoms.len() != 2 { return None }
+				
+				Some( (Vec::from(atoms[0].trim().as_bytes()),Vec::from(atoms[1].trim().as_bytes())) )
+			},
+			None => None
+		}
+	}
+	
+
+	pub fn request(bytes: &[u8], address: &str, host: &str, path: &str) -> Option<Vec<u8>> {
+		
+		let addr = format!("{}:{}", address, 80);
+		let msg = HttpWrapper::wrap_request(bytes, host, path);
+		
+		let mut stream = match TcpStream::connect(addr.as_str()) {
+			Ok(s) => s,
+			Err(_) => return None
+		};
+		
+		
+
+		stream.write(msg.as_slice()).unwrap();
+
+		let mut buf = [0;4096];
+		let size = match stream.read(&mut buf) {
+					Ok(s) => s,
+					Err(_) => 0
+		};
+
+		if size == 0 { return None }
+		
+		let (hdrbuf, mut msgbuf) = match HttpWrapper::unwrap_response(&buf[0..size]) {
+			Some(r) => r,
+			None => return None
+		};
+
+		match HttpWrapper::content_len(hdrbuf.as_slice()) {
+			Some(conlen) => {
+				let metalen = hdrbuf.len() + 4; // 4 bytes = \r\n\r\n
+				if (metalen + conlen) > 4096 {
+					let diff = conlen - (4096-metalen);
+					let mut vbuf = Vec::new();
+					vbuf.resize(diff, 0);
+					match stream.read(&mut vbuf.as_mut_slice()) {
+						Ok(s) => s,
+						Err(_) =>  0
+					};
+					msgbuf.append(&mut vbuf);
+				}
+				
+				Some(msgbuf)
+			}
+			_ => { return None }
+		}
+		
+		
+	}
 	/// Takes a Message, turns it into a string wraps it in
 	/// an HTTP response and returns a vector of bytes
 	///
@@ -176,15 +275,41 @@ Content-Length: {}\r\n\r\n", bytes.len()
 		for header in headers {
 			let atoms : Vec<&str> = header.split(":").collect();
 			
-			// Todo:
-			// Handle all the standard and de-facto headers here
-			// - Forwarded:
-			// - X-Real-IP:
+			// Todo: *2
 			if atoms[0] == "X-Forwarded-For" && atoms.len() > 1 {
 				return Some(String::from(atoms[1].trim()));
 			}
 		} 
 		
 		None
+	}
+	
+	fn extract_header(search: &str, block: &str) -> Option<String> {
+		let headers : Vec<&str> = block.split("\n").collect();
+		for header in headers {
+			let atoms : Vec<&str> = header.split(":").collect();
+			
+			if atoms[0] == search && atoms.len() > 1 {
+				return Some(String::from(atoms[1].trim()));
+			}
+		} 
+		
+		None		
+	}
+	
+	pub fn content_len(bytes: &[u8]) -> Option<usize> {
+		
+		let block = match str::from_utf8(bytes) {
+			Ok(s) => s,
+			Err(_) => return None,
+		};
+		
+		match HttpWrapper::extract_header("Content-Length", block) {
+			Some(v) => match v.parse::<usize>() {
+				Ok(u) => Some(u),
+				Err(_) => None
+			},
+			None => None
+		}
 	}
 }
