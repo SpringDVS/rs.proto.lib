@@ -859,6 +859,14 @@ pub struct ContentUri {
 	pub uri: Uri
 }
 
+impl ContentUri {
+	pub fn new(uri: Uri) -> ContentUri {
+		ContentUri {
+			uri: uri
+		}
+	}
+}
+
 impl ProtocolObject for ContentUri {
 	fn from_bytes(bytes: &[u8]) -> Result<Self, ParseFailure> {
 		Ok(ContentUri {
@@ -879,6 +887,18 @@ impl fmt::Display for ContentUri {
 		write!(f, "{}", self.uri)
 		
 	}
+}
+
+pub fn generate_message_service(uri: &str) -> Option<Message> {
+	let u = match Uri::new(uri) {
+		Ok(u) => u,
+		Err(_) => return None
+	};
+	
+	Some(Message::new(
+		CmdType::Service,
+		MessageContent::Service(ContentUri::new(u))
+	))
 }
 
 #[derive(Clone, Debug, PartialEq)]
