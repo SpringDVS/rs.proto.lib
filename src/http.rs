@@ -6,6 +6,7 @@ use std::str;
 use std::str::FromStr;
 use std::net::{SocketAddr};
 use protocol::{ProtocolObject, Message};
+use node::Node;
 use enums::{Failure};
 
 use std::io::prelude::*;
@@ -129,54 +130,7 @@ Content-Length: {}\r\n\r\n", path, host, bytes.len()
 	}
 	
 
-	pub fn request(bytes: &[u8], address: &str, host: &str, path: &str) -> Option<Vec<u8>> {
-		
-		let addr = format!("{}:{}", address, 80);
-		let msg = HttpWrapper::wrap_request(bytes, host, path);
-		
-		let mut stream = match TcpStream::connect(addr.as_str()) {
-			Ok(s) => s,
-			Err(_) => return None
-		};
-		
-		
 
-		stream.write(msg.as_slice()).unwrap();
-
-		let mut buf = [0;4096];
-		let size = match stream.read(&mut buf) {
-					Ok(s) => s,
-					Err(_) => 0
-		};
-
-		if size == 0 { return None }
-		
-		let (hdrbuf, mut msgbuf) = match HttpWrapper::unwrap_response(&buf[0..size]) {
-			Some(r) => r,
-			None => return None
-		};
-
-		match HttpWrapper::content_len(hdrbuf.as_slice()) {
-			Some(conlen) => {
-				let metalen = hdrbuf.len() + 4; // 4 bytes = \r\n\r\n
-				if (metalen + conlen) > 4096 {
-					let diff = conlen - (4096-metalen);
-					let mut vbuf = Vec::new();
-					vbuf.resize(diff, 0);
-					match stream.read(&mut vbuf.as_mut_slice()) {
-						Ok(s) => s,
-						Err(_) =>  0
-					};
-					msgbuf.append(&mut vbuf);
-				}
-				
-				Some(msgbuf)
-			}
-			_ => { return None }
-		}
-		
-		
-	}
 	/// Takes a Message, turns it into a string wraps it in
 	/// an HTTP response and returns a vector of bytes
 	///
@@ -312,4 +266,69 @@ Content-Length: {}\r\n\r\n", bytes.len()
 			None => None
 		}
 	}
+}
+
+pub struct Outbound;
+
+impl Outbound {
+	pub fn request(bytes: &[u8], address: &str, host: &str, path: &str) -> Option<Vec<u8>> {
+		
+		let addr = format!("{}:{}", address, 80);
+		let msg = HttpWrapper::wrap_request(bytes, host, path);
+		
+		let mut stream = match TcpStream::connect(addr.as_str()) {
+			Ok(s) => s,
+			Err(_) => return None
+		};
+		
+		
+
+		stream.write(msg.as_slice()).unwrap();
+
+		let mut buf = [0;4096];
+		let size = match stream.read(&mut buf) {
+					Ok(s) => s,
+					Err(_) => 0
+		};
+
+		if size == 0 { return None }
+		
+		let (hdrbuf, mut msgbuf) = match HttpWrapper::unwrap_response(&buf[0..size]) {
+			Some(r) => r,
+			None => return None
+		};
+
+		match HttpWrapper::content_len(hdrbuf.as_slice()) {
+			Some(conlen) => {
+				let metalen = hdrbuf.len() + 4; // 4 bytes = \r\n\r\n
+				if (metalen + conlen) > 4096 {
+					let diff = conlen - (4096-metalen);
+					let mut vbuf = Vec::new();
+					vbuf.resize(diff, 0);
+					match stream.read(&mut vbuf.as_mut_slice()) {
+						Ok(s) => s,
+						Err(_) =>  0
+					};
+					msgbuf.append(&mut vbuf);
+				}
+				
+				Some(msgbuf)
+			}
+			_ => { Some(msgbuf) }
+		}
+		
+		
+	}
+	
+	pub fn request_node(message: &Message, node: &Node) -> Option<Message> {
+		let response : Vec<u8> = match Outbound::request(message.to_bytes().as_slice(), node.address(), node.hostname(), "spring") {
+			Some(r) => r,
+			None => return None
+		};
+		
+		match Message::from_bytes(response.as_slice()) {
+			Ok(m) => Some(m),
+			Err(_) => None
+		}
+	}	
 }
