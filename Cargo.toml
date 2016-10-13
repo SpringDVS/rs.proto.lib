@@ -1,6 +1,6 @@
 [package]
 name = "spring_dvs"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Charlie Fyvie-Gauld <cfg@zunautica.org>"]
 license = "GPLv3"
 [dependencies]
