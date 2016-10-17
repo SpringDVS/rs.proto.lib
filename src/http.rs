@@ -17,6 +17,8 @@ use std::net::{TcpStream};
 
 pub struct HttpWrapper;
 
+// ToDo: Make the chunked encoding handler nicer
+// ToDo: Handle case where HTTP header is larger than initial buffer 
 // ToDo *2:
 //   Handle all the standard and de-facto headers here
 //   - Forwarded:
