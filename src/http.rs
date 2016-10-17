@@ -5,6 +5,8 @@
 use std::str;
 use std::str::FromStr;
 use std::net::{SocketAddr};
+use std::i64;
+
 use protocol::{ProtocolObject, Message};
 use node::Node;
 use enums::{Failure};
@@ -12,9 +14,8 @@ use enums::{Failure};
 use std::io::prelude::*;
 use std::net::{TcpStream};
 
-pub struct HttpWrapper;
 
-// ToDo: Bump to HTTP/1.1 when chunked encoding is handled
+pub struct HttpWrapper;
 
 // ToDo *2:
 //   Handle all the standard and de-facto headers here
@@ -75,7 +76,7 @@ Content-Length: {}\r\n\r\n", host, serial.len()
 	pub fn serialise_bytes_request(bytes: &Vec<u8>, host: &str) -> Vec<u8> {
 
 		let header : String = format!(
-"POST /spring/ HTTP/1.0\r
+"POST /spring/ HTTP/1.1\r
 Host: {}\r
 User-Agent: SpringDVS\r
 Content-Type: text/plain\r
@@ -98,7 +99,7 @@ Content-Length: {}\r\n\r\n", host, bytes.len()
 	pub fn wrap_request(bytes: &[u8], host: &str, path: &str) -> Vec<u8> {
 
 		let header : String = format!(
-"POST /{} HTTP/1.0\r
+"POST /{} HTTP/1.1\r
 Host: {}\r
 User-Agent: SpringPrim/0.3\r
 Content-Type: text/plain\r
@@ -120,9 +121,9 @@ Content-Length: {}\r\n\r\n", path, host, bytes.len()
 		match s.find("\r\n\r\n") {
 			Some(_) => {
 				
-				let atoms : Vec<&str> = s.split("\r\n\r\n").collect();
+				let atoms : Vec<&str> = s.splitn(2, "\r\n\r\n").collect();
 				if atoms.len() != 2 { return None }
-				
+				//println!("\n*********\n[Debug]Header:\n{}\n%%%%%%%%%%%%%\n", atoms[0]);
 				Some( (Vec::from(atoms[0].trim().as_bytes()),Vec::from(atoms[1].trim().as_bytes())) )
 			},
 			None => None
@@ -238,7 +239,7 @@ Content-Length: {}\r\n\r\n", bytes.len()
 		None
 	}
 	
-	fn extract_header(search: &str, block: &str) -> Option<String> {
+	pub fn extract_header(search: &str, block: &str) -> Option<String> {
 		let headers : Vec<&str> = block.split("\n").collect();
 		for header in headers {
 			let atoms : Vec<&str> = header.split(":").collect();
@@ -291,13 +292,31 @@ impl Outbound {
 					Err(_) => 0
 		};
 
-		if size == 0 { return None }
 		
+
+		if size == 0 { return None }
 		let (hdrbuf, mut msgbuf) = match HttpWrapper::unwrap_response(&buf[0..size]) {
 			Some(r) => r,
 			None => return None
 		};
+		
+		let hdrstr = String::from_utf8(hdrbuf.clone()).unwrap();
+		
+		match HttpWrapper::extract_header("Content-Length", &hdrstr) {
+			Some(s) => Outbound::transfer_single(&hdrbuf, msgbuf, &mut stream),
+			None => {
+				match HttpWrapper::extract_header("Transfer-Encoding", &hdrstr) {
+					Some(s) => Outbound::transfer_chunked(&hdrbuf, msgbuf, &mut stream),
+					None => None
+				}
+			}
+		}
+			
 
+	}
+	
+	fn transfer_single(hdrbuf: &Vec<u8>, mut msgbuf: Vec<u8>, stream: &mut TcpStream) -> Option<Vec<u8>> {
+		
 		match HttpWrapper::content_len(hdrbuf.as_slice()) {
 			Some(conlen) => {
 				let metalen = hdrbuf.len() + 4; // 4 bytes = \r\n\r\n
@@ -317,9 +336,81 @@ impl Outbound {
 			_ => { Some(msgbuf) }
 		}
 		
-		
+					
 	}
 	
+	fn transfer_chunked(hdrbuf: &Vec<u8>, mut msgbuf: Vec<u8>, stream: &mut TcpStream) -> Option<Vec<u8>> {
+		
+		let mut buflen = msgbuf.len();
+		let mut index = 0;
+		let mut response = str::from_utf8(msgbuf.as_slice()).unwrap().to_string();
+		
+		
+		let mut aggregate = String::new();
+		loop {
+			
+			let r = response.clone();
+			let buf : Vec<&str> = r.splitn(2, "\r\n").collect();
+			
+			if buf[0].trim() == "0" {
+					break
+			}
+
+			index += buf[0].len() + 2; // include \r\n bytes
+			
+			
+			let chunk_size = i64::from_str_radix(buf[0], 16).unwrap() as usize;
+			let buflen_req = index + chunk_size;
+			
+			let chunkbuf = if buflen_req > buflen + 2 {
+				
+				// We haven't pulled the whole chunk from the socket
+				// so read the chunk and read to next chunk size
+				let diff = (buflen_req - buflen)+2;
+				
+				let mut v : Vec<u8> = Vec::new();
+				v.resize(diff, b'\0');
+				stream.read_exact(&mut v.as_mut());
+				let mut bufstr = String::from(buf[1]);
+				 
+				bufstr.push_str(str::from_utf8(v.as_slice()).unwrap());
+				
+				buflen += diff;
+				
+				v.clear();
+				
+				
+				let mut b = [b'\0'];
+				loop {
+					stream.read_exact(&mut b);
+					v.push(b[0]);
+					
+					if b[0] == b'\r' {
+						stream.read_exact(&mut b);
+						v.push(b[0]);
+						if b[0] == b'\n' { break; }
+					}
+				}
+				
+				bufstr.push_str(str::from_utf8(v.as_slice()).unwrap());
+				buflen += v.len();
+				bufstr.clone()
+				
+			} else {
+				String::from(buf[1])
+			};
+
+			let (value,rest) = chunkbuf.split_at(chunk_size);
+			
+			response = rest.trim_left().to_string();
+			index += chunk_size+2;
+			
+			aggregate.push_str(value);
+		}
+		
+		 
+		Some(Vec::from(aggregate.as_bytes()))
+	}
 	pub fn request_node(message: &Message, node: &Node) -> Option<Message> {
 		let response : Vec<u8> = match Outbound::request(message.to_bytes().as_slice(), node.address(), node.hostname(), "spring") {
 			Some(r) => r,
