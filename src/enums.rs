@@ -40,6 +40,8 @@ pub enum Response {
 	UnsupportedService,
 	MalformedContent,
 	Ok,
+	Chunk,
+	Eot,
 }
 
 impl Response {
@@ -54,6 +56,8 @@ impl Response {
 			"122" => Some(Response::UnsupportedService),
 
 			"200" => Some(Response::Ok),
+			"201" => Some(Response::Chunk),
+			"202" => Some(Response::Eot), 
 			
 			_ => None,
 		}
@@ -62,16 +66,18 @@ impl Response {
 
 impl fmt::Display for Response {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-		let out = match self {
-				&Response::NetspaceError => "101",
-				&Response::NetspaceDuplication => "102",
-				&Response::NetworkError => "103",
-				&Response::MalformedContent => "104",
+		let out = match *self {
+				Response::NetspaceError => "101",
+				Response::NetspaceDuplication => "102",
+				Response::NetworkError => "103",
+				Response::MalformedContent => "104",
 
-				&Response::UnsupportedAction => "121",
-				&Response::UnsupportedService => "122",
+				Response::UnsupportedAction => "121",
+				Response::UnsupportedService => "122",
 
-				&Response::Ok => "200",							
+				Response::Ok => "200",
+				Response::Chunk => "201",
+				Response::Eot => "202",
 		};
 		write!(f, "{}", out)
 	} 

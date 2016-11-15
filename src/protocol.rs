@@ -37,6 +37,7 @@ use uri::Uri;
 
 pub type Ipv4 = [u8;4];
 pub type Ipv6 = [u8;6];
+pub type Bytes = Vec<u8>;
 
 #[macro_export]
 macro_rules! utf8_from {
@@ -302,6 +303,9 @@ pub enum ResponseContent {
 	
 	/// Contains a service response
 	ServiceText(ContentServiceText),
+	
+	/// Header for a multipart service response
+	ServiceMulti(ContentServiceMulti),
 }
 
 impl fmt::Display for ResponseContent {
@@ -312,6 +316,7 @@ impl fmt::Display for ResponseContent {
 			&ResponseContent::Network(ref s) => write!(f, "{}", s),
 			&ResponseContent::NodeInfo(ref s) => write!(f, "{}", s),
 			&ResponseContent::ServiceText(ref s) => write!(f, "{}", s),
+			&ResponseContent::ServiceMulti(_) => write!(f, ""),
 			
 		}
 	}
@@ -939,4 +944,13 @@ pub fn generate_response_service_text(msg: &str) -> Message {
 		CmdType::Response,
 		MessageContent::Response(ContentResponse::new_service_text(msg))
 	)
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ContentServiceMulti;
+
+impl ContentServiceMulti {
+	pub fn new() -> ContentServiceMulti {
+		ContentServiceMulti {}
+	}
 }

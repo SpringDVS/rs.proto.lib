@@ -297,7 +297,7 @@ impl Outbound {
 		
 
 		if size == 0 { return None }
-		let (hdrbuf, mut msgbuf) = match HttpWrapper::unwrap_response(&buf[0..size]) {
+		let (hdrbuf, msgbuf) = match HttpWrapper::unwrap_response(&buf[0..size]) {
 			Some(r) => r,
 			None => return None
 		};
@@ -305,10 +305,10 @@ impl Outbound {
 		let hdrstr = String::from_utf8(hdrbuf.clone()).unwrap();
 		
 		match HttpWrapper::extract_header("Content-Length", &hdrstr) {
-			Some(s) => Outbound::transfer_single(&hdrbuf, msgbuf, &mut stream),
+			Some(_) => Outbound::transfer_single(&hdrbuf, msgbuf, &mut stream),
 			None => {
 				match HttpWrapper::extract_header("Transfer-Encoding", &hdrstr) {
-					Some(s) => Outbound::transfer_chunked(&hdrbuf, msgbuf, &mut stream),
+					Some(_) => Outbound::transfer_chunked(msgbuf, &mut stream),
 					None => None
 				}
 			}
@@ -341,7 +341,7 @@ impl Outbound {
 					
 	}
 	
-	fn transfer_chunked(hdrbuf: &Vec<u8>, mut msgbuf: Vec<u8>, stream: &mut TcpStream) -> Option<Vec<u8>> {
+	fn transfer_chunked(msgbuf: Vec<u8>, stream: &mut TcpStream) -> Option<Vec<u8>> {
 		
 		let mut buflen = msgbuf.len();
 		let mut index = 0;
@@ -372,7 +372,7 @@ impl Outbound {
 				
 				let mut v : Vec<u8> = Vec::new();
 				v.resize(diff, b'\0');
-				stream.read_exact(&mut v.as_mut());
+				let _ = stream.read_exact(&mut v.as_mut());
 				let mut bufstr = String::from(buf[1]);
 				 
 				bufstr.push_str(str::from_utf8(v.as_slice()).unwrap());
@@ -384,11 +384,11 @@ impl Outbound {
 				
 				let mut b = [b'\0'];
 				loop {
-					stream.read_exact(&mut b);
+					let _ =stream.read_exact(&mut b);
 					v.push(b[0]);
 					
 					if b[0] == b'\r' {
-						stream.read_exact(&mut b);
+						let _ = stream.read_exact(&mut b);
 						v.push(b[0]);
 						if b[0] == b'\n' { break; }
 					}
