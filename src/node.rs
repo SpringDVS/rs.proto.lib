@@ -12,13 +12,13 @@ pub use protocol::*;
 pub struct Node {
 	springname: String,
 	hostname: String,
+	hostpath: String,
 	address: String,
 	
 	service: NodeService,
 	state: NodeState,
 	role: NodeRole,
-	
-	resource: String,
+
 	key: String
 }
 
@@ -47,12 +47,13 @@ impl Node {
 		Node {
 			springname: String::from(spring),
 			hostname: String::from(hostname),
-			address: String::from(address),
+			hostpath: String::from(&res[1..]),
 			
+			address: String::from(address),
 			service: service,
 			state: state,
 			role: role,
-			resource: String::from(&res[1..]),
+			
 			key: String::from(key)
 		}
 			
@@ -127,7 +128,7 @@ impl Node {
 		
 		Some(NodeDoubleFmt { 
 			spring: self.springname.clone(),
-			host: self.hostname.clone()
+			host: self.hostfield()
 		})
 	}
 	
@@ -142,7 +143,7 @@ impl Node {
 		
 		Some(NodeTripleFmt { 
 			spring: self.springname.clone(),
-			host: self.hostname.clone(),
+			host: self.hostfield(),
 			address: self.address.clone(),
 		})
 	}
@@ -159,7 +160,7 @@ impl Node {
 
 		Some(NodeQuadFmt { 
 			spring: self.springname.clone(),
-			host: self.hostname.clone(),
+			host: self.hostfield(),
 			address: self.address.clone(),
 			service: self.service,
 		})
@@ -173,7 +174,7 @@ impl Node {
 
 		Some(NodeInfoFmt {
 			spring: self.springname.clone(),
-			host: self.hostname.clone(),
+			host: self.hostfield(),
 			address: self.address.clone(),
 			service: self.service,
 			state: self.state,
@@ -187,7 +188,7 @@ impl Node {
 		
 		match property {
 			
-			NodeProperty::Hostname => { info.host = self.hostname.clone() },
+			NodeProperty::Hostname => { info.host = self.hostfield() },
 			NodeProperty::Address => { info.address = self.address.clone() },
 			NodeProperty::Service(_) => { info.service = self.service },
 			NodeProperty::Role(_) => { info.role = self.role },
@@ -200,6 +201,14 @@ impl Node {
 		};
 		
 		info
+	}
+	
+	pub fn hostfield(&self) -> String {
+		if self.hostpath.len() == 0  {
+			self.hostname.to_string()
+		} else {
+			format!("{}/{}", self.hostname, self.hostpath)
+		} 
 	}
 	
 	pub fn springname(&self) -> &str {
@@ -231,8 +240,8 @@ impl Node {
 		self.state
 	}
 	
-	pub fn resource(&self) -> &str {
-		&self.resource
+	pub fn hostpath(&self) -> &str {
+		&self.hostpath
 	}
 
 	pub fn update_state(&mut self, state: NodeState) {
@@ -259,7 +268,7 @@ impl Node {
 		self.hostname = hostname.to_string()
 	}
 	
-	pub fn update_resource(&mut self, resource: &str) {
-		self.resource = resource.to_string()
+	pub fn update_hostpash(&mut self, hostpath: &str) {
+		self.hostpath = hostpath.to_string()
 	}
 }

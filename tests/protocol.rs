@@ -59,6 +59,32 @@ fn ts_from_bytes_reg_pass() {
 	assert_eq!(c.key, "PUBLIC KEY\nAbCdEf");
 }
 
+
+#[test]
+fn ts_from_bytes_reg_2_pass() {
+	let o = Message::from_bytes(b"register foobar,hostbar.org/foo;org;http;abcdef\nPUBLIC KEY\nAbCdEf");
+	assert!(o.is_ok());
+	let m : Message = o.unwrap();
+	assert_eq!(m.cmd, CmdType::Register);
+	
+	assert!( match m.content {
+			MessageContent::Registration(_) => true,
+			_ => false,
+	});
+	
+	let c : ContentRegistration = match m.content {
+		MessageContent::Registration(s) => s,
+		_ => return
+	};
+	
+	assert_eq!(c.ndouble.spring, "foobar");
+	assert_eq!(c.ndouble.host, "hostbar.org/foo");
+	assert_eq!(c.role, NodeRole::Org);
+	assert_eq!(c.service, NodeService::Http);
+	assert_eq!(c.token, "abcdef");
+	assert_eq!(c.key, "PUBLIC KEY\nAbCdEf");
+}
+
 #[test]
 fn ts_from_bytes_reg_fail_zero() {
 	let o = Message::from_bytes(b"register");

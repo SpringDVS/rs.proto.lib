@@ -46,7 +46,7 @@ impl HttpWrapper {
 	pub fn serialise_request(msg: &Message, host: &str) -> Vec<u8> {
 		let serial = msg.to_bytes();
 		let header : String = format!(
-"POST /spring/ HTTP/1.0\r
+"POST /spring/ HTTP/1.1\r
 Host: {}\r
 User-Agent: SpringDVS\r
 Content-Type: text/plain\r
@@ -414,10 +414,17 @@ impl Outbound {
 		Some(Vec::from(aggregate.as_bytes()))
 	}
 	pub fn request_node(message: &Message, node: &Node) -> Option<Message> {
-		let response : Vec<u8> = match Outbound::request(message.to_bytes().as_slice(), node.address(), node.hostname(), "spring") {
+		 
+		let path = match node.hostpath() {
+			"" => "spring".to_string(),
+			s => format!("{}/spring", s)
+		};
+		
+		let response : Vec<u8> = match Outbound::request(message.to_bytes().as_slice(), node.address(), node.hostname(), &path) {
 			Some(r) => r,
 			None => return None
 		};
+		
 		
 		match Message::from_bytes(response.as_slice()) {
 			Ok(m) => Some(m),
